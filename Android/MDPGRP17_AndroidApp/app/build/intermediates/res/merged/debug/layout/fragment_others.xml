@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="?android:attr/selectableItemBackground"
+    android:padding="@dimen/md_keylines">
+
+    <android.support.v4.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:paddingTop="@dimen/md_keylines">
+
+            <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                xmlns:tools="http://schemas.android.com/tools"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="@dimen/md_keylines"
+                android:background="?android:attr/selectableItemBackground">
+
+                <TextView
+                    android:id="@+id/title_WayPoint"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="@dimen/md_keylines"
+                    android:text="@string/settings_header_waypoint"
+                    android:textAppearance="?attr/textAppearanceListItem"
+                    android:textSize="@dimen/article_subheading"
+                    tools:text="@string/settings_header_waypoint" />
+
+                <TextView
+                    android:id="@+id/coordinateX"
+                    android:layout_width="@dimen/cards_button_width"
+                    android:layout_height="@dimen/cards_button_height"
+                    android:layout_below="@+id/title_WayPoint"
+                    android:layout_marginLeft="@dimen/md_keylines"
+                    android:ellipsize="end"
+                    android:gravity="center"
+                    android:singleLine="true"
+                    android:text="X:"
+                    android:textAppearance="?attr/textAppearanceListItem"
+                    android:textColor="@color/medium_grey"
+                    android:textSize="@dimen/list_body"
+                    tools:text="X:" />
+
+                <EditText
+                    android:id="@+id/coordinateXValue"
+                    android:layout_width="@dimen/cards_button_width"
+                    android:layout_height="@dimen/cards_button_height"
+                    android:layout_below="@+id/title_WayPoint"
+                    android:layout_marginLeft="@dimen/md_keylines"
+                    android:layout_toRightOf="@+id/coordinateX"
+                    android:ems="10"
+                    android:inputType="textPersonName"
+                    android:text=" " />
+
+                <TextView
+                    android:id="@+id/coordinateY"
+                    android:layout_width="@dimen/cards_button_width"
+                    android:layout_height="@dimen/cards_button_height"
+                    android:layout_below="@+id/title_WayPoint"
+                    android:layout_marginLeft="@dimen/md_keylines"
+                    android:layout_toRightOf="@+id/coordinateXValue"
+                    android:ellipsize="end"
+                    android:gravity="center"
+                    android:singleLine="true"
+                    android:text="Y:"
+                    android:textAppearance="?attr/textAppearanceListItem"
+                    android:textColor="@color/medium_grey"
+                    android:textSize="@dimen/list_body"
+                    tools:text="Y:" />
+
+                <EditText
+                    android:id="@+id/coordinateYValue"
+                    android:layout_width="@dimen/cards_button_width"
+                    android:layout_height="@dimen/cards_button_height"
+                    android:layout_below="@+id/title_WayPoint"
+                    android:layout_marginLeft="@dimen/md_keylines"
+                    android:layout_toRightOf="@+id/coordinateY"
+                    android:ems="10"
+                    android:inputType="textPersonName"
+                    android:text=" " />
+
+                <Button
+                    android:id="@+id/button"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentEnd="true"
+                    android:layout_alignParentRight="true"
+                    android:layout_below="@+id/title_WayPoint"
+                    android:layout_marginLeft="@dimen/md_keylines"
+                    android:text="Set" />
+
+            </RelativeLayout>
+
+            <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                xmlns:tools="http://schemas.android.com/tools"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="@dimen/md_keylines"
+                android:background="?android:attr/selectableItemBackground">
+
+                <TextView
+                    android:id="@+id/title_MapMode"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="@dimen/md_keylines"
+                    android:layout_toRightOf="@+id/list_avatar"
+                    android:text="@string/settings_header_mapmode"
+                    android:textAppearance="?attr/textAppearanceListItem"
+                    android:textSize="@dimen/article_subheading"
+                    tools:text="@string/settings_header_mapmode" />
+
+                <TextView
+                    android:id="@+id/settings_mapmode_auto"
+                    android:layout_width="@dimen/cards_button_width"
+                    android:layout_height="@dimen/cards_button_height"
+                    android:layout_below="@+id/title_MapMode"
+                    android:layout_marginLeft="@dimen/md_keylines"
+                    android:layout_toRightOf="@+id/list_avatar"
+                    android:gravity="center"
+                    android:textAppearance="?attr/textAppearanceListItem"
+                    android:textColor="@color/medium_grey"
+                    android:textSize="@dimen/list_body"
+                    tools:text="Style" />
+
+                <ToggleButton
+                    android:id="@+id/tgglebtn_settings_mapmode_auto"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentEnd="true"
+                    android:layout_alignParentRight="true"
+                    android:layout_below="@+id/title_MapMode"
+                    android:layout_marginLeft="@dimen/md_keylines"
+                    android:checked="true"
+                    android:textOff="Manual"
+                    android:textOn="Auto" />
+            </RelativeLayout>
+        </LinearLayout>
+    </android.support.v4.widget.NestedScrollView>
+</RelativeLayout>
+

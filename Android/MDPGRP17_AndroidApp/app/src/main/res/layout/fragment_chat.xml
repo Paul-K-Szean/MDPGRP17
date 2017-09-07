@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="#ffffff"
+    android:orientation="vertical">
+
+    <ListView
+        android:id="@+id/listView_message"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
+    <RelativeLayout
+
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:background="@color/colorPrimaryDark"
+        android:padding="@dimen/md_keylines">
+
+        <ImageButton
+            android:id="@+id/imageButton_send"
+            android:layout_width="@dimen/cards_button_width"
+            android:layout_height="wrap_content"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentRight="true"
+            android:layout_weight="5"
+            android:background="@android:drawable/ic_menu_send"
+            android:padding="4dp"
+            android:src="@android:drawable/ic_menu_send" />
+
+        <EditText
+            android:id="@+id/editText_message"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:layout_toLeftOf="@id/imageButton_send"
+            android:hint="Write a message"
+            android:textColor="#CFD8DC"
+            android:textColorHint="#CFD8DC" />
+
+
+    </RelativeLayout>
+
+</RelativeLayout>

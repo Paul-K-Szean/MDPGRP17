@@ -1,0 +1,34 @@
+[
+    {
+        "merged": "C:\\Users\\szean\\Documents\\AndroidProjects\\MDP\\MDPGRP17_AndroidApp\\app\\build\\intermediates\\res\\merged\\debug\\menu\\menu_main.xml",
+        "source": "C:\\Users\\szean\\Documents\\AndroidProjects\\MDP\\MDPGRP17_AndroidApp\\app\\src\\main\\res\\menu\\menu_main.xml"
+    },
+    {
+        "merged": "C:\\Users\\szean\\Documents\\AndroidProjects\\MDP\\MDPGRP17\\app\\build\\intermediates\\res\\merged\\debug\\menu\\menu_scrolling.xml",
+        "source": "C:\\Users\\szean\\Documents\\AndroidProjects\\MDP\\MDPGRP17\\app\\src\\main\\res\\menu\\menu_scrolling.xml"
+    },
+    {
+        "merged": "C:\\Users\\szean\\Documents\\AndroidProjects\\MDP\\MDPGRP17_AndroidApp\\app\\build\\intermediates\\res\\merged\\debug\\menu\\menu_scrolling.xml",
+        "source": "C:\\Users\\szean\\Documents\\AndroidProjects\\MDP\\MDPGRP17_AndroidApp\\app\\src\\main\\res\\menu\\menu_scrolling.xml"
+    },
+    {
+        "merged": "C:\\Users\\szean\\Documents\\AndroidProjects\\MDP\\MDPGRP17\\app\\build\\intermediates\\res\\merged\\debug\\menu\\menu_bluetoothdevices.xml",
+        "source": "C:\\Users\\szean\\Documents\\AndroidProjects\\MDP\\MDPGRP17\\app\\src\\main\\res\\menu\\menu_bluetoothdevices.xml"
+    },
+    {
+        "merged": "C:\\Users\\szean\\Documents\\AndroidProjects\\MDP\\MDPGRP17_AndroidApp\\app\\build\\intermediates\\res\\merged\\debug\\menu\\menu_navigation.xml",
+        "source": "C:\\Users\\szean\\Documents\\AndroidProjects\\MDP\\MDPGRP17_AndroidApp\\app\\src\\main\\res\\menu\\menu_navigation.xml"
+    },
+    {
+        "merged": "C:\\Users\\szean\\Documents\\AndroidProjects\\MDP\\MDPGRP17\\app\\build\\intermediates\\res\\merged\\debug\\menu\\menu_main.xml",
+        "source": "C:\\Users\\szean\\Documents\\AndroidProjects\\MDP\\MDPGRP17\\app\\src\\main\\res\\menu\\menu_main.xml"
+    },
+    {
+        "merged": "C:\\Users\\szean\\Documents\\AndroidProjects\\MDP\\MDPGRP17\\app\\build\\intermediates\\res\\merged\\debug\\menu\\menu_navigation.xml",
+        "source": "C:\\Users\\szean\\Documents\\AndroidProjects\\MDP\\MDPGRP17\\app\\src\\main\\res\\menu\\menu_navigation.xml"
+    },
+    {
+        "merged": "C:\\Users\\szean\\Documents\\AndroidProjects\\MDP\\MDPGRP17_AndroidApp\\app\\build\\intermediates\\res\\merged\\debug\\menu\\menu_bluetoothdevices.xml",
+        "source": "C:\\Users\\szean\\Documents\\AndroidProjects\\MDP\\MDPGRP17_AndroidApp\\app\\src\\main\\res\\menu\\menu_bluetoothdevices.xml"
+    }
+]
