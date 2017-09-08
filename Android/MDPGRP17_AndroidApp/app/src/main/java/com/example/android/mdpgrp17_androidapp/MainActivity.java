@@ -25,9 +25,7 @@ import android.content.IntentFilter;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
-import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
-import android.support.design.widget.Snackbar;
 import android.support.graphics.drawable.VectorDrawableCompat;
 import android.support.v4.content.res.ResourcesCompat;
 import android.support.v4.view.GravityCompat;
@@ -39,7 +37,15 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
+import android.view.inputmethod.InputMethodManager;
+import android.widget.ArrayAdapter;
+import android.widget.ListView;
+import android.widget.RelativeLayout;
+import android.widget.TextView;
 import android.widget.Toast;
+
+import java.util.ArrayList;
 
 
 /**
@@ -52,6 +58,17 @@ public class MainActivity extends AppCompatActivity {
     private BluetoothAdapter mBluetoothAdapter;
     private DrawerLayout mDrawerLayout;
     private Menu menu;
+    private ListView listView_Command;
+    public ArrayList<BluetoothMessageEntity> mBTMsgArrayList;
+    public ArrayAdapter mBTMsgArrayAdapter;
+
+
+    //Arena setup
+    private RelativeLayout arenaGrid;
+    private Arena arena;
+    private String gridString = "GRID 20 15 2 20 2 19 0 0 0 0 0 0 0 0";
+    private int[] intArray = new int[300];
+    private int[][] obstacleArray = new int[20][15];
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -123,16 +140,12 @@ public class MainActivity extends AppCompatActivity {
                         return true;
                     }
                 });
-        // Adding Floating Action Button to bottom right of main view
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Snackbar.make(v, "Hello Snackbar!",
-                        Snackbar.LENGTH_LONG).show();
-            }
-        });
 
+        listView_Command = (ListView) findViewById(R.id.listView_Command);
+        mBluetoothConnection = BluetoothConnection.getmBluetoothConnection(mHandler);
+        updateGUI_MessageContent();
+        arenaGrid = (RelativeLayout) findViewById(R.id.arenaGrid);
+        updateGUI_ArenaMap();
         mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         IntentFilter intent_filter = new IntentFilter();
         // Register BT broadcasts when the bluetooth is turned ON/OFF
@@ -246,6 +259,88 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    public void updateGUI_MessageContent() {
+        Log.d(TAG, "updateGUI_MessageContent");
+        mBTMsgArrayList = mBluetoothConnection.getmBTMsgArrayList();
+        // message object
+        mBTMsgArrayAdapter = new ArrayAdapter<BluetoothMessageEntity>(this, R.layout.item_message,
+                R.id.textView_message, mBTMsgArrayList) {
+            @Override
+            public View getView(int position, View convertView, ViewGroup parent) {
+                View view = super.getView(position, convertView, parent);
+                TextView textView_message = ((TextView) view.findViewById(R.id.textView_message));
+                BluetoothMessageEntity bluetoothMessageEntity = this.getItem(position);
+                if (bluetoothMessageEntity.getFrom().equals("MDPGRP17")) {
+                    // FROM MDPGRP17 = sender
+                    textView_message.setBackgroundResource(R.color.sender_background);
+                    textView_message.setText(bluetoothMessageEntity.getMessageContent());
+                    RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) textView_message.getLayoutParams();
+                    params.addRule(RelativeLayout.ALIGN_PARENT_RIGHT);
+                    params.width = ViewGroup.LayoutParams.WRAP_CONTENT;
+                    textView_message.setLayoutParams(params); //causes layout update
+                } else {
+                    // FROM mRemoteDevice = receiver
+                    textView_message.setBackgroundResource(R.color.receiver_background);
+                    textView_message.setText(bluetoothMessageEntity.getMessageContent());
+                    RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) textView_message.getLayoutParams();
+                    params.addRule(RelativeLayout.ALIGN_PARENT_LEFT);
+                    params.width = ViewGroup.LayoutParams.WRAP_CONTENT;
+                    textView_message.setLayoutParams(params); //causes layout update
+                }
+                return view;
+            }
+        };
+        mBTMsgArrayAdapter.notifyDataSetChanged();
+        listView_Command.setAdapter(mBTMsgArrayAdapter);
+        listView_Command.post(new Runnable() {
+            public void run() {
+                listView_Command.setSelection(listView_Command.getCount() - 1);
+            }
+        });
+    }
+
+    public void updateGUI_ArenaMap() {
+        Log.d(TAG, "updateGUI_ArenaMap");
+        gridString = "GRID 20 15 2 20 2 19 0 0 0 0 0 0 0 0";
+//        x_coordinate.setText("2", TextView.BufferType.EDITABLE);
+//        y_coordinate.setText("2", TextView.BufferType.EDITABLE);
+//        position.setText("180");
+        intArray = toIntArray(gridString);
+
+        for (int x = 0; x < 20; x++) {
+            for (int y = 0; y < 15; y++) {
+                obstacleArray[x][y] = 0;
+            }
+        }
+        if (arena != null) {
+            arenaGrid.removeView(arena);
+            arena = null;
+        }
+        arena = new Arena(this, intArray);
+        arena.setGridArray(intArray);
+        arena.setObstacles(obstacleArray);
+        arenaGrid = (RelativeLayout) findViewById(R.id.arenaGrid);
+        arenaGrid.addView(arena);
+    }
+
+    public int[] toIntArray(String s) {
+        // gridString = "GRID 20 15 2 20 2 19 0 0 0 0 0 0 0 0";
+        String[] stringArray = s.split(" ");
+        int len = stringArray.length - 1;
+        int[] intArray = new int[len];
+
+        for (int i = 1; i < len; i++) {
+            intArray[i - 1] = Integer.parseInt(stringArray[i]);
+        }
+        return intArray;
+    }
+
+    private void hideVirtualKeyboard() {
+        InputMethodManager imanager = (InputMethodManager) this.getSystemService(Context.INPUT_METHOD_SERVICE);
+        imanager.hideSoftInputFromWindow(getCurrentFocus().getWindowToken(), 0);
+    }
+
+
     private final Handler mHandler = new Handler() {
         @Override
         public void handleMessage(Message msg) {
@@ -262,6 +357,7 @@ public class MainActivity extends AppCompatActivity {
                 case GlobalVariables.MESSAGE_READ: {
                     if (msg.obj instanceof BluetoothMessageEntity) {
                         showToast("Msg received: " + ((BluetoothMessageEntity) msg.obj).getMessageContent());
+                        updateGUI_MessageContent();
                     } else {
                         byte[] read = (byte[]) msg.obj;
                         String incomingMessage = new String(read, 0, msg.arg1);  // byte[]; offset; byteCount
@@ -273,6 +369,7 @@ public class MainActivity extends AppCompatActivity {
                 case GlobalVariables.MESSAGE_WRITE: {
                     if (msg.obj instanceof BluetoothMessageEntity) {
                         showToast("Msg sent: " + ((BluetoothMessageEntity) msg.obj).getMessageContent());
+                        updateGUI_MessageContent();
                     } else {
                         byte[] read = (byte[]) msg.obj;
                         String incomingMessage = new String(read, 0, msg.arg1);  // byte[]; offset; byteCount
@@ -284,6 +381,7 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     };
+
 
     // Create a BroadcastReceiver to capture bluetooth activities
     private final BroadcastReceiver mReceiver = new BroadcastReceiver() {
@@ -303,16 +401,9 @@ public class MainActivity extends AppCompatActivity {
                 // handle BT connection state
                 case BluetoothDevice.ACTION_ACL_CONNECTED:
                     Log.d(TAG, "onReceive: ACTION_ACL_CONNECTED: " + mRemoteDevice.getName());
-                    if (mBluetoothConnection.getBTConnectionState() != GlobalVariables.BT_CONNECTION_STATE_CONNECTED) {
-                        mBluetoothConnection.setBTConnectionState(GlobalVariables.BT_CONNECTION_STATE_CONNECTED);
-                        mBluetoothConnection.startConnectThread(mRemoteDevice, true);
-                    }
                     break;
                 case BluetoothDevice.ACTION_ACL_DISCONNECTED:
                     Log.d(TAG, "onReceive: ACTION_ACL_DISCONNECTED: " + mRemoteDevice.getName());
-                    if (mBluetoothConnection.getBTConnectionState() != GlobalVariables.BT_CONNECTION_STATE_DISCONNECTED) {
-                        mBluetoothConnection.setBTConnectionState(GlobalVariables.BT_CONNECTION_STATE_DISCONNECTED);
-                    }
                     break;
                 case BluetoothDevice.ACTION_ACL_DISCONNECT_REQUESTED:
                     Log.d(TAG, "onReceive: ACTION_ACL_DISCONNECT_REQUESTED " + mRemoteDevice.getName());
@@ -320,7 +411,6 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     };
-
 
     private void checkBTConectionState() {
         int checkCurrentConnectionState = mBluetoothConnection.getBTConnectionState();

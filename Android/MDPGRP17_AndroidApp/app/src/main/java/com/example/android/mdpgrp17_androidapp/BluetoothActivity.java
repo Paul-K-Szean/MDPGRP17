@@ -378,7 +378,7 @@ public class BluetoothActivity extends AppCompatActivity {
             final int currentConnectionState_ThisDevice = intent.getIntExtra(BluetoothAdapter.EXTRA_CONNECTION_STATE, BluetoothDevice.ERROR);
             final int preivousConnectionState_ThisDevice = intent.getIntExtra(BluetoothAdapter.EXTRA_PREVIOUS_CONNECTION_STATE, BluetoothDevice.ERROR);
             BluetoothDevice mRemoteDevice = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
-
+            int checkBTConnectionState = mBluetoothConnection.getBTConnectionState();
             switch (action) {
                 // found a remote device
                 case BluetoothDevice.ACTION_FOUND:
@@ -395,11 +395,11 @@ public class BluetoothActivity extends AppCompatActivity {
                     // 10 = bond_none, 11 = bond_bonding, 12 = bond_bonded
                     if (currentBondState_RemoteDevice == BluetoothDevice.BOND_NONE) {
                         Log.d(TAG, "Un-pair with " + mRemoteDevice.getName() + ", BOND_NONE (" + currentBondState_RemoteDevice + ")");
-
                     } else if (currentBondState_RemoteDevice == BluetoothDevice.BOND_BONDING) {
                         Log.d(TAG, "Pairing with " + mRemoteDevice.getName() + ", BOND_BONDING (" + currentBondState_RemoteDevice + ")");
                     } else if (currentBondState_RemoteDevice == BluetoothDevice.BOND_BONDED) {
                         Log.d(TAG, "Paired with " + mRemoteDevice.getName() + ", BOND_BONDED (" + currentBondState_RemoteDevice + ")");
+                        mBluetoothConnection.startConnectThread(mRemoteDevice, true);
                     }
                     break;
                 case BluetoothDevice.ACTION_PAIRING_REQUEST:
@@ -452,10 +452,6 @@ public class BluetoothActivity extends AppCompatActivity {
                 // handle BT connection state
                 case BluetoothDevice.ACTION_ACL_CONNECTED:
                     Log.d(TAG, "onReceive: ACTION_ACL_CONNECTED: " + mRemoteDevice.getName());
-                    if (mBluetoothConnection.getBTConnectionState() != GlobalVariables.BT_CONNECTION_STATE_CONNECTED) {
-                        mBluetoothConnection.setBTConnectionState(GlobalVariables.BT_CONNECTION_STATE_CONNECTED);
-                        mBluetoothConnection.startConnectThread(mRemoteDevice, true);
-                    }
                     break;
                 case BluetoothDevice.ACTION_ACL_DISCONNECTED:
                     Log.d(TAG, "onReceive: ACTION_ACL_DISCONNECTED: " + mRemoteDevice.getName());

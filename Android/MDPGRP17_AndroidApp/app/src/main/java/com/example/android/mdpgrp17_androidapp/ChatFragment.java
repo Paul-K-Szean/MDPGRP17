@@ -104,11 +104,9 @@ public class ChatFragment extends Fragment {
     public void updateGUI_MessageContent() {
         Log.d(TAG, "updateGUI_MessageContent");
         mBTMsgArrayList = mBluetoothConnection.getmBTMsgArrayList();
-
         // message object
         mBTMsgArrayAdapter = new ArrayAdapter<BluetoothMessageEntity>(getContext(), R.layout.item_message,
                 R.id.textView_message, mBTMsgArrayList) {
-
             @Override
             public View getView(int position, View convertView, ViewGroup parent) {
                 View view = super.getView(position, convertView, parent);

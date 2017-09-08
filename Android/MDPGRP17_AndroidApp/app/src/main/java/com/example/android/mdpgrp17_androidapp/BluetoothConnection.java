@@ -15,7 +15,10 @@ import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.UUID;
 
+import static com.example.android.mdpgrp17_androidapp.GlobalVariables.BT_CONNECTION_STATE_CONNECTED;
 import static com.example.android.mdpgrp17_androidapp.GlobalVariables.BT_CONNECTION_STATE_CONNECTING;
+import static com.example.android.mdpgrp17_androidapp.GlobalVariables.BT_CONNECTION_STATE_IDLE;
+import static com.example.android.mdpgrp17_androidapp.GlobalVariables.BT_CONNECTION_STATE_LISTENING;
 
 
 /**
@@ -30,8 +33,8 @@ public class BluetoothConnection {
     // 00001115-0000-1000-8000-00805f9b34fb || 00001101-0000-1000-8000-00805f9b34fb
     private static final UUID MY_UUID_SECURE = UUID.fromString("00001101-0000-1000-8000-00805f9b34fb");
     private static final UUID MY_UUID_INSECURE = UUID.fromString("00001101-0000-1000-8000-00805f9b34fb");
-    private static UUID REMOTE_UUID_SECURE;
-    private static UUID REMOTE_UUID_INSECURE;
+    private static final UUID REMOTE_UUID_SECURE = MY_UUID_SECURE;
+    private static final UUID REMOTE_UUID_INSECURE = MY_UUID_INSECURE;
 
     private AcceptThread mSecureAcceptThread;
     private AcceptThread mInSecureAcceptThread;
@@ -255,7 +258,7 @@ public class BluetoothConnection {
                     tmp = mBluetoothAdapter.listenUsingInsecureRfcommWithServiceRecord(SERVERNAME_INSECURE, MY_UUID_INSECURE);
                     Log.d(TAG, "AcceptThread: isConnectionSecure: " + isConnectionSecure + ". Using: " + MY_UUID_INSECURE);
                 }
-                Log.d(TAG, "AcceptThread: BluetoothServerSocket: " + tmp.toString());
+                Log.d(TAG, "AcceptThread: mServerSocket: " + tmp.toString());
                 if (mBTCurrentState != GlobalVariables.BT_CONNECTION_STATE_LISTENING) {
                     setBTConnectionState(GlobalVariables.BT_CONNECTION_STATE_LISTENING);
                     mHandler.obtainMessage(GlobalVariables.BT_CONNECTION_STATE_CHANGE, GlobalVariables.BT_CONNECTION_STATE_LISTENING, 0).sendToTarget();
@@ -279,26 +282,35 @@ public class BluetoothConnection {
             if (mServerSocket != null) {
                 BluetoothSocket mSocket = null;
                 try {
-                    // This is a blocking call and will only return on a
-                    // successful connection or an exception
                     Log.d(TAG, "AcceptThread: RFCOM server socket started");
                     mSocket = mServerSocket.accept();
                     Log.d(TAG, "AcceptThread: RFCOM server socket accepted a connection. Remote device: " + mSocket.getRemoteDevice().getName());
-                    mRemoteDevice = mSocket.getRemoteDevice();
+                    Log.d(TAG, "AcceptThread: RFCOM server socket: " + mServerSocket.toString());
+                    Log.d(TAG, "AcceptThread:  BluetoothSocket: " + mSocket.toString());
+
+                    mConnectedRemoteDevice = mRemoteDevice = mSocket.getRemoteDevice();
                 } catch (IOException e) {
                     Log.e(TAG, "AcceptThread: mServerSocket.accept(): " + e.getMessage());
                 }
-                // A connection was accepted. Perform work associated with
-                // the connection in a separate thread.
                 if (mSocket != null) {
-                    startConnectedThread(mSocket, mSocket.getRemoteDevice(), isConnectionSecure);
-                    Log.e(TAG, "AcceptThread: Connected to remote device");
-                    // Close the socket
-                    try {
-                        Log.e(TAG, "AcceptThread: Closing bluetooth socket");
-                        mSocket.close();
-                    } catch (IOException e) {
-                        Log.e(TAG, "AcceptThread: socket.close(); failed. " + e.getMessage());
+                    synchronized (BluetoothConnection.this) {
+                        switch (mBTCurrentState) {
+                            case BT_CONNECTION_STATE_LISTENING:
+                            case BT_CONNECTION_STATE_CONNECTING:
+                                // Situation normal. Start the connected thread.
+                                startConnectedThread(mSocket, mSocket.getRemoteDevice(), isConnectionSecure);
+                                break;
+                            case BT_CONNECTION_STATE_IDLE:
+                            case BT_CONNECTION_STATE_CONNECTED:
+                                // Either not ready or already connected. Terminate new socket.
+                                try {
+                                    Log.d(TAG, "AcceptThread: Closing bluetooth socket");
+                                    mSocket.close();
+                                } catch (IOException e) {
+                                    Log.e(TAG, "AcceptThread: socket.close(); failed. " + e.getMessage());
+                                }
+                                break;
+                        }
                     }
                 }
                 Log.i(TAG, "AcceptThread: Stopped running");
@@ -333,12 +345,9 @@ public class BluetoothConnection {
             Log.d(TAG, "ConnectThread: Connecting with " + mRemoteDevice.getName());
             this.mRemoteDevice = mRemoteDevice;
             this.isConnectionSecure = isConnectionSecure;
-            for (Parcelable UUID : mRemoteDevice.getUuids()) {
-                Log.d(TAG, "Remote device UUID(s): " + UUID.toString());
-            }
 
-            REMOTE_UUID_INSECURE = REMOTE_UUID_SECURE = UUID.fromString(mRemoteDevice.getUuids()[0].toString());
             try {
+
                 if (isConnectionSecure) {
                     mSocket = mRemoteDevice.createRfcommSocketToServiceRecord(REMOTE_UUID_SECURE);
                     Log.d(TAG, "ConnectThread: Is connection secure: " + isConnectionSecure + ". Using: " + REMOTE_UUID_SECURE);
@@ -347,6 +356,11 @@ public class BluetoothConnection {
                     Log.d(TAG, "ConnectThread: Is connection secure: " + isConnectionSecure + ". Using: " + REMOTE_UUID_INSECURE);
                 }
                 Log.d(TAG, "ConnectThread: BluetoothSocket: " + mSocket.toString());
+                if (mSocket.getRemoteDevice().getUuids() != null && mSocket != null) {
+                    for (Parcelable UUID : mSocket.getRemoteDevice().getUuids()) {
+                        Log.d(TAG, mSocket.getRemoteDevice().getName() + "'s UUID: " + UUID);
+                    }
+                }
                 setBTConnectionState(GlobalVariables.BT_CONNECTION_STATE_CONNECTING);
                 mHandler.obtainMessage(GlobalVariables.BT_CONNECTION_STATE_CHANGE, GlobalVariables.BT_CONNECTION_STATE_CONNECTING, 0).sendToTarget();
 
@@ -389,7 +403,6 @@ public class BluetoothConnection {
                     } catch (IOException e1) {
                         Log.e(TAG, "ConnectThread: mSocket.close(); failed. " + e1.getMessage());
                     }
-
                 }
 
                 // Once connected, reset ConnectThread
@@ -475,6 +488,8 @@ public class BluetoothConnection {
                     mHandler.obtainMessage(GlobalVariables.MESSAGE_READ, mBluetoothMessageEntity).sendToTarget();
                 } catch (IOException e) {
                     // Disconnection
+                    setBTConnectionState(GlobalVariables.BT_CONNECTION_STATE_LISTENING);
+                    mHandler.obtainMessage(GlobalVariables.BT_CONNECTION_STATE_CHANGE, GlobalVariables.BT_CONNECTION_STATE_LISTENING, 0).sendToTarget();
                     Log.e(TAG, "ConnectedThread: Write: mmInStream.read(buffer); failed. " + e.getMessage());
                     break;
                 }

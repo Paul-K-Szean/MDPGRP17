@@ -5,13 +5,9 @@
     android:background="#ffffff"
     android:orientation="vertical">
 
-    <ListView
-        android:id="@+id/listView_message"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
 
     <RelativeLayout
-
+        android:id="@+id/messageArea"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
@@ -41,5 +37,11 @@
 
 
     </RelativeLayout>
+
+    <ListView
+        android:id="@+id/listView_message"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_above="@id/messageArea" />
 
 </RelativeLayout>
