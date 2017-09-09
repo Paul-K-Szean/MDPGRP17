@@ -47,7 +47,7 @@ public class ChatFragment extends Fragment {
         mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         mBluetoothConnection = BluetoothConnection.getmBluetoothConnection(mHandler);
         mBluetoothConnection.setHandler(mHandler);
-        mBTMsgArrayList = mBluetoothConnection.getmBTMsgArrayList();
+        mBTMsgArrayList = mBluetoothConnection.getmBTConversationArrayList();
 
 
         // UI Objects
@@ -62,11 +62,9 @@ public class ChatFragment extends Fragment {
                 Log.d(TAG, "Image Button Send Clicked.");
                 mBluetoothAdapter.cancelDiscovery();
                 String messageToSend = editText_message.getText().toString();
-                if (messageToSend.length() > 0) {
-                    byte[] msgSend = messageToSend.getBytes();
-                    mBluetoothConnection.write(msgSend);
-                    editText_message.getText().clear();
-                }
+                mBluetoothConnection.write(BluetoothMessageEntity.sendConversation(messageToSend));
+                editText_message.getText().clear();
+
             }
         });
         return rootView;
@@ -103,7 +101,7 @@ public class ChatFragment extends Fragment {
 
     public void updateGUI_MessageContent() {
         Log.d(TAG, "updateGUI_MessageContent");
-        mBTMsgArrayList = mBluetoothConnection.getmBTMsgArrayList();
+        mBTMsgArrayList = mBluetoothConnection.getmBTConversationArrayList();
         // message object
         mBTMsgArrayAdapter = new ArrayAdapter<BluetoothMessageEntity>(getContext(), R.layout.item_message,
                 R.id.textView_message, mBTMsgArrayList) {

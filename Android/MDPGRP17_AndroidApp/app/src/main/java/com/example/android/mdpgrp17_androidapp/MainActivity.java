@@ -40,6 +40,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.ListView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
@@ -47,28 +48,41 @@ import android.widget.Toast;
 
 import java.util.ArrayList;
 
+import static com.example.android.mdpgrp17_androidapp.GlobalVariables.CMD_FORWARD;
+import static com.example.android.mdpgrp17_androidapp.GlobalVariables.CMD_REVERSE;
+import static com.example.android.mdpgrp17_androidapp.GlobalVariables.CMD_ROTATELEFT;
+import static com.example.android.mdpgrp17_androidapp.GlobalVariables.CMD_ROTATERIGHT;
+import static com.example.android.mdpgrp17_androidapp.GlobalVariables.CMD_SENDARENAINFO;
+import static com.example.android.mdpgrp17_androidapp.GlobalVariables.MESSAGE_FROM;
+
 
 /**
  * Provides UI for the main screen.
  */
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements View.OnClickListener {
     private static final String TAG = "MainActivity";
 
-    private BluetoothConnection mBluetoothConnection;
-    private BluetoothAdapter mBluetoothAdapter;
+    // GUI Objects
     private DrawerLayout mDrawerLayout;
     private Menu menu;
     private ListView listView_Command;
-    public ArrayList<BluetoothMessageEntity> mBTMsgArrayList;
-    public ArrayAdapter mBTMsgArrayAdapter;
-
-
-    //Arena setup
     private RelativeLayout arenaGrid;
+    private Button BTN_GetArenaInfo;
+    private Button BTN_CMD_Forward;
+    private Button BTN_CMD_Reverse;
+    private Button BTN_CMD_RotateLeft;
+    private Button BTN_CMD_RotateRight;
+    private Button BTN_TestEncodeString;
+    // Bluetooth objects
+    private BluetoothConnection mBluetoothConnection;
+    private BluetoothAdapter mBluetoothAdapter;
+    public ArrayList<BluetoothMessageEntity> mBTCommandArrayList;
+    public ArrayAdapter mBTCommandArrayAdapter;
+
+
+    //Arena objects
+
     private Arena arena;
-    private String gridString = "GRID 20 15 2 20 2 19 0 0 0 0 0 0 0 0";
-    private int[] intArray = new int[300];
-    private int[][] obstacleArray = new int[20][15];
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -77,6 +91,7 @@ public class MainActivity extends AppCompatActivity {
         getMenuInflater().inflate(R.menu.menu_main, menu);
         Log.d(TAG, "onCreateOptionsMenu");
         updateGUI_MenuIcon();
+
         return true;
     }
 
@@ -111,6 +126,16 @@ public class MainActivity extends AppCompatActivity {
         Log.d(TAG, "onCreate");
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        // GUI Objects
+        arenaGrid = (RelativeLayout) findViewById(R.id.arenaGrid);
+        listView_Command = (ListView) findViewById(R.id.listView_Command);
+        BTN_GetArenaInfo = (Button) findViewById(R.id.BTN_GetArenaInfo);
+        BTN_CMD_Forward = (Button) findViewById(R.id.BTN_CMD_Forward);
+        BTN_CMD_Reverse = (Button) findViewById(R.id.BTN_CMD_Reverse);
+        BTN_CMD_RotateLeft = (Button) findViewById(R.id.BTN_CMD_RotateLeft);
+        BTN_CMD_RotateRight = (Button) findViewById(R.id.BTN_CMD_RotateRight);
+        BTN_TestEncodeString = (Button) findViewById(R.id.BTN_TestEncodeString);
         // Adding Toolbar to Main screen
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -141,11 +166,7 @@ public class MainActivity extends AppCompatActivity {
                     }
                 });
 
-        listView_Command = (ListView) findViewById(R.id.listView_Command);
         mBluetoothConnection = BluetoothConnection.getmBluetoothConnection(mHandler);
-        updateGUI_MessageContent();
-        arenaGrid = (RelativeLayout) findViewById(R.id.arenaGrid);
-        updateGUI_ArenaMap();
         mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         IntentFilter intent_filter = new IntentFilter();
         // Register BT broadcasts when the bluetooth is turned ON/OFF
@@ -169,6 +190,14 @@ public class MainActivity extends AppCompatActivity {
         //  Register all the activities
         registerReceiver(mReceiver, intent_filter);
 
+        BTN_GetArenaInfo.setOnClickListener(this);
+        BTN_CMD_Forward.setOnClickListener(this);
+        BTN_CMD_Reverse.setOnClickListener(this);
+        BTN_CMD_RotateLeft.setOnClickListener(this);
+        BTN_CMD_RotateRight.setOnClickListener(this);
+        BTN_TestEncodeString.setOnClickListener(this);
+
+        updateGUI_MessageContent();
     }
 
     @Override
@@ -188,6 +217,7 @@ public class MainActivity extends AppCompatActivity {
                 checkBTConectionState();
             }
         } else Log.d(TAG, "onResume: BT OFF");
+        setup_ArenaGrid();
         super.onResume();
     }
 
@@ -261,16 +291,16 @@ public class MainActivity extends AppCompatActivity {
 
     public void updateGUI_MessageContent() {
         Log.d(TAG, "updateGUI_MessageContent");
-        mBTMsgArrayList = mBluetoothConnection.getmBTMsgArrayList();
+        mBTCommandArrayList = mBluetoothConnection.getmBTCommandArrayList();
         // message object
-        mBTMsgArrayAdapter = new ArrayAdapter<BluetoothMessageEntity>(this, R.layout.item_message,
-                R.id.textView_message, mBTMsgArrayList) {
+        mBTCommandArrayAdapter = new ArrayAdapter<BluetoothMessageEntity>(this, R.layout.item_message,
+                R.id.textView_message, mBTCommandArrayList) {
             @Override
             public View getView(int position, View convertView, ViewGroup parent) {
                 View view = super.getView(position, convertView, parent);
                 TextView textView_message = ((TextView) view.findViewById(R.id.textView_message));
                 BluetoothMessageEntity bluetoothMessageEntity = this.getItem(position);
-                if (bluetoothMessageEntity.getFrom().equals("MDPGRP17")) {
+                if (bluetoothMessageEntity.getFrom().equals(MESSAGE_FROM)) {
                     // FROM MDPGRP17 = sender
                     textView_message.setBackgroundResource(R.color.sender_background);
                     textView_message.setText(bluetoothMessageEntity.getMessageContent());
@@ -290,8 +320,8 @@ public class MainActivity extends AppCompatActivity {
                 return view;
             }
         };
-        mBTMsgArrayAdapter.notifyDataSetChanged();
-        listView_Command.setAdapter(mBTMsgArrayAdapter);
+        mBTCommandArrayAdapter.notifyDataSetChanged();
+        listView_Command.setAdapter(mBTCommandArrayAdapter);
         listView_Command.post(new Runnable() {
             public void run() {
                 listView_Command.setSelection(listView_Command.getCount() - 1);
@@ -299,40 +329,21 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    public void updateGUI_ArenaMap() {
-        Log.d(TAG, "updateGUI_ArenaMap");
-        gridString = "GRID 20 15 2 20 2 19 0 0 0 0 0 0 0 0";
-//        x_coordinate.setText("2", TextView.BufferType.EDITABLE);
-//        y_coordinate.setText("2", TextView.BufferType.EDITABLE);
-//        position.setText("180");
-        intArray = toIntArray(gridString);
+    public void updateGUI_ArenaGrid(String messageContent) {
+        Log.d(TAG, "updateGUI_ArenaGrid");
+        arena.decodeArenaInfo(messageContent);
+    }
 
-        for (int x = 0; x < 20; x++) {
-            for (int y = 0; y < 15; y++) {
-                obstacleArray[x][y] = 0;
-            }
-        }
+    public void setup_ArenaGrid() {
+        Log.d(TAG, "setup_ArenaGrid");
         if (arena != null) {
             arenaGrid.removeView(arena);
             arena = null;
         }
-        arena = new Arena(this, intArray);
-        arena.setGridArray(intArray);
-        arena.setObstacles(obstacleArray);
-        arenaGrid = (RelativeLayout) findViewById(R.id.arenaGrid);
+        arena = new Arena(this, arenaGrid);
         arenaGrid.addView(arena);
-    }
 
-    public int[] toIntArray(String s) {
-        // gridString = "GRID 20 15 2 20 2 19 0 0 0 0 0 0 0 0";
-        String[] stringArray = s.split(" ");
-        int len = stringArray.length - 1;
-        int[] intArray = new int[len];
 
-        for (int i = 1; i < len; i++) {
-            intArray[i - 1] = Integer.parseInt(stringArray[i]);
-        }
-        return intArray;
     }
 
     private void hideVirtualKeyboard() {
@@ -340,6 +351,42 @@ public class MainActivity extends AppCompatActivity {
         imanager.hideSoftInputFromWindow(getCurrentFocus().getWindowToken(), 0);
     }
 
+    public void onClick(View view) {
+        if (mBluetoothConnection.getBTConnectionState() == GlobalVariables.BT_CONNECTION_STATE_CONNECTED) {
+            switch (view.getId()) {
+                case R.id.BTN_GetArenaInfo: {
+                    mBluetoothConnection.write(BluetoothMessageEntity.sendCommand(CMD_SENDARENAINFO));
+                    break;
+                }
+                case R.id.BTN_CMD_Forward: {
+                    mBluetoothConnection.write(BluetoothMessageEntity.sendCommand(CMD_FORWARD));
+                    mBluetoothConnection.write(BluetoothMessageEntity.sendCommand(CMD_SENDARENAINFO));
+                    break;
+                }
+                case R.id.BTN_CMD_Reverse: {
+                    mBluetoothConnection.write(BluetoothMessageEntity.sendCommand(CMD_REVERSE));
+                    mBluetoothConnection.write(BluetoothMessageEntity.sendCommand(CMD_SENDARENAINFO));
+                    break;
+                }
+                case R.id.BTN_CMD_RotateLeft: {
+                    mBluetoothConnection.write(BluetoothMessageEntity.sendCommand(CMD_ROTATELEFT));
+                    mBluetoothConnection.write(BluetoothMessageEntity.sendCommand(CMD_SENDARENAINFO));
+                    break;
+                }
+                case R.id.BTN_CMD_RotateRight: {
+                    mBluetoothConnection.write(BluetoothMessageEntity.sendCommand(CMD_ROTATERIGHT));
+                    mBluetoothConnection.write(BluetoothMessageEntity.sendCommand(CMD_SENDARENAINFO));
+                    break;
+                }
+            }
+        }
+
+        if (view.getId() == R.id.BTN_TestEncodeString) {
+            Log.d(TAG, "Clicked On Others");
+            String encodedmsg = "GRID 20 15 12 7 270 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 1 1 1 0 0 0 0 1 1 1 1 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 1 1 1 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0";
+            updateGUI_ArenaGrid(encodedmsg);
+        }
+    }
 
     private final Handler mHandler = new Handler() {
         @Override
@@ -356,8 +403,8 @@ public class MainActivity extends AppCompatActivity {
                 }
                 case GlobalVariables.MESSAGE_READ: {
                     if (msg.obj instanceof BluetoothMessageEntity) {
-                        showToast("Msg received: " + ((BluetoothMessageEntity) msg.obj).getMessageContent());
                         updateGUI_MessageContent();
+                        updateGUI_ArenaGrid(((BluetoothMessageEntity) msg.obj).getMessageContent());
                     } else {
                         byte[] read = (byte[]) msg.obj;
                         String incomingMessage = new String(read, 0, msg.arg1);  // byte[]; offset; byteCount
@@ -368,7 +415,6 @@ public class MainActivity extends AppCompatActivity {
                 }
                 case GlobalVariables.MESSAGE_WRITE: {
                     if (msg.obj instanceof BluetoothMessageEntity) {
-                        showToast("Msg sent: " + ((BluetoothMessageEntity) msg.obj).getMessageContent());
                         updateGUI_MessageContent();
                     } else {
                         byte[] read = (byte[]) msg.obj;

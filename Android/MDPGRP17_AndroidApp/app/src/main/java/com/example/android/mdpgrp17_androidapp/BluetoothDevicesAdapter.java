@@ -30,7 +30,6 @@ public class BluetoothDevicesAdapter extends RecyclerView.Adapter<RecyclerView.V
 
     public BluetoothDevicesAdapter(Context context, BluetoothConnection mBluetoothConnection, ArrayList<BluetoothDevice> mBTDeviceList) {
         this.context = context;
-
         this.mBluetoothConnection = mBluetoothConnection;
         this.mBTDeviceList = mBTDeviceList;
         mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
@@ -85,6 +84,8 @@ public class BluetoothDevicesAdapter extends RecyclerView.Adapter<RecyclerView.V
                 case R.id.device_unpair:
                     Log.d(TAG, "Un-pair button clicked");
                     unpairDevice(mRemoteDevice);
+                    mBluetoothConnection.stopAllThreads();
+                    mBluetoothConnection.startAcceptThread(true);
                     break;
                 default:
                     Log.d(TAG, "onClick: Default clause");
@@ -100,7 +101,9 @@ public class BluetoothDevicesAdapter extends RecyclerView.Adapter<RecyclerView.V
                         }
                     } else {
                         Log.d(TAG, "onClick: Pairing with " + mRemoteDevice.getName());
-                        pairDevice(mRemoteDevice);
+                        // pairDevice(mRemoteDevice);
+                        mBluetoothConnection.startConnectThread(mRemoteDevice, true);
+
                     }
                     break;
             }

@@ -16,6 +16,8 @@ import android.util.Log;
  */
 
 public class ArenaProperties {
+    private int row;
+    private int col;
     private int[] gridSettings;
     private int[][] obstacleArray = new int[15][20];
     private int X;
@@ -24,41 +26,35 @@ public class ArenaProperties {
     private int _Y;
     private Paint paint;
     private Canvas canvas;
-    private static int size = 0;
+    private static int gridSize = 0;
     private static final String TAG = "ArenaProperties";
 
-    public ArenaProperties() {
+    public ArenaProperties(int row, int col) {
         super();
         Log.d(TAG, "ArenaProperties");
+        this.row = row;
+        this.col = col;
         paint = new Paint();
         paint.setAntiAlias(true);
         paint.setDither(true);
     }
 
-    public void setCanvas(Canvas c) {
-        Log.d(TAG, "setCanvas");
-        this.canvas = c;
-    }
-
     public void drawArena(Canvas canvas, int gridSize) {
-        Log.d(TAG, "drawArena");
         setCanvas(canvas);
-        this.size = gridSize;
-
-        int row = gridSettings[0],  //20
-                col = gridSettings[1],  //15
-                rHeadX = gridSettings[2],  // center of the head
-                rHeadY = gridSettings[3],
-                rRobotX = gridSettings[4],  // center of the robot
-                rRobotY = gridSettings[5];
+        this.gridSize = gridSize;
+        // "20 15 2 20 2 19 0 0 0 0 0 0 0 0";
+        int rHeadX = gridSettings[2],  // 2, center of the head
+                rHeadY = gridSettings[3],   // 20
+                rRobotX = gridSettings[4],  // 2, center of the robot
+                rRobotY = gridSettings[5];  // 19
 
         boolean directionUD = false,
                 directionLR = false;
 
         // Background
-        for (int i = 1; i <= col; i++) {
-            for (int j = 1; j <= row; j++) {
-                drawCell(i, j, gridSize, Color.parseColor("#295398"), canvas);
+        for (int row = 1; row <= this.row; row++) {
+            for (int col = 1; col <= this.col; col++) {
+                drawCell(col, row, gridSize, Color.parseColor("#295398"), canvas);
             }
         }
 
@@ -88,6 +84,14 @@ public class ArenaProperties {
                 drawCell(i, j, gridSize, Color.parseColor("#cccc00"), canvas);
             }
         }
+
+        // TEST
+        for (int i = 4; i <= 6; i++) {
+            for (int j = 10; j <= 12; j++) {
+                drawCell(i, j, gridSize, Color.parseColor("#cccc00"), canvas);
+            }
+        }
+
 
         // ROBOT
         // See whether the robot is towards horizontal way or vertical way
@@ -124,12 +128,12 @@ public class ArenaProperties {
         }
     }
 
-    public void drawCell(int i, int j, int gridSize, int c, Canvas canvas) {
+    public void drawCell(int col, int row, int gridSize, int c, Canvas canvas) {
+        Y = row * gridSize - gridSize / 2;
+        X = col * gridSize - gridSize / 2;
+        _Y = row * gridSize + gridSize / 2;
+        _X = col * gridSize + gridSize / 2;
 
-        X = i * gridSize - gridSize / 2;
-        Y = j * gridSize - gridSize / 2;
-        _X = i * gridSize + gridSize / 2;
-        _Y = j * gridSize + gridSize / 2;
         // paint the fill in color
         paint.setColor(c);
         paint.setStyle(Paint.Style.FILL);
@@ -138,6 +142,10 @@ public class ArenaProperties {
         paint.setColor(Color.WHITE);
         paint.setStyle(Paint.Style.STROKE);
         canvas.drawRect(new RectF(X, Y, _X, _Y), paint);
+    }
+
+    public void setCanvas(Canvas c) {
+        this.canvas = c;
     }
 
     public void setGridSettings(int[] gridArray) {

@@ -175,11 +175,11 @@
                         app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
                         <Button
-                            android:id="@+id/BTN_TurnLeft"
-                            android:layout_width="match_parent"
+                            android:id="@+id/BTN_CMD_RotateLeft"
+                            android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:text="Turn Left" />
+                            android:text="Rotate Left" />
                     </LinearLayout>
 
                     <LinearLayout
@@ -191,15 +191,15 @@
                         app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
                         <Button
-                            android:id="@+id/BTN_Forward"
-                            android:layout_width="match_parent"
+                            android:id="@+id/BTN_CMD_Forward"
+                            android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:text="Forward" />
 
                         <Button
-                            android:id="@+id/BTN_Reverse"
-                            android:layout_width="match_parent"
+                            android:id="@+id/BTN_CMD_Reverse"
+                            android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:text="Reverse" />
@@ -214,11 +214,11 @@
                         android:orientation="vertical">
 
                         <Button
-                            android:id="@+id/BTN_TurnRight"
-                            android:layout_width="match_parent"
+                            android:id="@+id/BTN_CMD_RotateRight"
+                            android:layout_width="wrap_content"
                             android:layout_height="match_parent"
                             android:layout_weight="1"
-                            android:text="Turn Right" />
+                            android:text="Rotate Right" />
 
                     </LinearLayout>
                 </LinearLayout>
@@ -238,7 +238,7 @@
                     app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
                     <Button
-                        android:id="@+id/button2"
+                        android:id="@+id/BTN_TestEncodeString"
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
                         android:layout_weight="1"

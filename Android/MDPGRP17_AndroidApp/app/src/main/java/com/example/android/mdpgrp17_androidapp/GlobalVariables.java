@@ -5,14 +5,19 @@ package com.example.android.mdpgrp17_androidapp;
  */
 
 public class GlobalVariables {
-    // Bluetooth Message
+    // Bluetooth Message Command
     public static final int MESSAGE_COMMAND = 0;
     public static final int MESSAGE_CONVERSATION = 1;
     public static final int MESSAGE_READ = 2;
     public static final int MESSAGE_WRITE = 3;
-
-//    public static final int MESSAGE_DEVICE_NAME = 3;
-//    public static final int MESSAGE_TOAST = 4;
+    public static final String MESSAGE_FROM = "MDPGRP17";
+    public static final String CMD_FORWARD = "cmd_forward";
+    public static final String CMD_REVERSE = "cmd_reverse";
+    public static final String CMD_ROTATELEFT = "cmd_rotateleft";
+    public static final String CMD_ROTATERIGHT = "cmd_rotateright";
+    public static final String CMD_BEGINEXPLORE = "cmd_beginexplore";
+    public static final String CMD_BEGINFASTEST = "cmd_beginfastest";
+    public static final String CMD_SENDARENAINFO = "cmd_sendarenainfo";
 
 
     // Bluetooth Connection State

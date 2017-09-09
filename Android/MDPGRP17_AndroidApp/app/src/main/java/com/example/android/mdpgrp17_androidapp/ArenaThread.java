@@ -25,10 +25,12 @@ public class ArenaThread extends Thread {
     }
 
     public void startThread() {
+        Log.d(TAG, "ArenaThread: Started");
         this.running = true;
     }
 
     public void run() {
+        Log.d(TAG, "ArenaThread: Running");
         try {
             while (true) {
                 arena.update();

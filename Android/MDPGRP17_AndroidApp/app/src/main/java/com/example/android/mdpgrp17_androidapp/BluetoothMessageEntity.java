@@ -1,5 +1,9 @@
 package com.example.android.mdpgrp17_androidapp;
 
+import static com.example.android.mdpgrp17_androidapp.GlobalVariables.MESSAGE_COMMAND;
+import static com.example.android.mdpgrp17_androidapp.GlobalVariables.MESSAGE_CONVERSATION;
+import static com.example.android.mdpgrp17_androidapp.GlobalVariables.MESSAGE_FROM;
+
 /**
  * Created by szean on 7/9/2017.
  */
@@ -9,11 +13,13 @@ public class BluetoothMessageEntity {
 
     String from;
     String to;
+    int messageType;
     String messageContent;
 
-    public BluetoothMessageEntity(String from, String to, String messageContent) {
+    public BluetoothMessageEntity(String from, String to, int messageType, String messageContent) {
         this.from = from;
         this.to = to;
+        this.messageType = messageType;
         this.messageContent = messageContent;
     }
 
@@ -33,6 +39,15 @@ public class BluetoothMessageEntity {
         this.to = to;
     }
 
+    public int getMessageType() {
+        return messageType;
+    }
+
+    public void setMessageType(int messageType) {
+        this.messageType = messageType;
+
+    }
+
     public String getMessageContent() {
         return messageContent;
     }
@@ -41,19 +56,12 @@ public class BluetoothMessageEntity {
         this.messageContent = messageContent;
     }
 
-
-//    byte[] read = (byte[]) msg.obj;
-//    String incomingMessage = new String(read, 0, msg.arg1);  // byte[]; offset; byteCount
-////                    Log.d(TAG, "MESSAGE_READ: " + incomingMessage);
-//
-//    bytes = mmInStream.read(buffer);
-//    String incomingMessage = new String(buffer, 0, bytes);
-//                    Log.d(TAG, "ConnectedThread: InputStream: " + incomingMessage);
-//                    mBTMsgArrayList.add(mConnectedRemoteDevice.getName() + ": " + incomingMessage);
-//                    Log.d(TAG, "mBTMsgArrayList size: " + mBTMsgArrayList.size());
-//                    for (String message : mBTMsgArrayList) {
-//        Log.d(TAG, "message: " + message);
-//    }
-//                    mHandler.obtainMessage(GlobalVariables.MESSAGE_READ, bytes, -1, buffer).sendToTarget();
-
+    public static BluetoothMessageEntity sendCommand(String commandString) {
+        BluetoothConnection mBluetoothConnection = BluetoothConnection.getmBluetoothConnection(null);
+        return new BluetoothMessageEntity(MESSAGE_FROM, mBluetoothConnection.getConnectedRemoteDevice().getName(), MESSAGE_COMMAND, commandString);
+    }
+    public static BluetoothMessageEntity sendConversation(String conversationString) {
+        BluetoothConnection mBluetoothConnection = BluetoothConnection.getmBluetoothConnection(null);
+        return new BluetoothMessageEntity(MESSAGE_FROM, mBluetoothConnection.getConnectedRemoteDevice().getName(), MESSAGE_CONVERSATION, conversationString);
+    }
 }

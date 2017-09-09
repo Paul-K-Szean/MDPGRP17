@@ -399,7 +399,6 @@ public class BluetoothActivity extends AppCompatActivity {
                         Log.d(TAG, "Pairing with " + mRemoteDevice.getName() + ", BOND_BONDING (" + currentBondState_RemoteDevice + ")");
                     } else if (currentBondState_RemoteDevice == BluetoothDevice.BOND_BONDED) {
                         Log.d(TAG, "Paired with " + mRemoteDevice.getName() + ", BOND_BONDED (" + currentBondState_RemoteDevice + ")");
-                        mBluetoothConnection.startConnectThread(mRemoteDevice, true);
                     }
                     break;
                 case BluetoothDevice.ACTION_PAIRING_REQUEST:

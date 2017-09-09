@@ -11,7 +11,6 @@ import android.util.Log;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.UUID;
 
@@ -19,6 +18,8 @@ import static com.example.android.mdpgrp17_androidapp.GlobalVariables.BT_CONNECT
 import static com.example.android.mdpgrp17_androidapp.GlobalVariables.BT_CONNECTION_STATE_CONNECTING;
 import static com.example.android.mdpgrp17_androidapp.GlobalVariables.BT_CONNECTION_STATE_IDLE;
 import static com.example.android.mdpgrp17_androidapp.GlobalVariables.BT_CONNECTION_STATE_LISTENING;
+import static com.example.android.mdpgrp17_androidapp.GlobalVariables.MESSAGE_COMMAND;
+import static com.example.android.mdpgrp17_androidapp.GlobalVariables.MESSAGE_CONVERSATION;
 
 
 /**
@@ -43,7 +44,7 @@ public class BluetoothConnection {
 
     private final BluetoothAdapter mBluetoothAdapter;
     private BluetoothDevice mConnectedRemoteDevice;   // connected remote device
-    private BluetoothMessageEntity mBluetoothMessageEntity;
+
     private int mBTCurrentState;
     private Handler mHandler;
 
@@ -73,17 +74,27 @@ public class BluetoothConnection {
         return mBluetoothConnection;
     }
 
-    private ArrayList<BluetoothMessageEntity> mBTMsgArrayList;
+    private ArrayList<BluetoothMessageEntity> mBTConversationArrayList;
 
-    public ArrayList<BluetoothMessageEntity> getmBTMsgArrayList() {
-        if (mBTMsgArrayList == null) {
-            Log.d(TAG, "getmBTMsgArrayList: mBTMsgArrayList was null, created new mBTMsgArrayList");
-            mBTMsgArrayList = new ArrayList<BluetoothMessageEntity>();
+    public ArrayList<BluetoothMessageEntity> getmBTConversationArrayList() {
+        if (mBTConversationArrayList == null) {
+            Log.d(TAG, "getmBTConversationArrayList: mBTConversationArrayList was null, created new mBTConversationArrayList");
+            mBTConversationArrayList = new ArrayList<BluetoothMessageEntity>();
         }
-        Log.d(TAG, "getmBTMsgArrayList: mBTMsgArrayList was not null, size: " + mBTMsgArrayList.size() + ", returned mBTMsgArrayList");
-        return mBTMsgArrayList;
+        Log.d(TAG, "getmBTConversationArrayList: mBTConversationArrayList was not null, size: " + mBTConversationArrayList.size() + ", returned mBTConversationArrayList");
+        return mBTConversationArrayList;
     }
 
+    private ArrayList<BluetoothMessageEntity> mBTCommandArrayList;
+
+    public ArrayList<BluetoothMessageEntity> getmBTCommandArrayList() {
+        if (mBTCommandArrayList == null) {
+            Log.d(TAG, "getmBTCommandArrayList: mBTCommandArrayList was null, created new mBTCommandArrayList");
+            mBTCommandArrayList = new ArrayList<BluetoothMessageEntity>();
+        }
+        Log.d(TAG, "getmBTCommandArrayList: mBTCommandArrayList was not null, size: " + mBTCommandArrayList.size() + ", returned mBTCommandArrayList");
+        return mBTCommandArrayList;
+    }
 
     /**
      * Start the chat service. Specifically startAcceptThread AcceptThread to begin a
@@ -215,19 +226,16 @@ public class BluetoothConnection {
 
     /**
      * Write to the ConnectedThread in an unsynchronized manner
-     *
-     * @param out The bytes to write
-     * @see ConnectedThread#write(byte[])
      */
-    public void write(byte[] out) {
-        Log.d(TAG, "Write()");
-        // Create temporary object
-        ConnectedThread r;
-
-        // Synchronize a copy of the ConnectedThread
-        Log.d(TAG, "write: Write Called.");
-        //perform the write
-        mConnectedThread.write(out);
+    public void write(BluetoothMessageEntity bluetoothMessageEntity) {
+        if (bluetoothMessageEntity.getMessageContent().length() > 0) {
+            // Synchronize a copy of the ConnectedThread
+            Log.d(TAG, "Write");
+            //perform the write
+            mConnectedThread.write(bluetoothMessageEntity);
+        } else {
+            Log.d(TAG, "Write: Nothing to write");
+        }
     }
 
     /**
@@ -291,6 +299,8 @@ public class BluetoothConnection {
                     mConnectedRemoteDevice = mRemoteDevice = mSocket.getRemoteDevice();
                 } catch (IOException e) {
                     Log.e(TAG, "AcceptThread: mServerSocket.accept(): " + e.getMessage());
+                    stopAllThreads();
+                    startAcceptThread(true);
                 }
                 if (mSocket != null) {
                     synchronized (BluetoothConnection.this) {
@@ -322,7 +332,8 @@ public class BluetoothConnection {
         public void cancel() {
             try {
                 Log.d(TAG, "AcceptThread: Closing server socket");
-                mServerSocket.close();
+                if (mServerSocket != null)
+                    mServerSocket.close();
                 Log.d(TAG, "AcceptThread: Server socket closed");
             } catch (IOException e) {
                 Log.e(TAG, "cancel:  mServerSocket.close(); failed. " + e.getMessage());
@@ -403,6 +414,9 @@ public class BluetoothConnection {
                     } catch (IOException e1) {
                         Log.e(TAG, "ConnectThread: mSocket.close(); failed. " + e1.getMessage());
                     }
+                    // Disconnection
+                    stopAllThreads();
+                    startAcceptThread(true);
                 }
 
                 // Once connected, reset ConnectThread
@@ -452,10 +466,12 @@ public class BluetoothConnection {
                 Log.d(TAG, "ConnectedThread: Getting input/output stream from the socket");
                 tmpIn = mmSocket.getInputStream();
                 tmpOut = mmSocket.getOutputStream();
-                mBTMsgArrayList = getmBTMsgArrayList();
+                mBTConversationArrayList = getmBTConversationArrayList();
+                mBTCommandArrayList = getmBTCommandArrayList();
+
+                // update BT connection status
                 setBTConnectionState(GlobalVariables.BT_CONNECTION_STATE_CONNECTED);
                 mHandler.obtainMessage(GlobalVariables.BT_CONNECTION_STATE_CHANGE, GlobalVariables.BT_CONNECTION_STATE_CONNECTED, 0).sendToTarget();
-                // update recycle view
             } catch (IOException e) {
                 setBTConnectionState(GlobalVariables.BT_CONNECTION_STATE_CONNECTING);
                 mHandler.obtainMessage(GlobalVariables.BT_CONNECTION_STATE_CHANGE, GlobalVariables.BT_CONNECTION_STATE_CONNECTING, 0).sendToTarget();
@@ -480,17 +496,26 @@ public class BluetoothConnection {
                     bytes = mmInStream.read(buffer);
                     String incomingMessage = new String(buffer, 0, bytes);
                     Log.d(TAG, "ConnectedThread: InputStream: " + incomingMessage);
-                    Log.d(TAG, "mBTMsgArrayList size: " + mBTMsgArrayList.size());
+                    Log.d(TAG, "mBTConversationArrayList size: " + mBTConversationArrayList.size());
+                    BluetoothMessageEntity mBluetoothMessageEntity;
+                    if (incomingMessage.contains("GRID")) {
+                        // command message received
+                        mBluetoothMessageEntity = new BluetoothMessageEntity(mConnectedRemoteDevice.getName(), "MDPGRP17", MESSAGE_COMMAND, incomingMessage);
+                        mBTCommandArrayList.add(mBluetoothMessageEntity);
+                    } else {
+                        mBluetoothMessageEntity = new BluetoothMessageEntity(mConnectedRemoteDevice.getName(), "MDPGRP17", MESSAGE_CONVERSATION, incomingMessage);
+                        mBTConversationArrayList.add(mBluetoothMessageEntity);
+                    }
 
-                    mBluetoothMessageEntity = new BluetoothMessageEntity(mConnectedRemoteDevice.getName(), "MDPGRP17", incomingMessage);
-                    mBTMsgArrayList.add(mBluetoothMessageEntity);
                     // mHandler.obtainMessage(GlobalVariables.MESSAGE_READ, bytes, -1, buffer).sendToTarget();
                     mHandler.obtainMessage(GlobalVariables.MESSAGE_READ, mBluetoothMessageEntity).sendToTarget();
                 } catch (IOException e) {
-                    // Disconnection
                     setBTConnectionState(GlobalVariables.BT_CONNECTION_STATE_LISTENING);
                     mHandler.obtainMessage(GlobalVariables.BT_CONNECTION_STATE_CHANGE, GlobalVariables.BT_CONNECTION_STATE_LISTENING, 0).sendToTarget();
                     Log.e(TAG, "ConnectedThread: Write: mmInStream.read(buffer); failed. " + e.getMessage());
+                    // Disconnection
+                    stopAllThreads();
+                    startAcceptThread(true);
                     break;
                 }
             }
@@ -498,14 +523,20 @@ public class BluetoothConnection {
         }
 
         //Call this from the main activity to send data to the remote device
-        public void write(byte[] bytes) {
-            String outgoingMessage = new String(bytes, Charset.defaultCharset());
+        public void write(BluetoothMessageEntity bluetoothMessageEntity) {
+            byte[] bytes = bluetoothMessageEntity.getMessageContent().getBytes();
+            String outgoingMessage = bluetoothMessageEntity.getMessageContent();
             try {
                 Log.d(TAG, "ConnectedThread: Writing to outputstream: " + outgoingMessage);
                 mmOutStream.write(bytes);
-                mBluetoothMessageEntity = new BluetoothMessageEntity("MDPGRP17", mConnectedRemoteDevice.getName(), outgoingMessage);
-                mBTMsgArrayList.add(mBluetoothMessageEntity);
-                mHandler.obtainMessage(GlobalVariables.MESSAGE_WRITE, mBluetoothMessageEntity).sendToTarget();
+
+                if (bluetoothMessageEntity.getMessageType() == MESSAGE_COMMAND) {
+                    mBTCommandArrayList.add(bluetoothMessageEntity);
+                }
+                if (bluetoothMessageEntity.getMessageType() == MESSAGE_CONVERSATION) {
+                    mBTConversationArrayList.add(bluetoothMessageEntity);
+                }
+                mHandler.obtainMessage(GlobalVariables.MESSAGE_WRITE, bluetoothMessageEntity).sendToTarget();
             } catch (IOException e) {
                 Log.e(TAG, "ConnectedThread: mmOutStream.write(bytes); failed. " + e.getMessage());
             }
