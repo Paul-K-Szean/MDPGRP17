@@ -48,6 +48,7 @@ import android.widget.Toast;
 
 import java.util.ArrayList;
 
+import static com.example.android.mdpgrp17_androidapp.GlobalVariables.BT_CONNECTION_STATE_CONNECTED;
 import static com.example.android.mdpgrp17_androidapp.GlobalVariables.CMD_FORWARD;
 import static com.example.android.mdpgrp17_androidapp.GlobalVariables.CMD_REVERSE;
 import static com.example.android.mdpgrp17_androidapp.GlobalVariables.CMD_ROTATELEFT;
@@ -311,7 +312,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 } else {
                     // FROM mRemoteDevice = receiver
                     textView_message.setBackgroundResource(R.color.receiver_background);
-                    textView_message.setText(bluetoothMessageEntity.getMessageContent());
+                    if (bluetoothMessageEntity.getMessageContent().contains("GRID")) {
+                        String displayMsg = "";
+                        textView_message.setText(displayMsg);
+                    } else {
+                        textView_message.setText(bluetoothMessageEntity.getMessageContent());
+                    }
                     RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) textView_message.getLayoutParams();
                     params.addRule(RelativeLayout.ALIGN_PARENT_LEFT);
                     params.width = ViewGroup.LayoutParams.WRAP_CONTENT;
@@ -343,7 +349,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         arena = new Arena(this, arenaGrid);
         arenaGrid.addView(arena);
 
-
+        if (mBluetoothConnection.getBTConnectionState() == BT_CONNECTION_STATE_CONNECTED) {
+            mBluetoothConnection.write(BluetoothMessageEntity.sendCommand(CMD_SENDARENAINFO));
+        }
     }
 
     private void hideVirtualKeyboard() {
@@ -383,7 +391,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         if (view.getId() == R.id.BTN_TestEncodeString) {
             Log.d(TAG, "Clicked On Others");
-            String encodedmsg = "GRID 20 15 12 7 270 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 1 1 1 0 0 0 0 1 1 1 1 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 1 1 1 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0";
+            String encodedmsg = "GRID 20 15 12 7 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 1 1 1 0 0 0 0 1 1 1 1 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 1 1 1 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0";
             updateGUI_ArenaGrid(encodedmsg);
         }
     }

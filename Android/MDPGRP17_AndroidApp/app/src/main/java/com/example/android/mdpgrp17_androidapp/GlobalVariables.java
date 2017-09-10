@@ -30,5 +30,12 @@ public class GlobalVariables {
     public static final int BT_CONNECTION_STATE_LISTENING = 5;
     public static final int BT_CONNECTION_STATE_CHANGE = 6;
     public static final int BT_CONNECTION_STATE_OFF = 7;
-    // Bluetooth
+
+    // Arena State
+    public static final int ARENA_GRID = 0;
+    public static final int ARENA_OBSTACLE = 1;
+    public static final int ARENA_ROBOTPOSITION = 2;
+    public static final int ARENA_ROBOTDIRECTION = 3;
+    public static final int ARENA_ROBOTTRAVELPATH = 4;
+
 }

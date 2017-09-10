@@ -252,8 +252,6 @@ public class BluetoothConnection {
 
         public AcceptThread(boolean isConnectionSecure) {
             Log.d(TAG, "AcceptThread: Started");
-            // Use a temporary object that is later assigned to mServerSocket
-            // because mServerSocket is final.
             BluetoothServerSocket tmp = null;
             this.isConnectionSecure = isConnectionSecure;
             // Create a new listening server socket
@@ -280,7 +278,6 @@ public class BluetoothConnection {
                 } else {
                     Log.e(TAG, "AcceptThread: mBluetoothAdapter.listenUsingInsecureRfcommWithServiceRecord(): " + e.getMessage());
                 }
-
             }
             mServerSocket = tmp;
         }
@@ -402,6 +399,7 @@ public class BluetoothConnection {
                     // successful connection or an exception
                     Log.d(TAG, "ConnectThread: Making connection with " + mSocket.getRemoteDevice().getName());
                     mSocket.connect();
+                    Log.d(TAG, "ConnectThread: Connected with " + mSocket.getRemoteDevice().getName());
                     mConnectedRemoteDevice = mRemoteDevice;
                 } catch (IOException e) {
                     setBTConnectionState(GlobalVariables.BT_CONNECTION_STATE_LISTENING);
@@ -482,7 +480,6 @@ public class BluetoothConnection {
             mmOutStream = tmpOut;
         }
 
-        // TODO: seperate Conversation and Command list
         public void run() {
             Log.d(TAG, "ConnectedThread: Running");
             Log.d(TAG, "ConnectedThread: BluetoothSocket: " + mmSocket.toString());

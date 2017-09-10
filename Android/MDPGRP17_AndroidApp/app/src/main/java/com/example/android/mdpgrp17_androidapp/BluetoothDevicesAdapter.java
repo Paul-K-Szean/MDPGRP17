@@ -103,7 +103,6 @@ public class BluetoothDevicesAdapter extends RecyclerView.Adapter<RecyclerView.V
                         Log.d(TAG, "onClick: Pairing with " + mRemoteDevice.getName());
                         // pairDevice(mRemoteDevice);
                         mBluetoothConnection.startConnectThread(mRemoteDevice, true);
-
                     }
                     break;
             }
@@ -134,8 +133,11 @@ public class BluetoothDevicesAdapter extends RecyclerView.Adapter<RecyclerView.V
             device_status.setText("Connected");
             device_unpair.setVisibility(View.VISIBLE);
         } else if (currentBTConnectionState == mBluetoothAdapter.STATE_CONNECTING && mRemoteDevice.getBondState() == BluetoothDevice.BOND_BONDED) {
-            Log.d(TAG, "Paired and connecting with " + mRemoteDevice.getName());
-            device_status.setText("Connecting");
+            if (mRemoteDevice == mBluetoothConnection.getConnectedRemoteDevice())
+            {
+                Log.d(TAG, "Paired and connecting with " + mRemoteDevice.getName());
+                device_status.setText("Connecting");
+            }
         } else {
             // device_status.setText("Not Connected");
             // back to none/bonding/bonded

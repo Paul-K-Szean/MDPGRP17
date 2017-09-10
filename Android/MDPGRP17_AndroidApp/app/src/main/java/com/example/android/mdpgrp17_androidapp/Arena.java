@@ -9,6 +9,11 @@ import android.util.Log;
 import android.view.View;
 import android.widget.RelativeLayout;
 
+import static com.example.android.mdpgrp17_androidapp.GlobalVariables.ARENA_GRID;
+import static com.example.android.mdpgrp17_androidapp.GlobalVariables.ARENA_OBSTACLE;
+import static com.example.android.mdpgrp17_androidapp.GlobalVariables.ARENA_ROBOTDIRECTION;
+import static com.example.android.mdpgrp17_androidapp.GlobalVariables.ARENA_ROBOTPOSITION;
+
 /**
  * Created by szean on 8/9/2017.
  */
@@ -23,6 +28,7 @@ public class Arena extends View {
     private int robotsize = 3;
     private int[][] obstacleArray = new int[20][15];
     private int[][] robotArray = new int[3][3];
+    private int[][] arenaInfo = new int[20][15];
     private int X;
     private int Y;
     private int _X;
@@ -30,7 +36,7 @@ public class Arena extends View {
     private Paint paint;
     private ArenaThread arenaThread;
     private int gridSize;
-    private int[] arenaInfo = new int[300];
+    private int[] arenaInfoString = new int[300];
     private RelativeLayout arenaGrid;
 
 
@@ -58,79 +64,24 @@ public class Arena extends View {
     }
 
     private void drawArenaGrid(int gridSize, Canvas canvas) {
-        int robotPosition_row_copy = robotPosition_row;
-        int robotPosition_col_copy = robotPosition_col;
-        int robotDirection_head_row = robotPosition_row;
-        int robotDirection_head_col = robotPosition_col;
-        int robotDirection_body = 3;
-        boolean isUpDown = false;
-
-        // set robot direction
-        if (robotDirection == 0) { // up
-            robotDirection_head_row = robotPosition_row;
-            robotDirection_head_col = robotPosition_col + 1;
-            robotDirection_body = robotPosition_row + 1;
-            isUpDown = true;
-        }
-        if (robotDirection == 90) { // right
-            robotDirection_head_row = robotPosition_row + 1;
-            robotDirection_head_col = robotPosition_col + 2;
-            robotDirection_body = robotPosition_col + 1;
-        }
-        if (robotDirection == 180) { // down
-            robotDirection_head_row = robotPosition_row + 2;
-            robotDirection_head_col = robotPosition_col + 1;
-            robotDirection_body = robotPosition_row + 1;
-            isUpDown = true;
-        }
-        if (robotDirection == 270) { // left
-            robotDirection_head_row = robotPosition_row + 1;
-            robotDirection_head_col = robotPosition_col;
-            robotDirection_body = robotPosition_col + 1;
-        }
 
         for (int rowIndex = 1; rowIndex <= row; rowIndex++) {
             for (int colIndex = 1; colIndex <= col; colIndex++) {
                 // draw grid
-                drawCell(rowIndex, colIndex, gridSize, Color.parseColor("#295398"), canvas);  // blue
-
-                // draw robot
-                if (rowIndex == robotPosition_row_copy && colIndex == robotPosition_col_copy) {
-                    if (robotsize > 0) {
-                        for (int colIndexCount = robotPosition_col_copy; colIndexCount <= robotPosition_col_copy + 2; colIndexCount++) {
-                            drawCell(robotPosition_row_copy, colIndexCount, gridSize, Color.parseColor("#ffa500"), canvas); // light orange
-
-                            // draw head
-                            if (rowIndex == robotDirection_head_row && colIndexCount == robotDirection_head_col) {
-                                drawCell(robotDirection_head_row, robotDirection_head_col, gridSize, Color.parseColor("#954bcc"), canvas); // teal
-                            }
-                            // draw body
-                            if (isUpDown) {
-                                if (rowIndex == robotDirection_body) {
-                                    if (colIndexCount != robotDirection_head_col) // remove center of body
-                                        drawCell(robotDirection_body, colIndexCount, gridSize, Color.parseColor("#4b0082"), canvas); // chocolate
-                                }
-                            } else {
-                                if (rowIndex == robotPosition_row_copy && colIndexCount == robotDirection_body) {
-                                    if (rowIndex != robotDirection_head_row) // remove center of body
-                                        drawCell(robotPosition_row_copy, colIndexCount, gridSize, Color.parseColor("#4b0082"), canvas); // chocolate
-                                }
-                            }
-                        }
-                        colIndex += 2; // skip col to draw
-                        robotPosition_row_copy++;    // to draw next row for
-                        robotsize--;
-                    } else {
-                        // reset
-                        robotPosition_row_copy = robotPosition_row;
-                        robotPosition_col_copy = robotPosition_col;
-                        robotsize = 3;
-                    }
+                if (Integer.valueOf(arenaInfo[rowIndex - 1][colIndex - 1]) == ARENA_GRID) {
+                    drawCell(rowIndex, colIndex, gridSize, Color.parseColor("#295398"), canvas);  // blue
                 }
 
-
+                // draw robot position
+                if (Integer.valueOf(arenaInfo[rowIndex - 1][colIndex - 1]) == ARENA_ROBOTPOSITION) {
+                    drawCell(rowIndex, colIndex, gridSize, Color.parseColor("#FF8C00"), canvas); // dark orange
+                }
+                // draw robot direction
+                if (Integer.valueOf(arenaInfo[rowIndex - 1][colIndex - 1]) == ARENA_ROBOTDIRECTION) {
+                    drawCell(rowIndex, colIndex, gridSize, Color.parseColor("#9932CC"), canvas); // dark orchid
+                }
                 // draw obstacle
-                if (Integer.valueOf(obstacleArray[rowIndex - 1][colIndex - 1]) == 1) {
+                if (Integer.valueOf(arenaInfo[rowIndex - 1][colIndex - 1]) == ARENA_OBSTACLE) {
                     drawCell(rowIndex, colIndex, gridSize, Color.parseColor("#e33054"), canvas); // red
                 }
             }
@@ -168,14 +119,68 @@ public class Arena extends View {
         robotDirection = Integer.valueOf(splitArenaInfoArray[5]);
 
         for (int count = 0; count < splitArenaInfoArray.length - 6; count++) {
-            arenaInfo[count] = Integer.valueOf(splitArenaInfoArray[count + 6]);
+            arenaInfoString[count] = Integer.valueOf(splitArenaInfoArray[count + 6]);
         }
 
         for (int rowIndex = 1; rowIndex <= row; rowIndex++) {
             for (int colIndex = 1; colIndex <= col; colIndex++) {
-                obstacleArray[rowIndex - 1][colIndex - 1] = arenaInfo[((colIndex - 1) + (rowIndex - 1) * 15)];
+                // set obstacles and the grid
+                arenaInfo[rowIndex - 1][colIndex - 1] = arenaInfoString[((colIndex - 1) + (rowIndex - 1) * 15)];
             }
         }
+        for (int rowIndex = robotPosition_row; rowIndex <= robotPosition_row + 2; rowIndex++) {
+            for (int colIndex = robotPosition_col; colIndex <= robotPosition_col + 2; colIndex++) {
+                // set robot position
+                arenaInfo[rowIndex - 1][colIndex - 1] = ARENA_ROBOTPOSITION;
+            }
+        }
+
+        // set robot direction
+        robotsize = 3;
+
+        int robotDirection_head_row;
+        int robotDirection_head_col;
+        int robotDirection_body = 3;
+        boolean isUpDown = false;
+
+        // set robot direction head
+        if (robotDirection == 0) { // up
+            robotDirection_head_row = robotPosition_row;
+            robotDirection_head_col = robotPosition_col + 1;
+            robotDirection_body = robotPosition_row + 1;
+            arenaInfo[robotDirection_head_row - 1][robotDirection_head_col - 1] = ARENA_ROBOTDIRECTION;
+            isUpDown = true;
+        }
+        if (robotDirection == 90) { // right
+            robotDirection_head_row = robotPosition_row + 1;
+            robotDirection_head_col = robotPosition_col + 2;
+            robotDirection_body = robotPosition_col + 1;
+            arenaInfo[robotDirection_head_row - 1][robotDirection_head_col - 1] = ARENA_ROBOTDIRECTION;
+        }
+        if (robotDirection == 180) { // down
+            robotDirection_head_row = robotPosition_row + 2;
+            robotDirection_head_col = robotPosition_col + 1;
+            robotDirection_body = robotPosition_row + 1;
+            arenaInfo[robotDirection_head_row - 1][robotDirection_head_col - 1] = ARENA_ROBOTDIRECTION;
+            isUpDown = true;
+        }
+        if (robotDirection == 270) { // left
+            robotDirection_head_row = robotPosition_row + 1;
+            robotDirection_head_col = robotPosition_col;
+            robotDirection_body = robotPosition_col + 1;
+            arenaInfo[robotDirection_head_row - 1][robotDirection_head_col - 1] = ARENA_ROBOTDIRECTION; // head
+        }
+        // set robot direction body
+        if (isUpDown) {
+            for (int colIndexCount = robotPosition_col; colIndexCount <= robotPosition_col + 2; colIndexCount++) {
+                arenaInfo[robotDirection_body - 1][colIndexCount - 1] = ARENA_ROBOTDIRECTION; // body
+            }
+        } else {
+            for (int rowIndexCount = robotPosition_row; rowIndexCount <= robotPosition_row + 2; rowIndexCount++) {
+                arenaInfo[rowIndexCount - 1][robotDirection_body - 1] = ARENA_ROBOTDIRECTION; // body
+            }
+        }
+
     }
 
 }
