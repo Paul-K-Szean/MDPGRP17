@@ -1,5 +1,8 @@
 package com.example.android.mdpgrp17_androidapp;
 
+import android.util.Log;
+
+import static android.content.ContentValues.TAG;
 import static com.example.android.mdpgrp17_androidapp.GlobalVariables.MESSAGE_COMMAND;
 import static com.example.android.mdpgrp17_androidapp.GlobalVariables.MESSAGE_CONVERSATION;
 import static com.example.android.mdpgrp17_androidapp.GlobalVariables.MESSAGE_FROM;
@@ -57,6 +60,7 @@ public class BluetoothMessageEntity {
     }
 
     public static BluetoothMessageEntity sendCommand(String commandString) {
+        Log.d(TAG,"sendCommand: ");
         BluetoothConnection mBluetoothConnection = BluetoothConnection.getmBluetoothConnection(null);
         return new BluetoothMessageEntity(MESSAGE_FROM, mBluetoothConnection.getConnectedRemoteDevice().getName(), MESSAGE_COMMAND, commandString);
     }

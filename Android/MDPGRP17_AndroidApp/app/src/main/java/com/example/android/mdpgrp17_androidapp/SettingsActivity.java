@@ -17,27 +17,31 @@ import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import static com.example.android.mdpgrp17_androidapp.GlobalVariables.BT_CONNECTION_STATE_CONNECTED;
+import static com.example.android.mdpgrp17_androidapp.GlobalVariables.BT_CONNECTION_STATE_IDLE;
+import static com.example.android.mdpgrp17_androidapp.GlobalVariables.CMD_SENDARENAINFO;
 
 public class SettingsActivity extends AppCompatActivity {
     private static final String TAG = "SettingsActivity";
     private BluetoothConnection mBluetoothConnection;
     private BluetoothAdapter mBluetoothAdapter;
     private ChatFragment chatFragment;
+    private Menu menu;
 
     // Add Fragments to Tabs
     private void setupViewPager(ViewPager viewPager) {
         Log.d(TAG, "setupViewPager");
         Adapter adapter = new Adapter(getSupportFragmentManager());
-        if (mBluetoothConnection.getBTConnectionState() == GlobalVariables.BT_CONNECTION_STATE_CONNECTED) {
-            chatFragment = new ChatFragment();
-            adapter.addFragment(chatFragment, "Chat");
-        }
-        adapter.addFragment(new OthersFragment(), "Functions");
-        adapter.addFragment(new OthersFragment(), "Others");
+
+        adapter.addFragment(new ChatFragment(), "Chat");
+        adapter.addFragment(new FunctionFragment(), "Functions");
 
         viewPager.setAdapter(adapter);
     }
@@ -69,6 +73,47 @@ public class SettingsActivity extends AppCompatActivity {
         public CharSequence getPageTitle(int position) {
             return mFragmentTitleList.get(position);
         }
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        this.menu = menu;
+        getMenuInflater().inflate(R.menu.menu_main, menu);
+        Log.d(TAG, "onCreateOptionsMenu");
+        updateGUI_MenuIcon();
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        // Handle action bar item clicks here. The action bar will
+        // automatically handle clicks on the Home/Up button, so long
+        // as you specify a parent activity in AndroidManifest.xml.
+        int id = item.getItemId();
+        //noinspection SimplifiableIfStatement
+        if (id == R.id.action_settings_bluetooth) {
+            Intent intent_bluetooth = new Intent(this, BluetoothActivity.class);
+            startActivity(intent_bluetooth);
+        } else if (id == R.id.action_settings) {
+            Intent intent_settings = new Intent(this, SettingsActivity.class);
+            startActivity(intent_settings);
+
+        } else if (id == R.id.action_settings_bluetooth_reconnect) {
+            if (mBluetoothConnection.getConnectedRemoteDevice() != null) {
+                mBluetoothConnection.startConnectThread(mBluetoothConnection.getConnectedRemoteDevice(), true);
+            } else {
+                showToast("You have not connected to any device yet.");
+            }
+        }
+        Log.d(TAG, "onOptionsItemSelected");
+        return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {
+        Log.d(TAG, "onPrepareOptionsMenu");
+        return super.onPrepareOptionsMenu(menu);
     }
 
     @Override
@@ -123,14 +168,26 @@ public class SettingsActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         Log.d(TAG, "onResume");
-        mBluetoothConnection = BluetoothConnection.getmBluetoothConnection(mHandler);
-        mBluetoothConnection.setHandler(mHandler);
         if (mBluetoothAdapter.isEnabled()) {
-            if (mBluetoothConnection != null) {
-                Log.d(TAG, "onResume: BT ON");
-                checkBTConectionState();
+            Log.d(TAG, "onResume: BT on");
+            // BT on
+            mBluetoothConnection = BluetoothConnection.getmBluetoothConnection(mHandler);
+            mBluetoothConnection.setHandler(mHandler);
+            int checkBTCurrentstate = mBluetoothConnection.getBTConnectionState();
+            if (checkBTCurrentstate == BT_CONNECTION_STATE_IDLE) {
+                mBluetoothConnection.startAcceptThread(true);
             }
-        } else Log.d(TAG, "onResume: BT OFF");
+            if (checkBTCurrentstate == BT_CONNECTION_STATE_CONNECTED) {
+                mBluetoothConnection.write(BluetoothMessageEntity.sendCommand(CMD_SENDARENAINFO));
+            }
+            updateGUI_ToolBar_BTConnectionState();
+            updateGUI_MenuIcon();
+        } else {
+            // BT off
+            Log.d(TAG, "onResume: BT off");
+        }
+
+
         super.onResume();
     }
 
@@ -167,6 +224,71 @@ public class SettingsActivity extends AppCompatActivity {
 
     private void showToast(String message) {
         Toast.makeText(getApplicationContext(), message, Toast.LENGTH_SHORT).show();
+    }
+
+    private void updateGUI_MenuIcon() {
+        Log.d(TAG, "updateMenuIcon");
+        // update GUI menu icon
+        if (menu != null) {
+            if (mBluetoothAdapter != null && mBluetoothConnection != null) {
+                if (mBluetoothAdapter.isEnabled()) {
+                    menu.findItem(R.id.action_settings_bluetooth).setIcon(R.drawable.ic_bluetooth_black_24dp); // default
+                    int currentBTConnectionState = mBluetoothConnection.getBTConnectionState();
+                    if (currentBTConnectionState == GlobalVariables.BT_CONNECTION_STATE_DISCONNECTED) {
+                        // default
+                    } else if (currentBTConnectionState == GlobalVariables.BT_CONNECTION_STATE_CONNECTING) {
+                        menu.findItem(R.id.action_settings_bluetooth).setIcon(R.drawable.ic_bluetooth_searching_black_24dp);
+                    } else if (currentBTConnectionState == BT_CONNECTION_STATE_CONNECTED) {
+                        menu.findItem(R.id.action_settings_bluetooth).setIcon(R.drawable.ic_bluetooth_connected_black_24dp);
+                    } else if (currentBTConnectionState == GlobalVariables.BT_CONNECTION_STATE_DISCONNECTING) {
+                        // default
+                    } else if (currentBTConnectionState == BT_CONNECTION_STATE_IDLE) {
+                        // default
+                    } else if (currentBTConnectionState == GlobalVariables.BT_CONNECTION_STATE_LISTENING) {
+                        // default
+                    }
+                } else {
+                    // BT OFF
+                    menu.findItem(R.id.action_settings_bluetooth).setIcon(R.drawable.ic_bluetooth_disabled_black_24dp);
+                }
+            }
+        } else {
+            Log.e(TAG, "updateMenuIcon: Menu was null");
+        }
+    }
+
+    private void updateGUI_ToolBar_BTConnectionState() {
+        int checkCurrentConnectionState = mBluetoothConnection.getBTConnectionState();
+        getSupportActionBar().setSubtitle("No device connected");// default status
+        switch (checkCurrentConnectionState) {
+            case GlobalVariables.BT_CONNECTION_STATE_DISCONNECTED:
+                Log.d(TAG, "updateGUI_ToolBar_BTConnectionState: BT connection state: BT_CONNECTION_STATE_DISCONNECTED");
+                break;
+            case GlobalVariables.BT_CONNECTION_STATE_CONNECTING:
+                Log.d(TAG, "updateGUI_ToolBar_BTConnectionState: BT connection state: BT_CONNECTION_STATE_CONNECTING");
+                break;
+            case BT_CONNECTION_STATE_CONNECTED:
+                Log.d(TAG, "updateGUI_ToolBar_BTConnectionState: BT connection state: BT_CONNECTION_STATE_CONNECTED");
+                if (mBluetoothConnection.getConnectedRemoteDevice() != null) {
+                    getSupportActionBar().setSubtitle("Connected to " + mBluetoothConnection.getConnectedRemoteDevice().getName());
+                } else {
+                    Log.e(TAG, "updateGUI_ToolBar_BTConnectionState: No device connected. Unable to find connected device");
+                    getSupportActionBar().setSubtitle("No device connected");
+                }
+                break;
+            case GlobalVariables.BT_CONNECTION_STATE_DISCONNECTING:
+                Log.d(TAG, "updateGUI_ToolBar_BTConnectionState: BT connection state: BT_CONNECTION_STATE_DISCONNECTING");
+                break;
+            case BT_CONNECTION_STATE_IDLE:
+                Log.d(TAG, "updateGUI_ToolBar_BTConnectionState: BT connection state: BT_CONNECTION_STATE_IDLE");
+                break;
+            case GlobalVariables.BT_CONNECTION_STATE_LISTENING:
+                Log.d(TAG, "updateGUI_ToolBar_BTConnectionState: BT connection state: BT_CONNECTION_STATE_LISTENING");
+                break;
+            case GlobalVariables.BT_CONNECTION_STATE_OFF:
+                Log.d(TAG, "updateGUI_ToolBar_BTConnectionState: BT connection state: BT_CONNECTION_STATE_OFF");
+                break;
+        }
     }
 
     private final Handler mHandler = new Handler() {
@@ -229,7 +351,6 @@ public class SettingsActivity extends AppCompatActivity {
                     break;
                 case BluetoothDevice.ACTION_ACL_DISCONNECTED:
                     Log.d(TAG, "onReceive: ACTION_ACL_DISCONNECTED");
-
                     break;
                 case BluetoothDevice.ACTION_ACL_DISCONNECT_REQUESTED:
                     Log.d(TAG, "onReceive: ACTION_ACL_DISCONNECT_REQUESTED");
@@ -247,7 +368,7 @@ public class SettingsActivity extends AppCompatActivity {
             case GlobalVariables.BT_CONNECTION_STATE_CONNECTING:
                 Log.d(TAG, "checkBTConectionState: BT connection state: BT_CONNECTION_STATE_CONNECTING");
                 break;
-            case GlobalVariables.BT_CONNECTION_STATE_CONNECTED:
+            case BT_CONNECTION_STATE_CONNECTED:
                 Log.d(TAG, "checkBTConectionState: BT connection state: BT_CONNECTION_STATE_CONNECTED");
                 if (mBluetoothConnection.getConnectedRemoteDevice() != null) {
                     getSupportActionBar().setSubtitle("Connected to " + mBluetoothConnection.getConnectedRemoteDevice().getName());
@@ -259,7 +380,7 @@ public class SettingsActivity extends AppCompatActivity {
             case GlobalVariables.BT_CONNECTION_STATE_DISCONNECTING:
                 Log.d(TAG, "checkBTConectionState: BT connection state: BT_CONNECTION_STATE_DISCONNECTING");
                 break;
-            case GlobalVariables.BT_CONNECTION_STATE_IDLE:
+            case BT_CONNECTION_STATE_IDLE:
                 Log.d(TAG, "checkBTConectionState: BT connection state: BT_CONNECTION_STATE_IDLE");
                 mBluetoothConnection.startAcceptThread(true);
                 getSupportActionBar().setSubtitle("No device connected");

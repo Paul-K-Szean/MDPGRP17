@@ -36,35 +36,26 @@ public class BluetoothConnection {
     private static final UUID MY_UUID_INSECURE = UUID.fromString("00001101-0000-1000-8000-00805f9b34fb");
     private static final UUID REMOTE_UUID_SECURE = MY_UUID_SECURE;
     private static final UUID REMOTE_UUID_INSECURE = MY_UUID_INSECURE;
-
+    private static BluetoothConnection mBluetoothConnection;
+    private final BluetoothAdapter mBluetoothAdapter;
     private AcceptThread mSecureAcceptThread;
     private AcceptThread mInSecureAcceptThread;
     private ConnectThread mConnectThread;
     private ConnectedThread mConnectedThread;
-
-    private final BluetoothAdapter mBluetoothAdapter;
     private BluetoothDevice mConnectedRemoteDevice;   // connected remote device
-
     private int mBTCurrentState;
     private Handler mHandler;
+    private ArrayList<BluetoothMessageEntity> mBTConversationArrayList;
+    private ArrayList<BluetoothMessageEntity> mBTCommandArrayList;
 
     // constructor
     public BluetoothConnection(Handler mHandler) {
-        int checkCurrentState = getBTConnectionState();
-        Log.d(TAG, "BluetoothConnection: getBTConnectionState(): " + checkCurrentState);
-        if (checkCurrentState != GlobalVariables.BT_CONNECTION_STATE_LISTENING ||
-                checkCurrentState != GlobalVariables.BT_CONNECTION_STATE_CONNECTED)
-            this.mBTCurrentState = GlobalVariables.BT_CONNECTION_STATE_IDLE;
+        Log.d(TAG, "BluetoothConnection");
+
         this.mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         this.mHandler = mHandler;
+        this.mBTCurrentState = GlobalVariables.BT_CONNECTION_STATE_IDLE;
     }
-
-    public void setHandler(Handler handler) {
-        Log.d(TAG, "setHandler");
-        mHandler = handler;
-    }
-
-    private static BluetoothConnection mBluetoothConnection;
 
     public static BluetoothConnection getmBluetoothConnection(Handler mHandler) {
         if (mBluetoothConnection == null) {
@@ -74,7 +65,10 @@ public class BluetoothConnection {
         return mBluetoothConnection;
     }
 
-    private ArrayList<BluetoothMessageEntity> mBTConversationArrayList;
+    public void setHandler(Handler handler) {
+        Log.d(TAG, "setHandler");
+        mHandler = handler;
+    }
 
     public ArrayList<BluetoothMessageEntity> getmBTConversationArrayList() {
         if (mBTConversationArrayList == null) {
@@ -84,8 +78,6 @@ public class BluetoothConnection {
         Log.d(TAG, "getmBTConversationArrayList: mBTConversationArrayList was not null, size: " + mBTConversationArrayList.size() + ", returned mBTConversationArrayList");
         return mBTConversationArrayList;
     }
-
-    private ArrayList<BluetoothMessageEntity> mBTCommandArrayList;
 
     public ArrayList<BluetoothMessageEntity> getmBTCommandArrayList() {
         if (mBTCommandArrayList == null) {
@@ -122,11 +114,17 @@ public class BluetoothConnection {
             if (mSecureAcceptThread == null) {
                 mSecureAcceptThread = new AcceptThread(isSecureConnection);
                 mSecureAcceptThread.start();
+            } else {
+                Log.d(TAG, "mSecureAcceptThread: Accept thread already started");
+                Log.d(TAG, "mSecureAcceptThread: " + mSecureAcceptThread.getName());
             }
         } else {
             if (mInSecureAcceptThread == null) {
                 mInSecureAcceptThread = new AcceptThread(isSecureConnection);
                 mInSecureAcceptThread.start();
+            } else {
+                Log.d(TAG, "mInSecureAcceptThread: Accept thread already started");
+                Log.d(TAG, "mInSecureAcceptThread: " + mSecureAcceptThread.toString());
             }
         }
     }
@@ -220,14 +218,38 @@ public class BluetoothConnection {
             mInSecureAcceptThread = null;
         }
 
-        setBTConnectionState(GlobalVariables.BT_CONNECTION_STATE_OFF);
-        mHandler.obtainMessage(GlobalVariables.BT_CONNECTION_STATE_CHANGE, GlobalVariables.BT_CONNECTION_STATE_OFF);
+        setBTConnectionState(GlobalVariables.BT_CONNECTION_STATE_IDLE);
+        mHandler.obtainMessage(GlobalVariables.BT_CONNECTION_STATE_CHANGE, GlobalVariables.BT_CONNECTION_STATE_IDLE);
     }
+
+    public synchronized void disconnect() {
+        Log.d(TAG, "disconnect");
+        if (mConnectThread != null) {
+            mConnectThread.cancel();
+            mConnectThread = null;
+        }
+
+        if (mConnectedThread != null) {
+            mConnectedThread.disconnect();
+            mConnectedThread = null;
+        }
+
+        if (mSecureAcceptThread != null) {
+            mSecureAcceptThread.cancel();
+            mSecureAcceptThread = null;
+        }
+
+        if (mInSecureAcceptThread != null) {
+            mInSecureAcceptThread.cancel();
+            mInSecureAcceptThread = null;
+        }
+    }
+
 
     /**
      * Write to the ConnectedThread in an unsynchronized manner
      */
-    public void write(BluetoothMessageEntity bluetoothMessageEntity) {
+    public synchronized void write(BluetoothMessageEntity bluetoothMessageEntity) {
         if (bluetoothMessageEntity.getMessageContent().length() > 0) {
             // Synchronize a copy of the ConnectedThread
             Log.d(TAG, "Write");
@@ -236,6 +258,62 @@ public class BluetoothConnection {
         } else {
             Log.d(TAG, "Write: Nothing to write");
         }
+    }
+
+    public synchronized int getBTConnectionState() {
+        // 0 = disconnected, 1 = connecting, 2 = connected, 3 = disconnecting, 4 = idle, 5 = listening, 6 = state changed
+        switch (mBTCurrentState) {
+            case 0:
+                Log.d(TAG, "getBTConnectionState: Current State: BT_CONNECTION_STATE_DISCONNECTED (" + mBTCurrentState + ")");
+                break;
+            case 1:
+                Log.d(TAG, "getBTConnectionState: Current State: BT_CONNECTION_STATE_CONNECTING (" + mBTCurrentState + ")");
+                break;
+            case 2:
+                Log.d(TAG, "getBTConnectionState: Current State: BT_CONNECTION_STATE_CONNECTED (" + mBTCurrentState + ")");
+                break;
+            case 3:
+                Log.d(TAG, "getBTConnectionState: Current State: BT_CONNECTION_STATE_DISCONNECTING (" + mBTCurrentState + ")");
+                break;
+            case 4:
+                Log.d(TAG, "getBTConnectionState: Current State: BT_CONNECTION_STATE_IDLE (" + mBTCurrentState + ")");
+                break;
+            case 5:
+                Log.d(TAG, "getBTConnectionState: Current State: BT_CONNECTION_STATE_LISTENING (" + mBTCurrentState + ")");
+                break;
+            case 6:
+                Log.d(TAG, "getBTConnectionState: Current State: BT_CONNECTION_STATE_CHANGE (" + mBTCurrentState + ")");
+                break;
+        }
+        return mBTCurrentState;
+    }
+
+    public synchronized void setBTConnectionState(int newState) {
+        if (mBTCurrentState != newState) {
+            Log.d(TAG, "setBTConnectionState: State changed: " + mBTCurrentState + " -> " + newState);
+            Log.d(TAG, "States(BT_CONNECTION_STATE_DISCONNECTED = 0, BT_CONNECTION_STATE_CONNECTING = 1, " +
+                    "BT_CONNECTION_STATE_CONNECTED = 2, BT_CONNECTION_STATE_DISCONNECTING = 3, " +
+                    "BT_CONNECTION_STATE_IDLE = 4, BT_CONNECTION_STATE_LISTENING = 5, " +
+                    "BT_CONNECTION_STATE_CHANGE = 6");
+            mBTCurrentState = newState;
+        } else {
+            Log.d(TAG, "setBTConnectionState: Already in this state: " + mBTCurrentState);
+        }
+        // Give the new state to the Handler so the UI Activity can update
+        // if(newState==BT_CONNECTION_STATE_CONNECTED)
+
+    }
+
+    public BluetoothDevice getConnectedRemoteDevice() {
+        if (mConnectedRemoteDevice != null)
+            return mConnectedRemoteDevice;
+        else {
+            return null;
+        }
+    }
+
+    public void setConnectedRemoteDevice(BluetoothDevice bluetoothDevice) {
+        this.mConnectedRemoteDevice = bluetoothDevice;
     }
 
     /**
@@ -256,7 +334,6 @@ public class BluetoothConnection {
             this.isConnectionSecure = isConnectionSecure;
             // Create a new listening server socket
             try {
-
                 if (isConnectionSecure) {
                     tmp = mBluetoothAdapter.listenUsingRfcommWithServiceRecord(SERVERNAME_SECURE, MY_UUID_SECURE);
                     Log.d(TAG, "AcceptThread: isConnectionSecure: " + isConnectionSecure + ". Using: " + MY_UUID_SECURE);
@@ -264,7 +341,7 @@ public class BluetoothConnection {
                     tmp = mBluetoothAdapter.listenUsingInsecureRfcommWithServiceRecord(SERVERNAME_INSECURE, MY_UUID_INSECURE);
                     Log.d(TAG, "AcceptThread: isConnectionSecure: " + isConnectionSecure + ". Using: " + MY_UUID_INSECURE);
                 }
-                Log.d(TAG, "AcceptThread: mServerSocket: " + tmp.toString());
+                Log.d(TAG, "AcceptThread: RFCOM server socket: " + tmp.toString());
                 if (mBTCurrentState != GlobalVariables.BT_CONNECTION_STATE_LISTENING) {
                     setBTConnectionState(GlobalVariables.BT_CONNECTION_STATE_LISTENING);
                     mHandler.obtainMessage(GlobalVariables.BT_CONNECTION_STATE_CHANGE, GlobalVariables.BT_CONNECTION_STATE_LISTENING, 0).sendToTarget();
@@ -292,19 +369,16 @@ public class BluetoothConnection {
                     Log.d(TAG, "AcceptThread: RFCOM server socket accepted a connection. Remote device: " + mSocket.getRemoteDevice().getName());
                     Log.d(TAG, "AcceptThread: RFCOM server socket: " + mServerSocket.toString());
                     Log.d(TAG, "AcceptThread:  BluetoothSocket: " + mSocket.toString());
-
                     mConnectedRemoteDevice = mRemoteDevice = mSocket.getRemoteDevice();
                 } catch (IOException e) {
                     Log.e(TAG, "AcceptThread: mServerSocket.accept(): " + e.getMessage());
-                    stopAllThreads();
-                    startAcceptThread(true);
                 }
                 if (mSocket != null) {
                     synchronized (BluetoothConnection.this) {
                         switch (mBTCurrentState) {
                             case BT_CONNECTION_STATE_LISTENING:
                             case BT_CONNECTION_STATE_CONNECTING:
-                                // Situation normal. Start the connected thread.
+                                // Start the connected thread.
                                 startConnectedThread(mSocket, mSocket.getRemoteDevice(), isConnectionSecure);
                                 break;
                             case BT_CONNECTION_STATE_IDLE:
@@ -412,8 +486,7 @@ public class BluetoothConnection {
                     } catch (IOException e1) {
                         Log.e(TAG, "ConnectThread: mSocket.close(); failed. " + e1.getMessage());
                     }
-                    // Disconnection
-                    stopAllThreads();
+                    // connection failed
                     startAcceptThread(true);
                 }
 
@@ -467,6 +540,12 @@ public class BluetoothConnection {
                 mBTConversationArrayList = getmBTConversationArrayList();
                 mBTCommandArrayList = getmBTCommandArrayList();
 
+                ConfigFileHandler configFileHandler = new ConfigFileHandler();
+                ConfigFile configFile = configFileHandler.getConfigFile();
+                configFile.getBluetoothConfig().setLastConnectedDevice(mConnectedRemoteDevice);
+                configFile.getBluetoothConfig().setLastConnectedDevice_Name(mConnectedRemoteDevice.getName());
+                configFile.getBluetoothConfig().setLastConnectedDevice_MACAddress(mConnectedRemoteDevice.getAddress());
+                configFileHandler.writeToExternalStorage(configFile);
                 // update BT connection status
                 setBTConnectionState(GlobalVariables.BT_CONNECTION_STATE_CONNECTED);
                 mHandler.obtainMessage(GlobalVariables.BT_CONNECTION_STATE_CHANGE, GlobalVariables.BT_CONNECTION_STATE_CONNECTED, 0).sendToTarget();
@@ -493,9 +572,8 @@ public class BluetoothConnection {
                     bytes = mmInStream.read(buffer);
                     String incomingMessage = new String(buffer, 0, bytes);
                     Log.d(TAG, "ConnectedThread: InputStream: " + incomingMessage);
-                    Log.d(TAG, "mBTConversationArrayList size: " + mBTConversationArrayList.size());
                     BluetoothMessageEntity mBluetoothMessageEntity;
-                    if (incomingMessage.contains("GRID")) {
+                    if (incomingMessage.contains("GRID ")) {
                         // command message received
                         mBluetoothMessageEntity = new BluetoothMessageEntity(mConnectedRemoteDevice.getName(), "MDPGRP17", MESSAGE_COMMAND, incomingMessage);
                         mBTCommandArrayList.add(mBluetoothMessageEntity);
@@ -511,7 +589,6 @@ public class BluetoothConnection {
                     mHandler.obtainMessage(GlobalVariables.BT_CONNECTION_STATE_CHANGE, GlobalVariables.BT_CONNECTION_STATE_LISTENING, 0).sendToTarget();
                     Log.e(TAG, "ConnectedThread: Write: mmInStream.read(buffer); failed. " + e.getMessage());
                     // Disconnection
-                    stopAllThreads();
                     startAcceptThread(true);
                     break;
                 }
@@ -548,57 +625,29 @@ public class BluetoothConnection {
                 Log.e(TAG, "ConnectedThread: mSocket.close(); failed. " + e.getMessage());
             }
         }
-    }
 
-    public synchronized void setBTConnectionState(int newState) {
-        if (mBTCurrentState != newState) {
-            Log.d(TAG, "setBTConnectionState: State changed: " + mBTCurrentState + " -> " + newState);
-            Log.d(TAG, "States(BT_CONNECTION_STATE_DISCONNECTED = 0, BT_CONNECTION_STATE_CONNECTING = 1, " +
-                    "BT_CONNECTION_STATE_CONNECTED = 2, BT_CONNECTION_STATE_DISCONNECTING = 3, " +
-                    "BT_CONNECTION_STATE_IDLE = 4, BT_CONNECTION_STATE_LISTENING = 5, " +
-                    "BT_CONNECTION_STATE_CHANGE = 6");
-            mBTCurrentState = newState;
-        } else {
-            Log.d(TAG, "setBTConnectionState: Already in this state: " + mBTCurrentState);
-        }
-        // Give the new state to the Handler so the UI Activity can update
-        // if(newState==BT_CONNECTION_STATE_CONNECTED)
+        public void disconnect() {
+            if (mmInStream != null) {
+                try {
+                    mmInStream.close();
+                } catch (Exception e) {
+                }
+            }
 
-    }
+            if (mmOutStream != null) {
+                try {
+                    mmOutStream.close();
+                } catch (Exception e) {
+                }
+            }
 
-    public synchronized int getBTConnectionState() {
-        // 0 = disconnected, 1 = connecting, 2 = connected, 3 = disconnecting, 4 = idle, 5 = listening, 6 = state changed
-        switch (mBTCurrentState) {
-            case 0:
-                Log.d(TAG, "getBTConnectionState: Current State: BT_CONNECTION_STATE_DISCONNECTED (" + mBTCurrentState + ")");
-                break;
-            case 1:
-                Log.d(TAG, "getBTConnectionState: Current State: BT_CONNECTION_STATE_CONNECTING (" + mBTCurrentState + ")");
-                break;
-            case 2:
-                Log.d(TAG, "getBTConnectionState: Current State: BT_CONNECTION_STATE_CONNECTED (" + mBTCurrentState + ")");
-                break;
-            case 3:
-                Log.d(TAG, "getBTConnectionState: Current State: BT_CONNECTION_STATE_DISCONNECTING (" + mBTCurrentState + ")");
-                break;
-            case 4:
-                Log.d(TAG, "getBTConnectionState: Current State: BT_CONNECTION_STATE_IDLE (" + mBTCurrentState + ")");
-                break;
-            case 5:
-                Log.d(TAG, "getBTConnectionState: Current State: BT_CONNECTION_STATE_LISTENING (" + mBTCurrentState + ")");
-                break;
-            case 6:
-                Log.d(TAG, "getBTConnectionState: Current State: BT_CONNECTION_STATE_CHANGE (" + mBTCurrentState + ")");
-                break;
-        }
-        return mBTCurrentState;
-    }
+            if (mmSocket != null) {
+                try {
+                    mmSocket.close();
+                } catch (Exception e) {
+                }
+            }
 
-    public BluetoothDevice getConnectedRemoteDevice() {
-        if (mConnectedRemoteDevice != null)
-            return mConnectedRemoteDevice;
-        else {
-            return null;
         }
     }
 

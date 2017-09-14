@@ -33,6 +33,7 @@ public class ArenaThread extends Thread {
         Log.d(TAG, "ArenaThread: Running");
         try {
             while (true) {
+                // room.updateList();
                 arena.update();
                 arena.postInvalidate();
                 sleep(sleepTime);

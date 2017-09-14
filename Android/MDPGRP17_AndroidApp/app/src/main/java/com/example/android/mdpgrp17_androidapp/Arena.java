@@ -25,9 +25,7 @@ public class Arena extends View {
     private int robotPosition_row;
     private int robotPosition_col;
     private int robotDirection;
-    private int robotsize = 3;
-    private int[][] obstacleArray = new int[20][15];
-    private int[][] robotArray = new int[3][3];
+
     private int[][] arenaInfo = new int[20][15];
     private int X;
     private int Y;
@@ -38,7 +36,7 @@ public class Arena extends View {
     private int gridSize;
     private int[] arenaInfoString = new int[300];
     private RelativeLayout arenaGrid;
-
+    private Canvas canvas;
 
     public Arena(Context context, RelativeLayout arenaGrid) {
         super(context);
@@ -57,21 +55,20 @@ public class Arena extends View {
     @Override
     public void onDraw(Canvas canvas) {
         try {
-            this.gridSize = ((arenaGrid.getMeasuredWidth()) - (arenaGrid.getMeasuredWidth() / col)) / col;
-            drawArenaGrid(gridSize, canvas);
+            this.canvas = canvas;
+            drawArenaGrid(canvas);
         } catch (Exception e) {
         }
     }
 
-    private void drawArenaGrid(int gridSize, Canvas canvas) {
-
+    private void drawArenaGrid(Canvas canvas) {
+        this.gridSize = ((arenaGrid.getMeasuredWidth()) - (arenaGrid.getMeasuredWidth() / col)) / col;
         for (int rowIndex = 1; rowIndex <= row; rowIndex++) {
             for (int colIndex = 1; colIndex <= col; colIndex++) {
                 // draw grid
                 if (Integer.valueOf(arenaInfo[rowIndex - 1][colIndex - 1]) == ARENA_GRID) {
-                    drawCell(rowIndex, colIndex, gridSize, Color.parseColor("#295398"), canvas);  // blue
+                    drawCell(rowIndex, colIndex, gridSize, Color.parseColor("#99f8ff"), canvas); // light blue
                 }
-
                 // draw robot position
                 if (Integer.valueOf(arenaInfo[rowIndex - 1][colIndex - 1]) == ARENA_ROBOTPOSITION) {
                     drawCell(rowIndex, colIndex, gridSize, Color.parseColor("#FF8C00"), canvas); // dark orange
@@ -82,8 +79,9 @@ public class Arena extends View {
                 }
                 // draw obstacle
                 if (Integer.valueOf(arenaInfo[rowIndex - 1][colIndex - 1]) == ARENA_OBSTACLE) {
-                    drawCell(rowIndex, colIndex, gridSize, Color.parseColor("#e33054"), canvas); // red
+                    drawCell(rowIndex, colIndex, gridSize, Color.parseColor("#000000"), canvas); // black
                 }
+
             }
         }
 
@@ -111,76 +109,102 @@ public class Arena extends View {
     }
 
     public void decodeArenaInfo(String cmdString) {
-        String[] splitArenaInfoArray = cmdString.split(" ");
-        row = Integer.valueOf(splitArenaInfoArray[1]);
-        col = Integer.valueOf(splitArenaInfoArray[2]);
-        robotPosition_col = Integer.valueOf(splitArenaInfoArray[3]);
-        robotPosition_row = Integer.valueOf(splitArenaInfoArray[4]);
-        robotDirection = Integer.valueOf(splitArenaInfoArray[5]);
 
-        for (int count = 0; count < splitArenaInfoArray.length - 6; count++) {
-            arenaInfoString[count] = Integer.valueOf(splitArenaInfoArray[count + 6]);
-        }
-
-        for (int rowIndex = 1; rowIndex <= row; rowIndex++) {
-            for (int colIndex = 1; colIndex <= col; colIndex++) {
-                // set obstacles and the grid
-                arenaInfo[rowIndex - 1][colIndex - 1] = arenaInfoString[((colIndex - 1) + (rowIndex - 1) * 15)];
-            }
-        }
-        for (int rowIndex = robotPosition_row; rowIndex <= robotPosition_row + 2; rowIndex++) {
-            for (int colIndex = robotPosition_col; colIndex <= robotPosition_col + 2; colIndex++) {
-                // set robot position
-                arenaInfo[rowIndex - 1][colIndex - 1] = ARENA_ROBOTPOSITION;
-            }
-        }
-
-        // set robot direction
-        robotsize = 3;
-
-        int robotDirection_head_row;
-        int robotDirection_head_col;
-        int robotDirection_body = 3;
-        boolean isUpDown = false;
-
-        // set robot direction head
-        if (robotDirection == 0) { // up
-            robotDirection_head_row = robotPosition_row;
-            robotDirection_head_col = robotPosition_col + 1;
-            robotDirection_body = robotPosition_row + 1;
-            arenaInfo[robotDirection_head_row - 1][robotDirection_head_col - 1] = ARENA_ROBOTDIRECTION;
-            isUpDown = true;
-        }
-        if (robotDirection == 90) { // right
-            robotDirection_head_row = robotPosition_row + 1;
-            robotDirection_head_col = robotPosition_col + 2;
-            robotDirection_body = robotPosition_col + 1;
-            arenaInfo[robotDirection_head_row - 1][robotDirection_head_col - 1] = ARENA_ROBOTDIRECTION;
-        }
-        if (robotDirection == 180) { // down
-            robotDirection_head_row = robotPosition_row + 2;
-            robotDirection_head_col = robotPosition_col + 1;
-            robotDirection_body = robotPosition_row + 1;
-            arenaInfo[robotDirection_head_row - 1][robotDirection_head_col - 1] = ARENA_ROBOTDIRECTION;
-            isUpDown = true;
-        }
-        if (robotDirection == 270) { // left
-            robotDirection_head_row = robotPosition_row + 1;
-            robotDirection_head_col = robotPosition_col;
-            robotDirection_body = robotPosition_col + 1;
-            arenaInfo[robotDirection_head_row - 1][robotDirection_head_col - 1] = ARENA_ROBOTDIRECTION; // head
-        }
-        // set robot direction body
-        if (isUpDown) {
-            for (int colIndexCount = robotPosition_col; colIndexCount <= robotPosition_col + 2; colIndexCount++) {
-                arenaInfo[robotDirection_body - 1][colIndexCount - 1] = ARENA_ROBOTDIRECTION; // body
+        if (cmdString.equals("NAKEDGRID")) {
+            Log.d(TAG, "decodeArenaInfo: NAKEDGRID");
+            // naked grid
+            row = 20;
+            col = 15;
+            robotPosition_row = robotPosition_col = robotDirection = 0;
+            for (int rowIndex = 1; rowIndex <= row; rowIndex++) {
+                for (int colIndex = 1; colIndex <= col; colIndex++) {
+                    this.arenaInfo[rowIndex - 1][colIndex - 1] = ARENA_GRID;
+                }
             }
         } else {
-            for (int rowIndexCount = robotPosition_row; rowIndexCount <= robotPosition_row + 2; rowIndexCount++) {
-                arenaInfo[rowIndexCount - 1][robotDirection_body - 1] = ARENA_ROBOTDIRECTION; // body
+            Log.d(TAG, "decodeArenaInfo: cmdString");
+
+            String[] splitArenaInfoArray = cmdString.split(" ");
+            row = Integer.valueOf(splitArenaInfoArray[1]);
+            col = Integer.valueOf(splitArenaInfoArray[2]);
+            robotPosition_col = Integer.valueOf(splitArenaInfoArray[3]);
+            robotPosition_row = Integer.valueOf(splitArenaInfoArray[4]);
+            robotDirection = Integer.valueOf(splitArenaInfoArray[5]);
+            try {
+                // convert raw data into array
+                for (int count = 0; count < splitArenaInfoArray.length - 6; count++) {
+                    arenaInfoString[count] = Integer.valueOf(splitArenaInfoArray[count + 6]);
+                }
+                // set obstacles and the grid
+                for (int rowIndex = 1; rowIndex <= row; rowIndex++) {
+                    for (int colIndex = 1; colIndex <= col; colIndex++) {
+                        arenaInfo[rowIndex - 1][colIndex - 1] = arenaInfoString[((colIndex - 1) + (rowIndex - 1) * 15)];
+                    }
+                }
+                // set robot position
+                for (int rowIndex = robotPosition_row; rowIndex <= robotPosition_row + 2; rowIndex++) {
+                    for (int colIndex = robotPosition_col; colIndex <= robotPosition_col + 2; colIndex++) {
+                        arenaInfo[rowIndex - 1][colIndex - 1] = ARENA_ROBOTPOSITION;
+                    }
+                }
+
+                // set robot direction
+                int robotsize = 3;
+
+                int robotDirection_head_row;
+                int robotDirection_head_col;
+                int robotDirection_body = 3;
+                boolean isUpDown = false;
+
+                // set robot direction head
+                if (robotDirection == 0) { // up
+                    robotDirection_head_row = robotPosition_row;
+                    robotDirection_head_col = robotPosition_col + 1;
+                    robotDirection_body = robotPosition_row + 1;
+                    arenaInfo[robotDirection_head_row - 1][robotDirection_head_col - 1] = ARENA_ROBOTDIRECTION;
+                    isUpDown = true;
+                }
+                if (robotDirection == 90) { // right
+                    robotDirection_head_row = robotPosition_row + 1;
+                    robotDirection_head_col = robotPosition_col + 2;
+                    robotDirection_body = robotPosition_col + 1;
+                    arenaInfo[robotDirection_head_row - 1][robotDirection_head_col - 1] = ARENA_ROBOTDIRECTION;
+                }
+                if (robotDirection == 180) { // down
+                    robotDirection_head_row = robotPosition_row + 2;
+                    robotDirection_head_col = robotPosition_col + 1;
+                    robotDirection_body = robotPosition_row + 1;
+                    arenaInfo[robotDirection_head_row - 1][robotDirection_head_col - 1] = ARENA_ROBOTDIRECTION;
+                    isUpDown = true;
+                }
+                if (robotDirection == 270) { // left
+                    robotDirection_head_row = robotPosition_row + 1;
+                    robotDirection_head_col = robotPosition_col;
+                    robotDirection_body = robotPosition_col + 1;
+                    arenaInfo[robotDirection_head_row - 1][robotDirection_head_col - 1] = ARENA_ROBOTDIRECTION; // head
+                }
+                // set robot direction body
+                if (isUpDown) {
+                    for (int colIndexCount = robotPosition_col; colIndexCount <= robotPosition_col + 2; colIndexCount++) {
+                        if (colIndexCount != robotPosition_col + 1)
+                            arenaInfo[robotDirection_body - 1][colIndexCount - 1] = ARENA_ROBOTDIRECTION; // body
+
+                    }
+                } else {
+                    for (int rowIndexCount = robotPosition_row; rowIndexCount <= robotPosition_row + 2; rowIndexCount++) {
+                        if (rowIndexCount != robotPosition_row + 1)
+                            arenaInfo[rowIndexCount - 1][robotDirection_body - 1] = ARENA_ROBOTDIRECTION; // body
+                    }
+                }
+            } catch (Exception ex) {
+
             }
         }
+    }
 
+    public void setWayPoint() {
+        if (arenaInfo != null) {
+        }
     }
 
 }

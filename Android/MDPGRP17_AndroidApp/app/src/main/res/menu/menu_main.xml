@@ -17,13 +17,19 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     tools:context=".MainActivity">
-
-    <item android:id="@+id/action_settings_bluetooth"
-        android:title="@string/action_settings_bluetooth"
+    <item
+        android:id="@+id/action_settings_bluetooth_reconnect"
+        android:icon="@drawable/ic_autorenew_black_24dp"
+        android:title="@string/action_settings_reconect"
+        app:showAsAction="ifRoom" />
+    <item
+        android:id="@+id/action_settings_bluetooth"
         android:icon="@drawable/ic_bluetooth_disabled_black_24dp"
-        app:showAsAction="ifRoom"/>
-    <item android:id="@+id/action_settings"
-        android:title="@string/action_settings"
+        android:title="@string/action_settings_bluetooth"
+        app:showAsAction="ifRoom" />
+    <item
+        android:id="@+id/action_settings"
         android:icon="@drawable/ic_settings_black_24dp"
-        app:showAsAction="ifRoom"/>
+        android:title="@string/action_settings"
+        app:showAsAction="ifRoom" />
 </menu>

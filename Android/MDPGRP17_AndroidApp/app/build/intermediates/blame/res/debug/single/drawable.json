@@ -292,6 +292,10 @@
         "source": "C:\\Users\\szean\\.android\\build-cache\\8eaeee0584d658b9d5f6798c1b5e64283ee8c1bb\\output\\res\\drawable\\abc_dialog_material_background_dark.xml"
     },
     {
+        "merged": "C:\\Users\\szean\\Documents\\AndroidProjects\\MDP\\MDPGRP17_AndroidApp\\app\\build\\intermediates\\res\\merged\\debug\\drawable\\ic_autorenew_black_24dp.xml",
+        "source": "C:\\Users\\szean\\Documents\\AndroidProjects\\MDP\\MDPGRP17_AndroidApp\\app\\src\\main\\res\\drawable\\ic_autorenew_black_24dp.xml"
+    },
+    {
         "merged": "C:\\Users\\szean\\Documents\\AndroidProjects\\MDP\\MDPGRP17\\app\\build\\intermediates\\res\\merged\\debug\\drawable\\abc_btn_colored_material.xml",
         "source": "C:\\Users\\szean\\.android\\build-cache\\8eaeee0584d658b9d5f6798c1b5e64283ee8c1bb\\output\\res\\drawable\\abc_btn_colored_material.xml"
     },

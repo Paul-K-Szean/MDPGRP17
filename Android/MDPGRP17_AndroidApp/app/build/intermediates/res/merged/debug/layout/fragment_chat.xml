@@ -1,13 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/layout_chat"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:background="#ffffff"
     android:orientation="vertical">
 
 
+    <TextView
+        android:id="@+id/TV_Notice"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="center"
+        android:text="Please turn on bluetooth and connect to a device"
+        android:textSize="20sp" />
+
     <RelativeLayout
-        android:id="@+id/messageArea"
+        android:id="@+id/layout_MessageArea"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
@@ -15,7 +24,7 @@
         android:padding="@dimen/md_keylines">
 
         <ImageButton
-            android:id="@+id/imageButton_send"
+            android:id="@+id/imageButton_Send"
             android:layout_width="@dimen/cards_button_width"
             android:layout_height="wrap_content"
             android:layout_alignParentEnd="true"
@@ -26,11 +35,11 @@
             android:src="@android:drawable/ic_menu_send" />
 
         <EditText
-            android:id="@+id/editText_message"
+            android:id="@+id/ET_MessageArea"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignParentLeft="true"
-            android:layout_toLeftOf="@id/imageButton_send"
+            android:layout_toLeftOf="@id/imageButton_Send"
             android:hint="Write a message"
             android:textColor="#CFD8DC"
             android:textColorHint="#CFD8DC" />
@@ -39,9 +48,9 @@
     </RelativeLayout>
 
     <ListView
-        android:id="@+id/listView_message"
+        android:id="@+id/listView_MessageContent"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_above="@id/messageArea" />
+        android:layout_above="@id/layout_MessageArea" />
 
 </RelativeLayout>

@@ -32,23 +32,27 @@ import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.DefaultItemAnimator;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
-import android.widget.ListView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import static com.example.android.mdpgrp17_androidapp.GlobalVariables.BT_CONNECTION_STATE_CONNECTED;
+import static com.example.android.mdpgrp17_androidapp.GlobalVariables.BT_CONNECTION_STATE_IDLE;
 import static com.example.android.mdpgrp17_androidapp.GlobalVariables.CMD_FORWARD;
 import static com.example.android.mdpgrp17_androidapp.GlobalVariables.CMD_REVERSE;
 import static com.example.android.mdpgrp17_androidapp.GlobalVariables.CMD_ROTATELEFT;
@@ -66,7 +70,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     // GUI Objects
     private DrawerLayout mDrawerLayout;
     private Menu menu;
-    private ListView listView_Command;
+    private RecyclerView recyclerView_Command;
     private RelativeLayout arenaGrid;
     private Button BTN_GetArenaInfo;
     private Button BTN_CMD_Forward;
@@ -74,15 +78,20 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private Button BTN_CMD_RotateLeft;
     private Button BTN_CMD_RotateRight;
     private Button BTN_TestEncodeString;
+    private Button BTN_SetWayPoint;
+    private Button BTN_JsonTest_Write;
+    private Button BTN_JsonTest_Read;
+    private TextView TV_RobotStatusValue;
+    private TextView TV_JsonTest_Write;
+    private TextView TV_JsonTest_Read;
     // Bluetooth objects
     private BluetoothConnection mBluetoothConnection;
     private BluetoothAdapter mBluetoothAdapter;
     public ArrayList<BluetoothMessageEntity> mBTCommandArrayList;
-    public ArrayAdapter mBTCommandArrayAdapter;
+    public BTCommandAdapter mBTCommandArrayAdapter; // recycler view adapter
 
 
     //Arena objects
-
     private Arena arena;
 
     @Override
@@ -92,7 +101,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         getMenuInflater().inflate(R.menu.menu_main, menu);
         Log.d(TAG, "onCreateOptionsMenu");
         updateGUI_MenuIcon();
-
         return true;
     }
 
@@ -109,6 +117,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         } else if (id == R.id.action_settings) {
             Intent intent_settings = new Intent(this, SettingsActivity.class);
             startActivity(intent_settings);
+        } else if (id == R.id.action_settings_bluetooth_reconnect) {
+            if (mBluetoothConnection.getConnectedRemoteDevice() != null) {
+                mBluetoothConnection.startConnectThread(mBluetoothConnection.getConnectedRemoteDevice(), true);
+            } else {
+                showToast("You have not connected to any device yet.");
+            }
         } else if (id == android.R.id.home) {
             mDrawerLayout.openDrawer(GravityCompat.START);
         }
@@ -130,17 +144,22 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         // GUI Objects
         arenaGrid = (RelativeLayout) findViewById(R.id.arenaGrid);
-        listView_Command = (ListView) findViewById(R.id.listView_Command);
+        recyclerView_Command = (RecyclerView) findViewById(R.id.listView_Command);
         BTN_GetArenaInfo = (Button) findViewById(R.id.BTN_GetArenaInfo);
         BTN_CMD_Forward = (Button) findViewById(R.id.BTN_CMD_Forward);
         BTN_CMD_Reverse = (Button) findViewById(R.id.BTN_CMD_Reverse);
         BTN_CMD_RotateLeft = (Button) findViewById(R.id.BTN_CMD_RotateLeft);
         BTN_CMD_RotateRight = (Button) findViewById(R.id.BTN_CMD_RotateRight);
         BTN_TestEncodeString = (Button) findViewById(R.id.BTN_TestEncodeString);
+        BTN_SetWayPoint = (Button) findViewById(R.id.BTN_SetWayPoint);
+        BTN_JsonTest_Write = (Button) findViewById(R.id.BTN_JsonTest_Write);
+        BTN_JsonTest_Read = (Button) findViewById(R.id.BTN_JsonTest_Read);
+        TV_RobotStatusValue = (TextView) findViewById(R.id.TV_RobotStatusValue);
+        TV_JsonTest_Write = (TextView) findViewById(R.id.TV_JsonTest_Write);
+        TV_JsonTest_Read = (TextView) findViewById(R.id.TV_JsonTest_Read);
         // Adding Toolbar to Main screen
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-
         // Create Navigation drawer and inflate layout
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer);
@@ -166,8 +185,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         return true;
                     }
                 });
-
-        mBluetoothConnection = BluetoothConnection.getmBluetoothConnection(mHandler);
+        // Bluetooth objects
         mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         IntentFilter intent_filter = new IntentFilter();
         // Register BT broadcasts when the bluetooth is turned ON/OFF
@@ -196,29 +214,47 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         BTN_CMD_Reverse.setOnClickListener(this);
         BTN_CMD_RotateLeft.setOnClickListener(this);
         BTN_CMD_RotateRight.setOnClickListener(this);
+        BTN_SetWayPoint.setOnClickListener(this);
+        BTN_JsonTest_Write.setOnClickListener(this);
+        BTN_JsonTest_Read.setOnClickListener(this);
         BTN_TestEncodeString.setOnClickListener(this);
 
-        updateGUI_MessageContent();
+
     }
 
     @Override
     protected void onStart() {
         Log.d(TAG, "onStart");
         super.onStart();
+
     }
 
     @Override
     protected void onResume() {
         Log.d(TAG, "onResume");
-        mBluetoothConnection = BluetoothConnection.getmBluetoothConnection(mHandler);
-        mBluetoothConnection.setHandler(mHandler);
-        if (mBluetoothAdapter.isEnabled()) {
-            if (mBluetoothConnection != null) {
-                Log.d(TAG, "onResume: BT ON");
-                checkBTConectionState();
-            }
-        } else Log.d(TAG, "onResume: BT OFF");
         setup_ArenaGrid();
+        if (mBluetoothAdapter.isEnabled()) {
+            Log.d(TAG, "onResume: BT on");
+            // BT on
+            mBluetoothConnection = BluetoothConnection.getmBluetoothConnection(mHandler);
+            mBluetoothConnection.setHandler(mHandler);
+            int checkBTCurrentstate = mBluetoothConnection.getBTConnectionState();
+            if (checkBTCurrentstate == BT_CONNECTION_STATE_IDLE) {
+                mBluetoothConnection.startAcceptThread(true);
+            }
+            if (checkBTCurrentstate == BT_CONNECTION_STATE_CONNECTED) {
+                mBluetoothConnection.write(BluetoothMessageEntity.sendCommand(CMD_SENDARENAINFO));
+            }
+            updateGUI_ToolBar_BTConnectionState();
+            updateGUI_MessageContent();
+            updateGUI_MenuIcon();
+        } else {
+            // BT off
+            Log.d(TAG, "onResume: BT off");
+            TV_RobotStatusValue.setText("None");
+        }
+
+
         super.onResume();
     }
 
@@ -255,6 +291,61 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         Log.d(TAG, "onActivityResult");
     }
 
+    public void onClick(View view) {
+
+        if (view.getId() == R.id.BTN_TestEncodeString) {
+            Log.d(TAG, "Clicked On BTN_TestEncodeString");
+            String encodedmsg = "GRID 20 15 12 7 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 1 1 1 0 0 0 0 1 1 1 1 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 1 1 1 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0";
+            updateGUI_ArenaGrid(encodedmsg);
+        }
+        if (view.getId() == R.id.BTN_JsonTest_Write) {
+            Log.d(TAG, "Clicked On BTN_JsonTest_Write");
+
+        }
+        if (view.getId() == R.id.BTN_JsonTest_Read) {
+            Log.d(TAG, "Clicked On BTN_JsonTest_Read");
+
+        }
+
+
+        if (mBluetoothAdapter.isEnabled()) {
+            if (mBluetoothConnection.getBTConnectionState() == BT_CONNECTION_STATE_CONNECTED) {
+                switch (view.getId()) {
+                    case R.id.BTN_GetArenaInfo: {
+                        mBluetoothConnection.write(BluetoothMessageEntity.sendCommand(CMD_SENDARENAINFO));
+                        break;
+                    }
+                    case R.id.BTN_CMD_Forward: {
+                        mBluetoothConnection.write(BluetoothMessageEntity.sendCommand(CMD_FORWARD));
+                        mBluetoothConnection.write(BluetoothMessageEntity.sendCommand(CMD_SENDARENAINFO));
+                        TV_RobotStatusValue.setText("Moving forward");
+                        break;
+                    }
+                    case R.id.BTN_CMD_Reverse: {
+                        mBluetoothConnection.write(BluetoothMessageEntity.sendCommand(CMD_REVERSE));
+                        mBluetoothConnection.write(BluetoothMessageEntity.sendCommand(CMD_SENDARENAINFO));
+                        TV_RobotStatusValue.setText("Moving reverse");
+                        break;
+                    }
+                    case R.id.BTN_CMD_RotateLeft: {
+                        mBluetoothConnection.write(BluetoothMessageEntity.sendCommand(CMD_ROTATELEFT));
+                        mBluetoothConnection.write(BluetoothMessageEntity.sendCommand(CMD_SENDARENAINFO));
+                        TV_RobotStatusValue.setText("Rotating left");
+                        break;
+                    }
+                    case R.id.BTN_CMD_RotateRight: {
+                        mBluetoothConnection.write(BluetoothMessageEntity.sendCommand(CMD_ROTATERIGHT));
+                        mBluetoothConnection.write(BluetoothMessageEntity.sendCommand(CMD_SENDARENAINFO));
+                        TV_RobotStatusValue.setText("Rotating right");
+                        break;
+                    }
+                }
+            }
+        } else {
+            showToast("Please turn on bluetooth and connect to a device");
+        }
+    }
+
     private void showToast(String message) {
         Toast.makeText(getApplicationContext(), message, Toast.LENGTH_SHORT).show();
     }
@@ -271,11 +362,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         // default
                     } else if (currentBTConnectionState == GlobalVariables.BT_CONNECTION_STATE_CONNECTING) {
                         menu.findItem(R.id.action_settings_bluetooth).setIcon(R.drawable.ic_bluetooth_searching_black_24dp);
-                    } else if (currentBTConnectionState == GlobalVariables.BT_CONNECTION_STATE_CONNECTED) {
+                    } else if (currentBTConnectionState == BT_CONNECTION_STATE_CONNECTED) {
                         menu.findItem(R.id.action_settings_bluetooth).setIcon(R.drawable.ic_bluetooth_connected_black_24dp);
                     } else if (currentBTConnectionState == GlobalVariables.BT_CONNECTION_STATE_DISCONNECTING) {
                         // default
-                    } else if (currentBTConnectionState == GlobalVariables.BT_CONNECTION_STATE_IDLE) {
+                    } else if (currentBTConnectionState == BT_CONNECTION_STATE_IDLE) {
                         // default
                     } else if (currentBTConnectionState == GlobalVariables.BT_CONNECTION_STATE_LISTENING) {
                         // default
@@ -286,7 +377,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 }
             }
         } else {
-            Log.e(TAG, "menu was null");
+            Log.e(TAG, "updateMenuIcon: Menu was null");
         }
     }
 
@@ -294,50 +385,59 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         Log.d(TAG, "updateGUI_MessageContent");
         mBTCommandArrayList = mBluetoothConnection.getmBTCommandArrayList();
         // message object
-        mBTCommandArrayAdapter = new ArrayAdapter<BluetoothMessageEntity>(this, R.layout.item_message,
-                R.id.textView_message, mBTCommandArrayList) {
-            @Override
-            public View getView(int position, View convertView, ViewGroup parent) {
-                View view = super.getView(position, convertView, parent);
-                TextView textView_message = ((TextView) view.findViewById(R.id.textView_message));
-                BluetoothMessageEntity bluetoothMessageEntity = this.getItem(position);
-                if (bluetoothMessageEntity.getFrom().equals(MESSAGE_FROM)) {
-                    // FROM MDPGRP17 = sender
-                    textView_message.setBackgroundResource(R.color.sender_background);
-                    textView_message.setText(bluetoothMessageEntity.getMessageContent());
-                    RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) textView_message.getLayoutParams();
-                    params.addRule(RelativeLayout.ALIGN_PARENT_RIGHT);
-                    params.width = ViewGroup.LayoutParams.WRAP_CONTENT;
-                    textView_message.setLayoutParams(params); //causes layout update
-                } else {
-                    // FROM mRemoteDevice = receiver
-                    textView_message.setBackgroundResource(R.color.receiver_background);
-                    if (bluetoothMessageEntity.getMessageContent().contains("GRID")) {
-                        String displayMsg = "";
-                        textView_message.setText(displayMsg);
-                    } else {
-                        textView_message.setText(bluetoothMessageEntity.getMessageContent());
-                    }
-                    RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) textView_message.getLayoutParams();
-                    params.addRule(RelativeLayout.ALIGN_PARENT_LEFT);
-                    params.width = ViewGroup.LayoutParams.WRAP_CONTENT;
-                    textView_message.setLayoutParams(params); //causes layout update
-                }
-                return view;
-            }
-        };
+        mBTCommandArrayAdapter = new BTCommandAdapter(mBTCommandArrayList);
         mBTCommandArrayAdapter.notifyDataSetChanged();
-        listView_Command.setAdapter(mBTCommandArrayAdapter);
-        listView_Command.post(new Runnable() {
-            public void run() {
-                listView_Command.setSelection(listView_Command.getCount() - 1);
-            }
-        });
+        RecyclerView.LayoutManager mLayoutManager = new LinearLayoutManager(getApplicationContext());
+        recyclerView_Command.setLayoutManager(mLayoutManager);
+        recyclerView_Command.setItemAnimator(new DefaultItemAnimator());
+        recyclerView_Command.setAdapter(mBTCommandArrayAdapter);
+        recyclerView_Command.scrollToPosition(mBTCommandArrayList.size() - 1);
+
     }
 
     public void updateGUI_ArenaGrid(String messageContent) {
         Log.d(TAG, "updateGUI_ArenaGrid");
         arena.decodeArenaInfo(messageContent);
+    }
+
+    private void updateGUI_ToolBar_BTConnectionState() {
+        int checkCurrentConnectionState = mBluetoothConnection.getBTConnectionState();
+        getSupportActionBar().setSubtitle("No device connected");// default status
+        switch (checkCurrentConnectionState) {
+            case GlobalVariables.BT_CONNECTION_STATE_DISCONNECTED:
+                Log.d(TAG, "updateGUI_ToolBar_BTConnectionState: BT connection state: BT_CONNECTION_STATE_DISCONNECTED");
+                break;
+            case GlobalVariables.BT_CONNECTION_STATE_CONNECTING:
+                Log.d(TAG, "updateGUI_ToolBar_BTConnectionState: BT connection state: BT_CONNECTION_STATE_CONNECTING");
+                break;
+            case BT_CONNECTION_STATE_CONNECTED:
+                Log.d(TAG, "updateGUI_ToolBar_BTConnectionState: BT connection state: BT_CONNECTION_STATE_CONNECTED");
+                if (mBluetoothConnection.getConnectedRemoteDevice() != null) {
+                    getSupportActionBar().setSubtitle("Connected to " + mBluetoothConnection.getConnectedRemoteDevice().getName());
+                    mBluetoothConnection.write(BluetoothMessageEntity.sendCommand(CMD_SENDARENAINFO));  // get arena info after reconnection
+                    TV_RobotStatusValue.setText("Idling");
+                } else {
+                    Log.e(TAG, "updateGUI_ToolBar_BTConnectionState: No device connected. Unable to find connected device");
+                    getSupportActionBar().setSubtitle("No device connected");
+                }
+                break;
+            case GlobalVariables.BT_CONNECTION_STATE_DISCONNECTING:
+                Log.d(TAG, "updateGUI_ToolBar_BTConnectionState: BT connection state: BT_CONNECTION_STATE_DISCONNECTING");
+                break;
+            case BT_CONNECTION_STATE_IDLE:
+                Log.d(TAG, "updateGUI_ToolBar_BTConnectionState: BT connection state: BT_CONNECTION_STATE_IDLE");
+                break;
+            case GlobalVariables.BT_CONNECTION_STATE_LISTENING:
+                Log.d(TAG, "updateGUI_ToolBar_BTConnectionState: BT connection state: BT_CONNECTION_STATE_LISTENING");
+                break;
+            case GlobalVariables.BT_CONNECTION_STATE_OFF:
+                Log.d(TAG, "updateGUI_ToolBar_BTConnectionState: BT connection state: BT_CONNECTION_STATE_OFF");
+                break;
+        }
+    }
+
+    private void updateGUI_ArenaRobotStatus() {
+        TV_RobotStatusValue.setText("Idling");
     }
 
     public void setup_ArenaGrid() {
@@ -348,52 +448,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
         arena = new Arena(this, arenaGrid);
         arenaGrid.addView(arena);
-
-        if (mBluetoothConnection.getBTConnectionState() == BT_CONNECTION_STATE_CONNECTED) {
-            mBluetoothConnection.write(BluetoothMessageEntity.sendCommand(CMD_SENDARENAINFO));
-        }
+        updateGUI_ArenaGrid("NAKEDGRID");
     }
 
     private void hideVirtualKeyboard() {
         InputMethodManager imanager = (InputMethodManager) this.getSystemService(Context.INPUT_METHOD_SERVICE);
         imanager.hideSoftInputFromWindow(getCurrentFocus().getWindowToken(), 0);
-    }
-
-    public void onClick(View view) {
-        if (mBluetoothConnection.getBTConnectionState() == GlobalVariables.BT_CONNECTION_STATE_CONNECTED) {
-            switch (view.getId()) {
-                case R.id.BTN_GetArenaInfo: {
-                    mBluetoothConnection.write(BluetoothMessageEntity.sendCommand(CMD_SENDARENAINFO));
-                    break;
-                }
-                case R.id.BTN_CMD_Forward: {
-                    mBluetoothConnection.write(BluetoothMessageEntity.sendCommand(CMD_FORWARD));
-                    mBluetoothConnection.write(BluetoothMessageEntity.sendCommand(CMD_SENDARENAINFO));
-                    break;
-                }
-                case R.id.BTN_CMD_Reverse: {
-                    mBluetoothConnection.write(BluetoothMessageEntity.sendCommand(CMD_REVERSE));
-                    mBluetoothConnection.write(BluetoothMessageEntity.sendCommand(CMD_SENDARENAINFO));
-                    break;
-                }
-                case R.id.BTN_CMD_RotateLeft: {
-                    mBluetoothConnection.write(BluetoothMessageEntity.sendCommand(CMD_ROTATELEFT));
-                    mBluetoothConnection.write(BluetoothMessageEntity.sendCommand(CMD_SENDARENAINFO));
-                    break;
-                }
-                case R.id.BTN_CMD_RotateRight: {
-                    mBluetoothConnection.write(BluetoothMessageEntity.sendCommand(CMD_ROTATERIGHT));
-                    mBluetoothConnection.write(BluetoothMessageEntity.sendCommand(CMD_SENDARENAINFO));
-                    break;
-                }
-            }
-        }
-
-        if (view.getId() == R.id.BTN_TestEncodeString) {
-            Log.d(TAG, "Clicked On Others");
-            String encodedmsg = "GRID 20 15 12 7 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 1 1 1 0 0 0 0 1 1 1 1 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 1 1 1 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0";
-            updateGUI_ArenaGrid(encodedmsg);
-        }
     }
 
     private final Handler mHandler = new Handler() {
@@ -406,13 +466,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
             switch (msg.what) {
                 case GlobalVariables.BT_CONNECTION_STATE_CHANGE: {
-                    checkBTConectionState();
+                    updateGUI_ToolBar_BTConnectionState();
+                    updateGUI_MenuIcon();
                     break;
                 }
                 case GlobalVariables.MESSAGE_READ: {
                     if (msg.obj instanceof BluetoothMessageEntity) {
                         updateGUI_MessageContent();
                         updateGUI_ArenaGrid(((BluetoothMessageEntity) msg.obj).getMessageContent());
+                        updateGUI_ArenaRobotStatus();
                     } else {
                         byte[] read = (byte[]) msg.obj;
                         String incomingMessage = new String(read, 0, msg.arg1);  // byte[]; offset; byteCount
@@ -462,44 +524,85 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 case BluetoothDevice.ACTION_ACL_DISCONNECT_REQUESTED:
                     Log.d(TAG, "onReceive: ACTION_ACL_DISCONNECT_REQUESTED " + mRemoteDevice.getName());
                     break;
+                case BluetoothAdapter.ACTION_CONNECTION_STATE_CHANGED:
+                    Log.d(TAG, "onReceive: ACTION_CONNECTION_STATE_CHANGED");
+                    // 0 = disconnected, 1 = connecting ON, 2 = connected, 3 = disconnecting
+                    if (currentConnectionState_ThisDevice == BluetoothAdapter.STATE_DISCONNECTED) {
+                        Log.d(TAG, "onReceive: currentConnectionState_ThisDevice: STATE_DISCONNECTED (" + currentConnectionState_ThisDevice + ")" + mRemoteDevice.getName());
+                    } else if (currentConnectionState_ThisDevice == BluetoothAdapter.STATE_CONNECTING) {
+                        Log.d(TAG, "onReceive: currentConnectionState_ThisDevice: STATE_CONNECTING (" + currentConnectionState_ThisDevice + ")" + mRemoteDevice.getName());
+                    } else if (currentConnectionState_ThisDevice == BluetoothAdapter.STATE_CONNECTED) {
+                        Log.d(TAG, "onReceive: currentConnectionState_ThisDevice: STATE_CONNECTED (" + currentConnectionState_ThisDevice + "), " + mRemoteDevice.getName());
+
+                    } else if (currentConnectionState_ThisDevice == BluetoothAdapter.STATE_DISCONNECTING) {
+                        Log.d(TAG, "onReceive: currentConnectionState_ThisDevice: STATE_DISCONNECTING (" + currentConnectionState_ThisDevice + ")" + mRemoteDevice.getName());
+                    } else {
+                        Log.d(TAG, "onReceive: currentConnectionState_ThisDevice: action: (" + action.toString() + ")");
+                    }
+                    updateGUI_ToolBar_BTConnectionState();
+                    updateGUI_MenuIcon();
+                    break;
             }
         }
     };
 
-    private void checkBTConectionState() {
-        int checkCurrentConnectionState = mBluetoothConnection.getBTConnectionState();
-        switch (checkCurrentConnectionState) {
-            case GlobalVariables.BT_CONNECTION_STATE_DISCONNECTED:
-                Log.d(TAG, "checkBTConectionState: BT connection state: BT_CONNECTION_STATE_DISCONNECTED");
-                break;
-            case GlobalVariables.BT_CONNECTION_STATE_CONNECTING:
-                Log.d(TAG, "checkBTConectionState: BT connection state: BT_CONNECTION_STATE_CONNECTING");
-                break;
-            case GlobalVariables.BT_CONNECTION_STATE_CONNECTED:
-                Log.d(TAG, "checkBTConectionState: BT connection state: BT_CONNECTION_STATE_CONNECTED");
-                if (mBluetoothConnection.getConnectedRemoteDevice() != null) {
-                    getSupportActionBar().setSubtitle("Connected to " + mBluetoothConnection.getConnectedRemoteDevice().getName());
+
+    public class BTCommandAdapter extends RecyclerView.Adapter<BTCommandAdapter.MyViewHolder> {
+
+        private List<BluetoothMessageEntity> BTCommandArrayList;
+
+        public class MyViewHolder extends RecyclerView.ViewHolder {
+            public TextView textView_message;
+
+            public MyViewHolder(View view) {
+                super(view);
+                textView_message = (TextView) view.findViewById(R.id.textView_message);
+
+            }
+        }
+
+        public BTCommandAdapter(List<BluetoothMessageEntity> BTCommandArrayList) {
+            this.BTCommandArrayList = BTCommandArrayList;
+        }
+
+        @Override
+        public MyViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+            View itemView = LayoutInflater.from(parent.getContext())
+                    .inflate(R.layout.item_message, parent, false);
+            return new MyViewHolder(itemView);
+        }
+
+        @Override
+        public void onBindViewHolder(MyViewHolder holder, int position) {
+
+            BluetoothMessageEntity bluetoothMessageEntity = BTCommandArrayList.get(position);
+            if (bluetoothMessageEntity.getFrom().equals(MESSAGE_FROM)) {
+                // FROM MDPGRP17 = sender
+                holder.textView_message.setBackgroundResource(R.color.sender_background);
+                holder.textView_message.setText(bluetoothMessageEntity.getMessageContent());
+                RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) holder.textView_message.getLayoutParams();
+                params.addRule(RelativeLayout.ALIGN_PARENT_RIGHT);
+                params.width = ViewGroup.LayoutParams.WRAP_CONTENT;
+                holder.textView_message.setLayoutParams(params); //causes layout update
+            } else {
+                // FROM mRemoteDevice = receiver
+                holder.textView_message.setBackgroundResource(R.color.receiver_background);
+                if (bluetoothMessageEntity.getMessageContent().contains("GRID")) {
+                    String displayMsg = "";
+                    holder.textView_message.setText(displayMsg);
                 } else {
-                    Log.e(TAG, "checkBTConectionState: No device connected. Error");
-                    getSupportActionBar().setSubtitle("No device connected");
+                    holder.textView_message.setText(bluetoothMessageEntity.getMessageContent());
                 }
-                break;
-            case GlobalVariables.BT_CONNECTION_STATE_DISCONNECTING:
-                Log.d(TAG, "checkBTConectionState: BT connection state: BT_CONNECTION_STATE_DISCONNECTING");
-                break;
-            case GlobalVariables.BT_CONNECTION_STATE_IDLE:
-                Log.d(TAG, "checkBTConectionState: BT connection state: BT_CONNECTION_STATE_IDLE");
-                mBluetoothConnection.startAcceptThread(true);
-                getSupportActionBar().setSubtitle("No device connected");
-                break;
-            case GlobalVariables.BT_CONNECTION_STATE_LISTENING:
-                Log.d(TAG, "checkBTConectionState: BT connection state: BT_CONNECTION_STATE_LISTENING");
-                getSupportActionBar().setSubtitle("No device connected");
-                break;
-            case GlobalVariables.BT_CONNECTION_STATE_OFF:
-                Log.d(TAG, "checkBTConectionState: BT connection state: BT_CONNECTION_STATE_OFF");
-                getSupportActionBar().setSubtitle("No device connected");
-                break;
+                RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) holder.textView_message.getLayoutParams();
+                params.addRule(RelativeLayout.ALIGN_PARENT_LEFT);
+                params.width = ViewGroup.LayoutParams.WRAP_CONTENT;
+                holder.textView_message.setLayoutParams(params); //causes layout update
+            }
+        }
+
+        @Override
+        public int getItemCount() {
+            return BTCommandArrayList.size();
         }
     }
 }

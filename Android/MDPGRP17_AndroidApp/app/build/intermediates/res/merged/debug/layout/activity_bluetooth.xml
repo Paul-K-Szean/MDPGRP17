@@ -86,10 +86,10 @@
                     android:textSize="@dimen/article_titles"
                     android:textStyle="bold" />
 
-                <android.support.v7.widget.RecyclerView
-                    android:id="@+id/recyclerview_btdevicelist"
+                <ListView
+                    android:id="@+id/listView_BTDeviceList"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
+                    android:layout_height="match_parent"
                     android:layout_below="@id/devices_nearby" />
 
 
