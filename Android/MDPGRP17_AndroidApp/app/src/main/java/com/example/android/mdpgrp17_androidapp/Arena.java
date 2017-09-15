@@ -8,7 +8,7 @@ import android.graphics.RectF;
 import android.util.Log;
 import android.view.View;
 import android.widget.RelativeLayout;
-
+import android.view.MotionEvent;
 import static com.example.android.mdpgrp17_androidapp.GlobalVariables.ARENA_GRID;
 import static com.example.android.mdpgrp17_androidapp.GlobalVariables.ARENA_OBSTACLE;
 import static com.example.android.mdpgrp17_androidapp.GlobalVariables.ARENA_ROBOTDIRECTION;
@@ -37,7 +37,7 @@ public class Arena extends View {
     private int[] arenaInfoString = new int[300];
     private RelativeLayout arenaGrid;
     private Canvas canvas;
-
+    private MotionEvent simulationEvent;
     public Arena(Context context, RelativeLayout arenaGrid) {
         super(context);
         Log.d(TAG, "Arena");
@@ -86,7 +86,22 @@ public class Arena extends View {
         }
 
     }
-
+    arenaGrid.setOnTouchListner(new View.OnTouchListener(){
+        public boolean onTouch(View v, MotionEvent event) {
+                if (event == simulationEvent)
+                    return false;
+                int action = event.getAction();
+                int x = (int)event.getX();
+                int y = (int)event.getY();
+                Log.e("onTouchListener", "User touch at X:" + x + " Y:" + y);
+                long length = 0;
+                if (action == MotionEvent.ACTION_DOWN) {
+                    click(v, x, y);
+                }
+                return false;
+            }
+    });
+    
     public void drawCell(int row, int col, int gridSize, int c, Canvas canvas) {
         Y = row * gridSize - gridSize / 2;
         X = col * gridSize - gridSize / 2;
@@ -102,7 +117,7 @@ public class Arena extends View {
         paint.setStyle(Paint.Style.STROKE);
         canvas.drawRect(new RectF(X, Y, _X, _Y), paint);
     }
-
+    
     public void update() {
         // called every period (200milisec) because arena thread is running
 
@@ -201,7 +216,7 @@ public class Arena extends View {
             }
         }
     }
-
+    
     public void setWayPoint() {
         if (arenaInfo != null) {
         }
