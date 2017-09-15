@@ -13,7 +13,7 @@ import android.widget.RelativeLayout;
 import android.widget.Toast;
 
 =======
-import android.view.MotionEvent;
+
 >>>>>>> 32c20946a528bdb4d1e034b95a03a1fecda63550
 import static com.example.android.mdpgrp17_androidapp.GlobalVariables.ARENA_GRID;
 import static com.example.android.mdpgrp17_androidapp.GlobalVariables.ARENA_GRID_END;
@@ -49,7 +49,7 @@ public class Arena extends View {
 
 =======
     private Canvas canvas;
-    private MotionEvent simulationEvent;
+   
 >>>>>>> 32c20946a528bdb4d1e034b95a03a1fecda63550
     public Arena(Context context, RelativeLayout arenaGrid) {
         super(context);
@@ -104,21 +104,7 @@ public class Arena extends View {
             }
         }
     }
-    arenaGrid.setOnTouchListner(new View.OnTouchListener(){
-        public boolean onTouch(View v, MotionEvent event) {
-                if (event == simulationEvent)
-                    return false;
-                int action = event.getAction();
-                int x = (int)event.getX();
-                int y = (int)event.getY();
-                Log.e("onTouchListener", "User touch at X:" + x + " Y:" + y);
-                long length = 0;
-                if (action == MotionEvent.ACTION_DOWN) {
-                    click(v, x, y);
-                }
-                return false;
-            }
-    });
+   
     
     public void drawCell(int row, int col, int gridSize, int c, Canvas canvas) {
         Y = row * gridSize - gridSize / 2;
