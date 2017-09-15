@@ -47,7 +47,7 @@ import android.widget.Button;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
-
+import android.view.MotionEvent;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -66,7 +66,7 @@ import static com.example.android.mdpgrp17_androidapp.GlobalVariables.MESSAGE_FR
  */
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
     private static final String TAG = "MainActivity";
-
+private MotionEvent simulationEvent;
     // GUI Objects
     private DrawerLayout mDrawerLayout;
     private Menu menu;
@@ -215,9 +215,40 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         BTN_JsonTest_Write.setOnClickListener(this);
         BTN_JsonTest_Read.setOnClickListener(this);
         BTN_TestEncodeString.setOnClickListener(this);
-
+arenaGrid.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                if (event == simulationEvent)
+                    return false;
+                int action = event.getAction();
+                int x = (int)event.getX();
+                int y = (int)event.getY();
+                Log.e("onTouchListener", "User touch at X:" + x + " Y:" + y);
+                long length = 0;
+                if (action == MotionEvent.ACTION_DOWN) {
+                    click(v, x, y);
+                }
+                return false;
+            }
+        });
     }
+public void click(final View view, final int x, final int y) {
+        new Handler().postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                // SIMULATION BEGINS HERE AFTER 2000 Millis ///
+                long touchTime = SystemClock.uptimeMillis();
+                simulationEvent = MotionEvent.obtain(touchTime, touchTime,
+                        MotionEvent.ACTION_DOWN, x, y, 0);
+                view.dispatchTouchEvent(simulationEvent);
 
+                simulationEvent = MotionEvent.obtain(touchTime, touchTime,
+                        MotionEvent.ACTION_UP, x, y, 0);
+                view.dispatchTouchEvent(simulationEvent);
+                Log.e("simulatedTouch","simulated touch executed at X:"+x+" Y:"+y);
+            }
+        }, 2000);
+    }
     @Override
     protected void onStart() {
         Log.d(TAG, "onStart");
