@@ -6,10 +6,14 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.RectF;
 import android.util.Log;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.RelativeLayout;
+import android.widget.Toast;
 
 import static com.example.android.mdpgrp17_androidapp.GlobalVariables.ARENA_GRID;
+import static com.example.android.mdpgrp17_androidapp.GlobalVariables.ARENA_GRID_END;
+import static com.example.android.mdpgrp17_androidapp.GlobalVariables.ARENA_GRID_START;
 import static com.example.android.mdpgrp17_androidapp.GlobalVariables.ARENA_OBSTACLE;
 import static com.example.android.mdpgrp17_androidapp.GlobalVariables.ARENA_ROBOTDIRECTION;
 import static com.example.android.mdpgrp17_androidapp.GlobalVariables.ARENA_ROBOTPOSITION;
@@ -26,6 +30,7 @@ public class Arena extends View {
     private int robotPosition_col;
     private int robotDirection;
 
+
     private int[][] arenaInfo = new int[20][15];
     private int X;
     private int Y;
@@ -36,7 +41,6 @@ public class Arena extends View {
     private int gridSize;
     private int[] arenaInfoString = new int[300];
     private RelativeLayout arenaGrid;
-    private Canvas canvas;
 
     public Arena(Context context, RelativeLayout arenaGrid) {
         super(context);
@@ -48,14 +52,13 @@ public class Arena extends View {
         this.paint.setAntiAlias(true);
         this.paint.setDither(true);
         // a thread to update the grid
-        ArenaThread arenaThread = new ArenaThread(this);
+        this.arenaThread = new ArenaThread(this);
         arenaThread.startThread();
     }
 
     @Override
     public void onDraw(Canvas canvas) {
         try {
-            this.canvas = canvas;
             drawArenaGrid(canvas);
         } catch (Exception e) {
         }
@@ -69,6 +72,14 @@ public class Arena extends View {
                 if (Integer.valueOf(arenaInfo[rowIndex - 1][colIndex - 1]) == ARENA_GRID) {
                     drawCell(rowIndex, colIndex, gridSize, Color.parseColor("#99f8ff"), canvas); // light blue
                 }
+                // draw start position
+                if (Integer.valueOf(arenaInfo[rowIndex - 1][colIndex - 1]) == ARENA_GRID_START) {
+                    drawCell(rowIndex, colIndex, gridSize, Color.parseColor("#3AB795"), canvas); // green
+                }
+                // draw end position
+                if (Integer.valueOf(arenaInfo[rowIndex - 1][colIndex - 1]) == ARENA_GRID_END) {
+                    drawCell(rowIndex, colIndex, gridSize, Color.parseColor("#FFF201"), canvas); // yellow
+                }
                 // draw robot position
                 if (Integer.valueOf(arenaInfo[rowIndex - 1][colIndex - 1]) == ARENA_ROBOTPOSITION) {
                     drawCell(rowIndex, colIndex, gridSize, Color.parseColor("#FF8C00"), canvas); // dark orange
@@ -81,18 +92,15 @@ public class Arena extends View {
                 if (Integer.valueOf(arenaInfo[rowIndex - 1][colIndex - 1]) == ARENA_OBSTACLE) {
                     drawCell(rowIndex, colIndex, gridSize, Color.parseColor("#000000"), canvas); // black
                 }
-
             }
         }
-
     }
 
     public void drawCell(int row, int col, int gridSize, int c, Canvas canvas) {
         Y = row * gridSize - gridSize / 2;
-        X = col * gridSize - gridSize / 2;
         _Y = row * gridSize + gridSize / 2;
+        X = col * gridSize - gridSize / 2;
         _X = col * gridSize + gridSize / 2;
-
         // paint the fill in color
         paint.setColor(c);
         paint.setStyle(Paint.Style.FILL);
@@ -101,6 +109,7 @@ public class Arena extends View {
         paint.setColor(Color.WHITE);
         paint.setStyle(Paint.Style.STROKE);
         canvas.drawRect(new RectF(X, Y, _X, _Y), paint);
+
     }
 
     public void update() {
@@ -108,22 +117,39 @@ public class Arena extends View {
 
     }
 
-    public void decodeArenaInfo(String cmdString) {
-
-        if (cmdString.equals("NAKEDGRID")) {
-            Log.d(TAG, "decodeArenaInfo: NAKEDGRID");
-            // naked grid
-            row = 20;
-            col = 15;
-            robotPosition_row = robotPosition_col = robotDirection = 0;
-            for (int rowIndex = 1; rowIndex <= row; rowIndex++) {
-                for (int colIndex = 1; colIndex <= col; colIndex++) {
-                    this.arenaInfo[rowIndex - 1][colIndex - 1] = ARENA_GRID;
-                }
+    private void setupNakedGrid(int startPosition_row, int startPosition_col, int endPosition_row, int endPosition_col) {
+        Log.d(TAG, "decodeArenaInfo: setupNakedGrid");
+        // naked grid
+        row = 20;
+        col = 15;
+        robotPosition_row = robotPosition_col = robotDirection = 0;
+        for (int rowIndex = 1; rowIndex <= row; rowIndex++) {
+            for (int colIndex = 1; colIndex <= col; colIndex++) {
+                this.arenaInfo[rowIndex - 1][colIndex - 1] = ARENA_GRID;
             }
+        }
+        // set start position
+        for (int rowIndex = startPosition_row; rowIndex <= startPosition_row + 2; rowIndex++) {
+            for (int colIndex = startPosition_col; colIndex <= startPosition_col + 2; colIndex++) {
+                arenaInfo[rowIndex - 1][colIndex - 1] = ARENA_GRID_START;
+            }
+        }
+        // set end position
+        for (int rowIndex = endPosition_row; rowIndex <= endPosition_row + 2; rowIndex++) {
+            for (int colIndex = endPosition_col; colIndex <= endPosition_col + 2; colIndex++) {
+                arenaInfo[rowIndex - 1][colIndex - 1] = ARENA_GRID_END;
+            }
+        }
+    }
+
+    public void decodeArenaInfo(String cmdString) {
+        int startPosition_row = 1, startPosition_col = 1;
+        int endPosition_row = 18;
+        int endPosition_col = 13;
+        if (cmdString.equals("NAKEDGRID")) {
+            setupNakedGrid(startPosition_row, startPosition_col, endPosition_row, endPosition_col);
         } else {
             Log.d(TAG, "decodeArenaInfo: cmdString");
-
             String[] splitArenaInfoArray = cmdString.split(" ");
             row = Integer.valueOf(splitArenaInfoArray[1]);
             col = Integer.valueOf(splitArenaInfoArray[2]);
@@ -141,6 +167,19 @@ public class Arena extends View {
                         arenaInfo[rowIndex - 1][colIndex - 1] = arenaInfoString[((colIndex - 1) + (rowIndex - 1) * 15)];
                     }
                 }
+                // set start position
+                for (int rowIndex = 1; rowIndex <= startPosition_row + 2; rowIndex++) {
+                    for (int colIndex = 1; colIndex <= startPosition_col + 2; colIndex++) {
+                        arenaInfo[rowIndex - 1][colIndex - 1] = ARENA_GRID_START;
+                    }
+                }
+                // set end position
+                for (int rowIndex = endPosition_row; rowIndex <= endPosition_row + 2; rowIndex++) {
+                    for (int colIndex = endPosition_col; colIndex <= endPosition_col + 2; colIndex++) {
+                        arenaInfo[rowIndex - 1][colIndex - 1] = ARENA_GRID_END;
+                    }
+                }
+
                 // set robot position
                 for (int rowIndex = robotPosition_row; rowIndex <= robotPosition_row + 2; rowIndex++) {
                     for (int colIndex = robotPosition_col; colIndex <= robotPosition_col + 2; colIndex++) {
@@ -202,9 +241,36 @@ public class Arena extends View {
         }
     }
 
-    public void setWayPoint() {
-        if (arenaInfo != null) {
+    public int[][] getArenaInfo() {
+        if (arenaInfo == null) {
+
         }
+        return arenaInfo;
     }
+
+    private void showToast(String message) {
+        Toast.makeText(getContext(), message, Toast.LENGTH_SHORT).show();
+    }
+
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+        if (event.getAction() == MotionEvent.ACTION_DOWN) {
+            int column = (int) (event.getX() / gridSize);
+            int row = (int) (event.getY() / gridSize);
+            if (row >= 1 && row <= 20 && col >= 1 && col <= 15) {
+                // empty on the grid
+                if (arenaInfo[row - 1][column - 1] == ARENA_GRID) {
+                    arenaInfo[row - 1][column - 1] = ARENA_OBSTACLE;
+                } else if (arenaInfo[row - 1][column - 1] == ARENA_OBSTACLE) {
+                    arenaInfo[row - 1][column - 1] = ARENA_GRID;
+                }
+            }
+            showToast("Touched on (X,Y): " + row + "," + column);
+            invalidate();
+        }
+
+        return true;
+    }
+
 
 }

@@ -28,12 +28,12 @@
         "source": "C:\\Users\\szean\\.android\\build-cache\\96e68b64afd7f5be0802c8789468c73bec68fb5c\\output\\res\\layout\\design_navigation_item.xml"
     },
     {
-        "merged": "C:\\Users\\szean\\Documents\\AndroidProjects\\MDP\\MDPGRP17_AndroidApp\\app\\build\\intermediates\\res\\merged\\debug\\layout\\fragment_function.xml",
-        "source": "C:\\Users\\szean\\Documents\\AndroidProjects\\MDP\\MDPGRP17_AndroidApp\\app\\src\\main\\res\\layout\\fragment_function.xml"
-    },
-    {
         "merged": "C:\\Users\\szean\\Documents\\AndroidProjects\\MDP\\MDPGRP17\\app\\build\\intermediates\\res\\merged\\debug\\layout\\support_simple_spinner_dropdown_item.xml",
         "source": "C:\\Users\\szean\\.android\\build-cache\\8eaeee0584d658b9d5f6798c1b5e64283ee8c1bb\\output\\res\\layout\\support_simple_spinner_dropdown_item.xml"
+    },
+    {
+        "merged": "C:\\Users\\szean\\Documents\\AndroidProjects\\MDP\\MDPGRP17_AndroidApp\\app\\build\\intermediates\\res\\merged\\debug\\layout\\fragment_function.xml",
+        "source": "C:\\Users\\szean\\Documents\\AndroidProjects\\MDP\\MDPGRP17_AndroidApp\\app\\src\\main\\res\\layout\\fragment_function.xml"
     },
     {
         "merged": "C:\\Users\\szean\\Documents\\AndroidProjects\\MDP\\MDPGRP17_AndroidApp\\app\\build\\intermediates\\res\\merged\\debug\\layout\\abc_screen_toolbar.xml",
@@ -76,12 +76,12 @@
         "source": "C:\\Users\\szean\\.android\\build-cache\\8eaeee0584d658b9d5f6798c1b5e64283ee8c1bb\\output\\res\\layout\\abc_search_dropdown_item_icons_2line.xml"
     },
     {
-        "merged": "C:\\Users\\szean\\Documents\\AndroidProjects\\MDP\\MDPGRP17\\app\\build\\intermediates\\res\\merged\\debug\\layout\\abc_select_dialog_material.xml",
-        "source": "C:\\Users\\szean\\.android\\build-cache\\8eaeee0584d658b9d5f6798c1b5e64283ee8c1bb\\output\\res\\layout\\abc_select_dialog_material.xml"
-    },
-    {
         "merged": "C:\\Users\\szean\\Documents\\AndroidProjects\\MDP\\MDPGRP17_AndroidApp\\app\\build\\intermediates\\res\\merged\\debug\\layout\\abc_screen_simple.xml",
         "source": "C:\\Users\\szean\\.android\\build-cache\\8eaeee0584d658b9d5f6798c1b5e64283ee8c1bb\\output\\res\\layout\\abc_screen_simple.xml"
+    },
+    {
+        "merged": "C:\\Users\\szean\\Documents\\AndroidProjects\\MDP\\MDPGRP17\\app\\build\\intermediates\\res\\merged\\debug\\layout\\abc_select_dialog_material.xml",
+        "source": "C:\\Users\\szean\\.android\\build-cache\\8eaeee0584d658b9d5f6798c1b5e64283ee8c1bb\\output\\res\\layout\\abc_select_dialog_material.xml"
     },
     {
         "merged": "C:\\Users\\szean\\Documents\\AndroidProjects\\MDP\\MDPGRP17_AndroidApp\\app\\build\\intermediates\\res\\merged\\debug\\layout\\design_bottom_sheet_dialog.xml",
@@ -120,12 +120,12 @@
         "source": "C:\\Users\\szean\\.android\\build-cache\\8eaeee0584d658b9d5f6798c1b5e64283ee8c1bb\\output\\res\\layout\\support_simple_spinner_dropdown_item.xml"
     },
     {
-        "merged": "C:\\Users\\szean\\Documents\\AndroidProjects\\MDP\\MDPGRP17_AndroidApp\\app\\build\\intermediates\\res\\merged\\debug\\layout\\fragment_chat.xml",
-        "source": "C:\\Users\\szean\\Documents\\AndroidProjects\\MDP\\MDPGRP17_AndroidApp\\app\\src\\main\\res\\layout\\fragment_chat.xml"
-    },
-    {
         "merged": "C:\\Users\\szean\\Documents\\AndroidProjects\\MDP\\MDPGRP17_AndroidApp\\app\\build\\intermediates\\res\\merged\\debug\\layout\\select_dialog_singlechoice_material.xml",
         "source": "C:\\Users\\szean\\.android\\build-cache\\8eaeee0584d658b9d5f6798c1b5e64283ee8c1bb\\output\\res\\layout\\select_dialog_singlechoice_material.xml"
+    },
+    {
+        "merged": "C:\\Users\\szean\\Documents\\AndroidProjects\\MDP\\MDPGRP17_AndroidApp\\app\\build\\intermediates\\res\\merged\\debug\\layout\\fragment_chat.xml",
+        "source": "C:\\Users\\szean\\Documents\\AndroidProjects\\MDP\\MDPGRP17_AndroidApp\\app\\src\\main\\res\\layout\\fragment_chat.xml"
     },
     {
         "merged": "C:\\Users\\szean\\Documents\\AndroidProjects\\MDP\\MDPGRP17\\app\\build\\intermediates\\res\\merged\\debug\\layout\\design_layout_snackbar.xml",

@@ -15,7 +15,6 @@
   -->
 <android.support.v4.widget.DrawerLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/drawer"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -34,16 +33,27 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:descendantFocusability="beforeDescendants"
+                android:focusable="true"
                 android:focusableInTouchMode="true"
+                android:gravity="center_horizontal"
+                android:paddingTop="6dp"
+                app:layout_behavior="@string/appbar_scrolling_view_behavior"
                 android:orientation="vertical">
+
+                <RelativeLayout
+                    android:id="@+id/arenaGrid"
+                    android:layout_width="520dp"
+                    android:layout_height="660dp"
+                    android:layout_weight="1"
+                    android:rotationX="180"></RelativeLayout>
 
                 <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="550dp"
+                    android:layout_height="match_parent"
+                    android:layout_marginTop="-6dp"
                     android:layout_weight="1"
-                    android:orientation="horizontal"
-                    app:layout_behavior="@string/appbar_scrolling_view_behavior">
+                    android:gravity="center_horizontal"
+                    android:orientation="horizontal">
 
                     <LinearLayout
                         android:layout_width="match_parent"
@@ -51,24 +61,34 @@
                         android:layout_weight="1"
                         android:orientation="vertical">
 
-                        <RelativeLayout
-                            android:id="@+id/arenaGrid"
+                        <TextView
+                            android:id="@+id/TV_RobotStatus"
                             android:layout_width="match_parent"
-                            android:layout_height="match_parent"
-                            android:layout_weight="1">
+                            android:layout_height="wrap_content"
+                            android:layout_below="@id/arenaGrid"
+                            android:layout_weight="1"
+                            android:gravity="center"
+                            android:text="Robot Status"
+                            android:textSize="20sp"
+                            android:textStyle="bold" />
 
-                        </RelativeLayout>
-
+                        <TextView
+                            android:id="@+id/TV_RobotStatusValue"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_below="@id/arenaGrid"
+                            android:layout_weight="1"
+                            android:gravity="center"
+                            android:text="None"
+                            android:textSize="20sp" />
 
                     </LinearLayout>
 
                     <LinearLayout
-                        android:layout_width="350dp"
-                        android:layout_height="wrap_content"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
                         android:layout_weight="1"
-                        android:orientation="vertical"
-                        android:paddingRight="@dimen/list_body"
-                        android:paddingTop="8dp">
+                        android:orientation="vertical">
 
                         <TextView
                             android:id="@+id/TV_FastestTime"
@@ -88,6 +108,13 @@
                             android:gravity="center"
                             android:text="00:00:00"
                             android:textSize="20sp" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
 
                         <TextView
                             android:id="@+id/TV_ExplorationTime"
@@ -107,82 +134,6 @@
                             android:gravity="center"
                             android:text="00:00:00"
                             android:textSize="20sp" />
-
-                        <TextView
-                            android:id="@+id/TV_WayPoint"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:gravity="center"
-                            android:text="Way Point (X,Y)"
-                            android:textSize="20sp"
-                            android:textStyle="bold" />
-
-                        <LinearLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="match_parent"
-                            android:layout_weight="1"
-                            android:orientation="horizontal">
-
-                            <EditText
-                                android:id="@+id/editText3"
-                                android:layout_width="wrap_content"
-                                android:layout_height="match_parent"
-                                android:layout_weight="1"
-                                android:ems="10"
-                                android:focusableInTouchMode="true"
-                                android:inputType="textPersonName"
-                                tools:text="X: " />
-
-                            <EditText
-                                android:id="@+id/editText2"
-                                android:layout_width="wrap_content"
-                                android:layout_height="match_parent"
-                                android:layout_weight="1"
-                                android:ems="10"
-                                android:focusableInTouchMode="true"
-                                android:inputType="textPersonName"
-                                tools:text="Y: " />
-                        </LinearLayout>
-
-                        <Button
-                            android:id="@+id/BTN_SetWayPoint"
-                            android:layout_width="match_parent"
-                            android:layout_height="match_parent"
-                            android:layout_weight="1"
-                            android:text="Set" />
-
-                        <TextView
-                            android:id="@+id/TV_RobotStatus"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_below="@id/arenaGrid"
-                            android:layout_weight="1"
-                            android:gravity="center"
-                            android:paddingLeft="@dimen/list_body"
-                            android:text="Robot Status"
-                            android:textSize="20sp"
-                            android:textStyle="bold" />
-
-                        <TextView
-                            android:id="@+id/TV_RobotStatusValue"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_below="@id/arenaGrid"
-                            android:layout_weight="1"
-                            android:gravity="center"
-                            android:paddingLeft="@dimen/list_body"
-                            android:text="None"
-                            android:textSize="20sp" />
-
-                        <Button
-                            android:id="@+id/BTN_Reconnect"
-                            android:layout_width="match_parent"
-                            android:layout_height="match_parent"
-                            android:layout_weight="1"
-                            android:text="Reconnect"
-                            android:visibility="invisible" />
-
                     </LinearLayout>
 
                 </LinearLayout>
@@ -190,6 +141,7 @@
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="500dp"
+                    android:gravity="center_horizontal"
                     android:orientation="horizontal"
                     android:paddingLeft="@dimen/list_body"
                     android:paddingRight="@dimen/list_body"
@@ -198,20 +150,32 @@
                     <LinearLayout
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <ToggleButton
+                            android:id="@+id/TB_MapMode"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Map Mode"
+                            android:textOff="Manual"
+                            android:textOn="Auto" />
+
+                        <Button
+                            android:id="@+id/Update"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Update Map" />
+
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
                         android:orientation="vertical"
                         app:layout_behavior="@string/appbar_scrolling_view_behavior">
-
-                        <TextView
-                            android:id="@+id/textView2"
-                            android:layout_width="match_parent"
-                            android:layout_height="@dimen/avator_size"
-                            android:layout_below="@id/arenaGrid"
-                            android:layout_weight="1"
-                            android:gravity="center"
-                            android:paddingLeft="@dimen/list_body"
-                            android:text="Control Pad"
-                            android:textSize="20sp"
-                            android:textStyle="bold" />
 
                         <LinearLayout
                             android:layout_width="match_parent"
@@ -228,8 +192,8 @@
 
                                 <Button
                                     android:id="@+id/BTN_CMD_RotateLeft"
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="match_parent"
                                     android:layout_weight="1"
                                     android:text="Rotate Left" />
                             </LinearLayout>
@@ -267,7 +231,7 @@
 
                                 <Button
                                     android:id="@+id/BTN_CMD_RotateRight"
-                                    android:layout_width="wrap_content"
+                                    android:layout_width="match_parent"
                                     android:layout_height="match_parent"
                                     android:layout_weight="1"
                                     android:text="Rotate Right" />
@@ -275,10 +239,35 @@
                             </LinearLayout>
                         </LinearLayout>
 
+                        <TextView
+                            android:id="@+id/TV_CommandLog"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_below="@id/arenaGrid"
+                            android:layout_weight="1"
+                            android:gravity="center"
+                            android:text="Command Log"
+                            android:textSize="20sp"
+                            android:textStyle="bold" />
+
+                        <android.support.v7.widget.RecyclerView
+                            android:id="@+id/listView_Command"
+                            android:layout_width="match_parent"
+                            android:layout_height="380dp"
+                            android:layout_below="@id/TV_CommandLog"
+                            android:layout_weight="1" />
+
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical">
+
                         <Button
                             android:id="@+id/BTN_TestEncodeString"
                             android:layout_width="match_parent"
-                            android:layout_height="match_parent"
+                            android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:text="Others" />
 
@@ -288,34 +277,6 @@
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:text="GetArenaInfo" />
-
-                    </LinearLayout>
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:orientation="vertical"
-                        app:layout_behavior="@string/appbar_scrolling_view_behavior">
-
-                        <TextView
-                            android:id="@+id/TV_CommandLog"
-                            android:layout_width="match_parent"
-                            android:layout_height="@dimen/avator_size"
-                            android:layout_below="@id/arenaGrid"
-                            android:layout_weight="1"
-                            android:gravity="center"
-                            android:paddingLeft="@dimen/list_body"
-                            android:text="Command Log"
-                            android:textSize="20sp"
-                            android:textStyle="bold" />
-
-                        <android.support.v7.widget.RecyclerView
-                            android:id="@+id/listView_Command"
-                            android:layout_width="match_parent"
-                            android:layout_height="470dp"
-                            android:layout_below="@id/TV_CommandLog"
-                            android:layout_weight="1" />
-
                     </LinearLayout>
 
                 </LinearLayout>
@@ -323,7 +284,6 @@
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:layout_weight="1"
                     android:orientation="vertical">
 
                     <Button
@@ -355,13 +315,6 @@
                         android:layout_weight="1"
                         android:text="None"
                         android:textSize="20sp" />
-
-                    <Button
-                        android:id="@+id/Update"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:layout_weight="1"
-                        android:text="Read JsonTest" />
 
                     <TextView
                         android:id="@+id/textView"

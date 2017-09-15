@@ -78,7 +78,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private Button BTN_CMD_RotateLeft;
     private Button BTN_CMD_RotateRight;
     private Button BTN_TestEncodeString;
-    private Button BTN_SetWayPoint;
     private Button BTN_JsonTest_Write;
     private Button BTN_JsonTest_Read;
     private TextView TV_RobotStatusValue;
@@ -151,7 +150,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         BTN_CMD_RotateLeft = (Button) findViewById(R.id.BTN_CMD_RotateLeft);
         BTN_CMD_RotateRight = (Button) findViewById(R.id.BTN_CMD_RotateRight);
         BTN_TestEncodeString = (Button) findViewById(R.id.BTN_TestEncodeString);
-        BTN_SetWayPoint = (Button) findViewById(R.id.BTN_SetWayPoint);
         BTN_JsonTest_Write = (Button) findViewById(R.id.BTN_JsonTest_Write);
         BTN_JsonTest_Read = (Button) findViewById(R.id.BTN_JsonTest_Read);
         TV_RobotStatusValue = (TextView) findViewById(R.id.TV_RobotStatusValue);
@@ -214,11 +212,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         BTN_CMD_Reverse.setOnClickListener(this);
         BTN_CMD_RotateLeft.setOnClickListener(this);
         BTN_CMD_RotateRight.setOnClickListener(this);
-        BTN_SetWayPoint.setOnClickListener(this);
         BTN_JsonTest_Write.setOnClickListener(this);
         BTN_JsonTest_Read.setOnClickListener(this);
         BTN_TestEncodeString.setOnClickListener(this);
-
 
     }
 
@@ -343,6 +339,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }
         } else {
             showToast("Please turn on bluetooth and connect to a device");
+
         }
     }
 

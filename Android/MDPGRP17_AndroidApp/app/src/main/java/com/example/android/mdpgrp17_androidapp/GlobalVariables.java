@@ -11,12 +11,12 @@ public class GlobalVariables {
     public static final int MESSAGE_READ = 2;
     public static final int MESSAGE_WRITE = 3;
     public static final String MESSAGE_FROM = "MDPGRP17";
-    public static final String CMD_FORWARD = "cmd_forward";
-    public static final String CMD_REVERSE = "cmd_reverse";
-    public static final String CMD_ROTATELEFT = "cmd_rotateleft";
-    public static final String CMD_ROTATERIGHT = "cmd_rotateright";
-    public static final String CMD_BEGINEXPLORE = "cmd_beginexplore";
-    public static final String CMD_BEGINFASTEST = "cmd_beginfastest";
+    public static final String CMD_FORWARD = "bai";
+    public static final String CMD_REVERSE = "bak";
+    public static final String CMD_ROTATELEFT = "baj";
+    public static final String CMD_ROTATERIGHT = "bal";
+    public static final String CMD_BEGINEXPLORE = "cam";
+    public static final String CMD_BEGINFASTEST = "can";
     public static final String CMD_SENDARENAINFO = "cmd_sendarenainfo";
 
 
@@ -34,8 +34,12 @@ public class GlobalVariables {
     // Arena State
     public static final int ARENA_GRID = 0;
     public static final int ARENA_OBSTACLE = 1;
-    public static final int ARENA_ROBOTPOSITION = 2;
-    public static final int ARENA_ROBOTDIRECTION = 3;
-    public static final int ARENA_ROBOTTRAVELPATH = 4;
+    public static final int ARENA_GRID_START = 2;
+    public static final int ARENA_GRID_END = 3;
+    public static final int ARENA_GRID_WAYPOINT = 4;
+    public static final int ARENA_ROBOTPOSITION = 5;
+    public static final int ARENA_ROBOTDIRECTION = 6;
+    public static final int ARENA_ROBOTTRAVELPATH = 7;
+
 
 }
