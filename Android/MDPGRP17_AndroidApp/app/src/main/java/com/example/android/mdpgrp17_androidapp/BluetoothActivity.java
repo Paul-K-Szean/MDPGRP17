@@ -28,8 +28,10 @@ import android.widget.ToggleButton;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Set;
 
 import static com.example.android.mdpgrp17_androidapp.GlobalVariables.BT_CONNECTION_STATE_CONNECTED;
+import static com.example.android.mdpgrp17_androidapp.GlobalVariables.BT_CONNECTION_STATE_CONNECTING;
 import static com.example.android.mdpgrp17_androidapp.GlobalVariables.BT_CONNECTION_STATE_IDLE;
 
 public class BluetoothActivity extends AppCompatActivity {
@@ -41,11 +43,22 @@ public class BluetoothActivity extends AppCompatActivity {
     private ArrayList<BluetoothDevice> mBTDeviceList;
     private ArrayAdapter mBTDeviceAdapter;
     private BluetoothAdapter mBluetoothAdapter;
+    private int mBTCurrentState;
     // UI objects
     private ToggleButton toggle_bluetooth_onoff;
     private Menu menu;
     private RelativeLayout layout_BTAct_Bottom;
     private ListView listView_BTDeviceList;
+
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        Log.d(TAG, "onActivityResult: requestCode:" + requestCode);
+        Log.d(TAG, "onActivityResult: resultCode:" + resultCode);
+        Log.d(TAG, "onActivityResult: data:" + data);
+
+    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -125,7 +138,7 @@ public class BluetoothActivity extends AppCompatActivity {
         //  Register all the activities
         registerReceiver(mReceiver, intent_filter);
 
-        checkBTStatus();
+        // checkBTStatus();
         if (mBTDeviceList != null)
             updateGUI_ListView_BTDeviceList();
     }
@@ -139,16 +152,17 @@ public class BluetoothActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         Log.d(TAG, "onResume");
-
+        mBluetoothConnection = BluetoothConnection.getmBluetoothConnection(mHandler);
+        mBluetoothConnection.setHandler(mHandler);
+        mBTCurrentState = mBluetoothConnection.getBTConnectionState();
         if (mBluetoothAdapter.isEnabled()) {
             Log.d(TAG, "onResume: BT on");
             // BT on
-            mBluetoothConnection = BluetoothConnection.getmBluetoothConnection(mHandler);
-            mBluetoothConnection.setHandler(mHandler);
-
+            showEnabled();
         } else {
-            // BT off
             Log.d(TAG, "onResume: BT off");
+            // BT off
+            showDisabled();
         }
         updateGUI_ToolBar_BTConnectionState();
         super.onResume();
@@ -189,18 +203,6 @@ public class BluetoothActivity extends AppCompatActivity {
 
     private void showToast(String message) {
         Toast.makeText(getApplicationContext(), message, Toast.LENGTH_SHORT).show();
-    }
-
-    private void checkBTStatus() {
-        Log.d(TAG, "checkBTStatus");
-        if (mBluetoothAdapter.isEnabled()) {
-            // BT on = startAcceptThread. Invoked in mReceiver
-            showEnabled(); // update UI
-
-        } else if (!mBluetoothAdapter.isEnabled()) {
-            // BT off = stopAllThread. Invoked in mReceiver
-            showDisabled(); // update UI
-        }
     }
 
     // Turn on BT
@@ -249,9 +251,9 @@ public class BluetoothActivity extends AppCompatActivity {
     }
 
     private void updateGUI_ToolBar_BTConnectionState() {
-        int checkCurrentConnectionState = mBluetoothConnection.getBTConnectionState();
+
         getSupportActionBar().setSubtitle("No device connected");// default status
-        switch (checkCurrentConnectionState) {
+        switch (mBTCurrentState) {
             case GlobalVariables.BT_CONNECTION_STATE_DISCONNECTED:
                 Log.d(TAG, "updateGUI_ToolBar_BTConnectionState: BT connection state: BT_CONNECTION_STATE_DISCONNECTED");
                 break;
@@ -285,13 +287,13 @@ public class BluetoothActivity extends AppCompatActivity {
     private void updateGUI_ListView_BTDeviceList() {
         Log.d(TAG, "updateGUI_ListView_BTDeviceList");
 
-        // message object
-        mBTDeviceAdapter = new ArrayAdapter<BluetoothDevice>(this, R.layout.item_devices,
-                R.id.device_name, mBTDeviceList) {
-            @Override
-            public View getView(int position, View convertView, ViewGroup parent) {
-                View view = super.getView(position, convertView, parent);
-                if (mBTDeviceList != null) {
+        if (mBTDeviceList != null) {
+            // message object
+            mBTDeviceAdapter = new ArrayAdapter<BluetoothDevice>(this, R.layout.item_devices,
+                    R.id.device_name, mBTDeviceList) {
+                @Override
+                public View getView(int position, View convertView, ViewGroup parent) {
+                    View view = super.getView(position, convertView, parent);
                     final BluetoothDevice mRemoteDevice = mBTDeviceList.get(position);
                     TextView device_name = ((TextView) view.findViewById(R.id.device_name));
                     TextView device_MACAddress = ((TextView) view.findViewById(R.id.device_MACAddress));
@@ -301,9 +303,11 @@ public class BluetoothActivity extends AppCompatActivity {
                     device_name.setText(mRemoteDevice.getName());
                     device_MACAddress.setText(mRemoteDevice.getAddress());
                     if (mBTDeviceList.get(position).getBondState() == BluetoothDevice.BOND_BONDED) {
-                        int checkBTCurrentState = mBluetoothConnection.getBTConnectionState();
-                        if (checkBTCurrentState == BT_CONNECTION_STATE_CONNECTED) {
+                        if (mBTCurrentState == BT_CONNECTION_STATE_CONNECTED && mRemoteDevice == mBluetoothConnection.getConnectedRemoteDevice()) {
+
                             device_status.setText("Connected");
+                        } else if (mBTCurrentState == BT_CONNECTION_STATE_CONNECTING && mRemoteDevice == mBluetoothConnection.getConnectedRemoteDevice()) {
+                            device_status.setText("Connecting");
                         } else {
                             device_status.setText("Paired");
                         }
@@ -320,38 +324,39 @@ public class BluetoothActivity extends AppCompatActivity {
                             updateGUI_ListView_BTDeviceList();  // update GUI
                         }
                     });
+                    return view;
                 }
-                return view;
-            }
 
-        };
-        mBTDeviceAdapter.notifyDataSetChanged();
-        listView_BTDeviceList.setAdapter(mBTDeviceAdapter);
-        listView_BTDeviceList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+            };
+            mBTDeviceAdapter.notifyDataSetChanged();
+            listView_BTDeviceList = (ListView) findViewById(R.id.listView_BTDeviceList);
+            listView_BTDeviceList.setAdapter(mBTDeviceAdapter);
+            listView_BTDeviceList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                @Override
+                public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 
-                BluetoothDevice mRemoteDevice = mBTDeviceList.get(position);
-                Log.d(TAG, "Clicked on " + mRemoteDevice.getName() + ", bondstate: " + mRemoteDevice.getBondState());
-                if (mRemoteDevice.getBondState() == BluetoothDevice.BOND_BONDED) {
-                    int checkBTCurrentState = mBluetoothConnection.getBTConnectionState();
-                    if (checkBTCurrentState == BT_CONNECTION_STATE_CONNECTED) {
-                        mBluetoothConnection.disconnect();
+                    BluetoothDevice mRemoteDevice = mBTDeviceList.get(position);
+                    Log.d(TAG, "Clicked on " + mRemoteDevice.getName() + ", bondstate: " + mRemoteDevice.getBondState());
+                    if (mRemoteDevice.getBondState() == BluetoothDevice.BOND_BONDED) {
+                        if (mBTCurrentState == BT_CONNECTION_STATE_CONNECTED) {
+                            mBluetoothConnection.disconnect();
+                        } else {
+                            mBluetoothConnection.startConnectThread(mRemoteDevice, true);
+                        }
                     } else {
-                        mBluetoothConnection.startConnectThread(mRemoteDevice, true);
+                        pairDevice(mRemoteDevice);
                     }
-
-                } else {
-                    pairDevice(mRemoteDevice);
+                    updateGUI_ListView_BTDeviceList();  // update GUI
                 }
-                updateGUI_ListView_BTDeviceList();  // update GUI
-            }
-        });
-        listView_BTDeviceList.post(new Runnable() {
-            public void run() {
-                listView_BTDeviceList.setSelection(listView_BTDeviceList.getCount() - 1);
-            }
-        });
+            });
+            listView_BTDeviceList.post(new Runnable() {
+                public void run() {
+                    listView_BTDeviceList.setSelection(listView_BTDeviceList.getCount() - 1);
+                }
+            });
+        } else {
+            Log.e(TAG, "updateGUI_ListView_BTDeviceList: mBTDeviceList was null");
+        }
 
     }
 
@@ -362,11 +367,19 @@ public class BluetoothActivity extends AppCompatActivity {
             Log.d(TAG, "mHandler: msg.arg1: " + msg.arg1);
             Log.d(TAG, "mHandler: msg.arg2: " + msg.arg2);
             Log.d(TAG, "mHandler: msg.toString(): " + msg.toString());
-
+            mBTCurrentState = mBluetoothConnection.getBTConnectionState();
             switch (msg.what) {
                 case GlobalVariables.BT_CONNECTION_STATE_CHANGE: {
                     updateGUI_ToolBar_BTConnectionState();
                     updateGUI_ListView_BTDeviceList();
+                    break;
+                }
+                case GlobalVariables.BT_CONNECTION_STATE_CONNECTIONFAILED: {
+                    showToast("Connection with remote device failed");
+                    break;
+                }
+                case GlobalVariables.BT_CONNECTION_STATE_CONNECTIONLOST: {
+                    showToast("Connection with remote device lost");
                     break;
                 }
                 case GlobalVariables.MESSAGE_READ: {
@@ -398,6 +411,7 @@ public class BluetoothActivity extends AppCompatActivity {
     // Create a BroadcastReceiver to capture bluetooth activities
     private final BroadcastReceiver mReceiver = new BroadcastReceiver() {
         public void onReceive(Context context, Intent intent) {
+            Log.d(TAG, "onReceive");
             String action = intent.getAction();
             // ON/OFF STATES
             final int currentState_ThisDevice = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.ERROR);
@@ -408,16 +422,18 @@ public class BluetoothActivity extends AppCompatActivity {
             // DISCONNECTED/CONNECTING/CONNECTED/DISCONNECTING
             final int currentConnectionState_ThisDevice = intent.getIntExtra(BluetoothAdapter.EXTRA_CONNECTION_STATE, BluetoothDevice.ERROR);
             final int preivousConnectionState_ThisDevice = intent.getIntExtra(BluetoothAdapter.EXTRA_PREVIOUS_CONNECTION_STATE, BluetoothDevice.ERROR);
-            BluetoothDevice mRemoteDevice = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
-            int checkBTConnectionState = mBluetoothConnection.getBTConnectionState();
+            BluetoothDevice mRemoteDevice = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE); // found remote devices
+            Set<BluetoothDevice> mPairedDevices = mBluetoothAdapter.getBondedDevices(); // list of paired devices
+            mBTCurrentState = mBluetoothConnection.getBTConnectionState();
             switch (action) {
                 // found a remote device
                 case BluetoothDevice.ACTION_FOUND:
                     Log.d(TAG, "onReceive: ACTION_FOUND: " + mRemoteDevice.getName() + ", " + mRemoteDevice.getBondState());
-                    if (mBTDeviceList == null)
-                        mBTDeviceList = new ArrayList<BluetoothDevice>();
+                    if (mBTDeviceList.contains(mRemoteDevice)) {
+                        mBTDeviceList.remove(mRemoteDevice); // renew the paired remote device
+                    }
                     mBTDeviceList.add(mRemoteDevice);
-                    updateGUI_ListView_BTDeviceList();
+                    updateGUI_ListView_BTDeviceList();  // update GUI
                     showToast("Found " + mRemoteDevice.getName());
                     break;
                 // handle bonding state of this and remote device
@@ -444,7 +460,6 @@ public class BluetoothActivity extends AppCompatActivity {
                         showEnabled();
                         mBluetoothAdapter.startDiscovery();
                         mBluetoothConnection.startAcceptThread(true);
-                        mBTDeviceList = new ArrayList<BluetoothDevice>();
                     } else if (currentState_ThisDevice == BluetoothAdapter.STATE_TURNING_ON) {
                         Log.d(TAG, "currentState_ThisDevice: STATE_TURNING_ON (" + currentState_ThisDevice + ")");
                     } else if (currentState_ThisDevice == BluetoothAdapter.STATE_TURNING_OFF) {
@@ -459,22 +474,26 @@ public class BluetoothActivity extends AppCompatActivity {
                 // handle BT discovery state
                 case BluetoothAdapter.ACTION_DISCOVERY_STARTED:
                     Log.d(TAG, "onReceive: ACTION_DISCOVERY_STARTED");
-                    mBTDeviceList = new ArrayList<BluetoothDevice>();
+                    mBTDeviceList = new ArrayList<BluetoothDevice>();   // always create new list
+                    for (BluetoothDevice pairedDevice : mPairedDevices) {
+                        mBTDeviceList.add(pairedDevice);    // show paired devices
+                    }
+                    updateGUI_ListView_BTDeviceList(); // update GUI
                     break;
                 case BluetoothAdapter.ACTION_DISCOVERY_FINISHED:
                     Log.d(TAG, "onReceive: ACTION_DISCOVERY_FINISHED");
                     break;
                 case BluetoothAdapter.ACTION_CONNECTION_STATE_CHANGED:
                     Log.d(TAG, "onReceive: ACTION_CONNECTION_STATE_CHANGED");
-                    // 0 = disconnected, 1 = connecting ON, 2 = connected, 3 = disconnecting`
+                    // 0 = disconnected, 1 = connecting ON, 2 = connected, 3 = disconnecting
                     if (currentConnectionState_ThisDevice == BluetoothAdapter.STATE_DISCONNECTED) {
-                        Log.d(TAG, "onReceive: currentConnectionState_ThisDevice: STATE_DISCONNECTED (" + currentConnectionState_ThisDevice + ")" + mRemoteDevice.getName());
+                        Log.d(TAG, "onReceive: currentConnectionState_ThisDevice: STATE_DISCONNECTED (" + currentConnectionState_ThisDevice + "), " + mRemoteDevice.getName());
                     } else if (currentConnectionState_ThisDevice == BluetoothAdapter.STATE_CONNECTING) {
-                        Log.d(TAG, "onReceive: currentConnectionState_ThisDevice: STATE_CONNECTING (" + currentConnectionState_ThisDevice + ")" + mRemoteDevice.getName());
+                        Log.d(TAG, "onReceive: currentConnectionState_ThisDevice: STATE_CONNECTING (" + currentConnectionState_ThisDevice + "), " + mRemoteDevice.getName());
                     } else if (currentConnectionState_ThisDevice == BluetoothAdapter.STATE_CONNECTED) {
                         Log.d(TAG, "onReceive: currentConnectionState_ThisDevice: STATE_CONNECTED (" + currentConnectionState_ThisDevice + "), " + mRemoteDevice.getName());
                     } else if (currentConnectionState_ThisDevice == BluetoothAdapter.STATE_DISCONNECTING) {
-                        Log.d(TAG, "onReceive: currentConnectionState_ThisDevice: STATE_DISCONNECTING (" + currentConnectionState_ThisDevice + ")" + mRemoteDevice.getName());
+                        Log.d(TAG, "onReceive: currentConnectionState_ThisDevice: STATE_DISCONNECTING (" + currentConnectionState_ThisDevice + "), " + mRemoteDevice.getName());
                     } else {
                         Log.d(TAG, "onReceive: currentConnectionState_ThisDevice: action: (" + action.toString() + ")");
                     }

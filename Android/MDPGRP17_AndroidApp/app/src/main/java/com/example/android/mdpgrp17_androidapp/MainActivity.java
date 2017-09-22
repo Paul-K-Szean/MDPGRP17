@@ -44,10 +44,12 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
+import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
-import android.view.MotionEvent;
+import android.widget.ToggleButton;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -58,6 +60,7 @@ import static com.example.android.mdpgrp17_androidapp.GlobalVariables.CMD_REVERS
 import static com.example.android.mdpgrp17_androidapp.GlobalVariables.CMD_ROTATELEFT;
 import static com.example.android.mdpgrp17_androidapp.GlobalVariables.CMD_ROTATERIGHT;
 import static com.example.android.mdpgrp17_androidapp.GlobalVariables.CMD_SENDARENAINFO;
+import static com.example.android.mdpgrp17_androidapp.GlobalVariables.MESSAGE_COMMAND;
 import static com.example.android.mdpgrp17_androidapp.GlobalVariables.MESSAGE_FROM;
 
 
@@ -66,32 +69,37 @@ import static com.example.android.mdpgrp17_androidapp.GlobalVariables.MESSAGE_FR
  */
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
     private static final String TAG = "MainActivity";
-private MotionEvent simulationEvent;
+
     // GUI Objects
     private DrawerLayout mDrawerLayout;
     private Menu menu;
-    private RecyclerView recyclerView_Command;
-    private RelativeLayout arenaGrid;
-    private Button BTN_GetArenaInfo;
+    private RecyclerView RCYLRVW_Command;
+    private RelativeLayout RLO_ArenaGrid;
+    private LinearLayout LLO_MapMode_PreviousNext;
+    private Button BTN_CMD_GetArenaInfo;
     private Button BTN_CMD_Forward;
     private Button BTN_CMD_Reverse;
     private Button BTN_CMD_RotateLeft;
     private Button BTN_CMD_RotateRight;
-    private Button BTN_TestEncodeString;
-    private Button BTN_JsonTest_Write;
-    private Button BTN_JsonTest_Read;
-    private TextView TV_RobotStatusValue;
-    private TextView TV_JsonTest_Write;
-    private TextView TV_JsonTest_Read;
+    private Button BTN_MapMode_Previous;
+    private Button BTN_MapMode_Next;
+    private Button BTN_Reset;
+    private TextView TXTVW_RobotStatusValue;
+    private TextView TXTVW_MapModeIndexValue;
+    private TextView TXTVW_WayPointValue;
+    private ToggleButton TGLBTN_MapMode;
     // Bluetooth objects
     private BluetoothConnection mBluetoothConnection;
     private BluetoothAdapter mBluetoothAdapter;
     public ArrayList<BluetoothMessageEntity> mBTCommandArrayList;
     public BTCommandAdapter mBTCommandArrayAdapter; // recycler view adapter
-
-
-    //Arena objects
+    private int mBTCurrentState;
+    // Arena objects
     private Arena arena;
+
+    // Config objects
+    private ConfigFileHandler configFileHandler;
+    private ConfigFile configFile;
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -117,10 +125,16 @@ private MotionEvent simulationEvent;
             Intent intent_settings = new Intent(this, SettingsActivity.class);
             startActivity(intent_settings);
         } else if (id == R.id.action_settings_bluetooth_reconnect) {
-            if (mBluetoothConnection.getConnectedRemoteDevice() != null) {
-                mBluetoothConnection.startConnectThread(mBluetoothConnection.getConnectedRemoteDevice(), true);
+            BluetoothDevice lastConnectedDevice = mBluetoothConnection.getConnectedRemoteDevice();
+            if (lastConnectedDevice != null) {
+                mBluetoothConnection.startConnectThread(lastConnectedDevice, true);
             } else {
-                showToast("You have not connected to any device yet.");
+                lastConnectedDevice = mBluetoothAdapter.getRemoteDevice(configFileHandler.getConfigFile().getBluetoothConfig().getLastConnectedDevice_MACAddress());
+                if (lastConnectedDevice != null) {
+                    mBluetoothConnection.startConnectThread(lastConnectedDevice, true);
+                } else {
+                    showToast_Short("You have not connected to any device yet.");
+                }
             }
         } else if (id == android.R.id.home) {
             mDrawerLayout.openDrawer(GravityCompat.START);
@@ -142,19 +156,21 @@ private MotionEvent simulationEvent;
         setContentView(R.layout.activity_main);
 
         // GUI Objects
-        arenaGrid = (RelativeLayout) findViewById(R.id.arenaGrid);
-        recyclerView_Command = (RecyclerView) findViewById(R.id.listView_Command);
-        BTN_GetArenaInfo = (Button) findViewById(R.id.BTN_GetArenaInfo);
+        RLO_ArenaGrid = (RelativeLayout) findViewById(R.id.RLO_ArenaGrid);
+        LLO_MapMode_PreviousNext = (LinearLayout) findViewById(R.id.LLO_MapMode_PreviousNext);
+        RCYLRVW_Command = (RecyclerView) findViewById(R.id.RCYLRVW_Command);
+        BTN_CMD_GetArenaInfo = (Button) findViewById(R.id.BTN_CMD_GetArenaInfo);
         BTN_CMD_Forward = (Button) findViewById(R.id.BTN_CMD_Forward);
         BTN_CMD_Reverse = (Button) findViewById(R.id.BTN_CMD_Reverse);
         BTN_CMD_RotateLeft = (Button) findViewById(R.id.BTN_CMD_RotateLeft);
         BTN_CMD_RotateRight = (Button) findViewById(R.id.BTN_CMD_RotateRight);
-        BTN_TestEncodeString = (Button) findViewById(R.id.BTN_TestEncodeString);
-        BTN_JsonTest_Write = (Button) findViewById(R.id.BTN_JsonTest_Write);
-        BTN_JsonTest_Read = (Button) findViewById(R.id.BTN_JsonTest_Read);
-        TV_RobotStatusValue = (TextView) findViewById(R.id.TV_RobotStatusValue);
-        TV_JsonTest_Write = (TextView) findViewById(R.id.TV_JsonTest_Write);
-        TV_JsonTest_Read = (TextView) findViewById(R.id.TV_JsonTest_Read);
+        BTN_MapMode_Previous = (Button) findViewById(R.id.BTN_MapMode_Previous);
+        BTN_MapMode_Next = (Button) findViewById(R.id.BTN_MapMode_Next);
+        BTN_Reset = (Button) findViewById(R.id.BTN_Reset);
+        TXTVW_RobotStatusValue = (TextView) findViewById(R.id.TXTVW_RobotStatusValue);
+        TXTVW_MapModeIndexValue = (TextView) findViewById(R.id.TXTVW_MapModeIndexValue);
+        TXTVW_WayPointValue = (TextView) findViewById(R.id.TXTVW_WayPointValue);
+        TGLBTN_MapMode = (ToggleButton) findViewById(R.id.TGLBTN_MapMode);
         // Adding Toolbar to Main screen
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -183,6 +199,9 @@ private MotionEvent simulationEvent;
                         return true;
                     }
                 });
+
+        configFileHandler = new ConfigFileHandler();
+        configFile = configFileHandler.getConfigFile();
         // Bluetooth objects
         mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         IntentFilter intent_filter = new IntentFilter();
@@ -207,15 +226,16 @@ private MotionEvent simulationEvent;
         //  Register all the activities
         registerReceiver(mReceiver, intent_filter);
 
-        BTN_GetArenaInfo.setOnClickListener(this);
+        BTN_CMD_GetArenaInfo.setOnClickListener(this);
         BTN_CMD_Forward.setOnClickListener(this);
         BTN_CMD_Reverse.setOnClickListener(this);
         BTN_CMD_RotateLeft.setOnClickListener(this);
         BTN_CMD_RotateRight.setOnClickListener(this);
-        BTN_JsonTest_Write.setOnClickListener(this);
-        BTN_JsonTest_Read.setOnClickListener(this);
-        BTN_TestEncodeString.setOnClickListener(this);
-
+        BTN_MapMode_Previous.setOnClickListener(this);
+        BTN_MapMode_Next.setOnClickListener(this);
+        BTN_Reset.setOnClickListener(this);
+        TGLBTN_MapMode.setOnClickListener(this);
+    }
 
     @Override
     protected void onStart() {
@@ -228,16 +248,16 @@ private MotionEvent simulationEvent;
     protected void onResume() {
         Log.d(TAG, "onResume");
         setup_ArenaGrid();
+        mBluetoothConnection = BluetoothConnection.getmBluetoothConnection(mHandler);
+        mBluetoothConnection.setHandler(mHandler);
+        mBTCurrentState = mBluetoothConnection.getBTConnectionState();
         if (mBluetoothAdapter.isEnabled()) {
             Log.d(TAG, "onResume: BT on");
             // BT on
-            mBluetoothConnection = BluetoothConnection.getmBluetoothConnection(mHandler);
-            mBluetoothConnection.setHandler(mHandler);
-            int checkBTCurrentstate = mBluetoothConnection.getBTConnectionState();
-            if (checkBTCurrentstate == BT_CONNECTION_STATE_IDLE) {
+            if (mBTCurrentState == BT_CONNECTION_STATE_IDLE) {
                 mBluetoothConnection.startAcceptThread(true);
             }
-            if (checkBTCurrentstate == BT_CONNECTION_STATE_CONNECTED) {
+            if (mBTCurrentState == BT_CONNECTION_STATE_CONNECTED) {
                 mBluetoothConnection.write(BluetoothMessageEntity.sendCommand(CMD_SENDARENAINFO));
             }
             updateGUI_ToolBar_BTConnectionState();
@@ -246,7 +266,7 @@ private MotionEvent simulationEvent;
         } else {
             // BT off
             Log.d(TAG, "onResume: BT off");
-            TV_RobotStatusValue.setText("None");
+            TXTVW_RobotStatusValue.setText("None");
         }
 
 
@@ -287,90 +307,138 @@ private MotionEvent simulationEvent;
     }
 
     public void onClick(View view) {
-
-        if (view.getId() == R.id.BTN_TestEncodeString) {
-            Log.d(TAG, "Clicked On BTN_TestEncodeString");
-            String encodedmsg = "GRID 20 15 12 7 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 1 1 1 0 0 0 0 1 1 1 1 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 1 1 1 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0";
-            updateGUI_ArenaGrid(encodedmsg);
+        int controlID = view.getId();
+        if (controlID == R.id.BTN_Reset) {
+            Log.d(TAG, "Clicked On BTN_Reset");
+            arena.setMapMode(true);
+            arena.setArenaStateIndex_Pause(-1);
+            arena.setArenaStateIndex_InArray(-1);
+            arena.setupNakedGrid();
+            arena.setSaveState_ArenaInfo(new ArrayList<int[][]>());
+            arena.setSaveState_TravelInfo(new ArrayList<int[][]>());
+            if (mBTCurrentState == BT_CONNECTION_STATE_CONNECTED) {
+                mBluetoothConnection.write(BluetoothMessageEntity.sendCommand(CMD_SENDARENAINFO));
+            }
+            TXTVW_MapModeIndexValue.setText("Auto");
+            TXTVW_WayPointValue.setText("0,0");
         }
-        if (view.getId() == R.id.BTN_JsonTest_Write) {
-            Log.d(TAG, "Clicked On BTN_JsonTest_Write");
+        if (mBTCurrentState == BT_CONNECTION_STATE_CONNECTED) {
+            if (controlID == R.id.TGLBTN_MapMode) {
+                Log.d(TAG, "Clicked On TGLBTN_MapMode");
+                // set the map mode
+                arena.setMapMode(TGLBTN_MapMode.isChecked());
+                if (TGLBTN_MapMode.isChecked()) {
+                    // auto map mode
+                    LLO_MapMode_PreviousNext.setVisibility(View.INVISIBLE);
+                    TXTVW_MapModeIndexValue.setText("Auto");
+                    arena.setArenaStateIndex_Pause(-1); // reset the pause index
+                    arena.setArenaStateIndex_InArray(-1);// reset the transverse index
+                } else {
+                    // manual map mode
+                    LLO_MapMode_PreviousNext.setVisibility(View.VISIBLE);
+                    // set the pause index to the current index count
+                    // already increased to the next state, so need to decrease the index to view the current state
+                    arena.setArenaStateIndex_Pause(arena.getArenaInfoSize() - 1);
+                    // check if index of transverse was set to the initial value of the pause index
+                    if (arena.getArenaStateIndex_InArray() == -1)
+                        arena.setArenaStateIndex_InArray(arena.getArenaStateIndex_Pause());
 
-        }
-        if (view.getId() == R.id.BTN_JsonTest_Read) {
-            Log.d(TAG, "Clicked On BTN_JsonTest_Read");
-
-        }
-
-
-        if (mBluetoothAdapter.isEnabled()) {
-            if (mBluetoothConnection.getBTConnectionState() == BT_CONNECTION_STATE_CONNECTED) {
-                switch (view.getId()) {
-                    case R.id.BTN_GetArenaInfo: {
-                        mBluetoothConnection.write(BluetoothMessageEntity.sendCommand(CMD_SENDARENAINFO));
-                        break;
-                    }
-                    case R.id.BTN_CMD_Forward: {
+                    TXTVW_MapModeIndexValue.setText("Index: " + arena.getArenaStateIndex_InArray());
+                }
+            }
+            if (controlID == R.id.BTN_MapMode_Previous) {
+                Log.d(TAG, "Clicked On BTN_MapMode_Previous");
+                if (arena.getArenaStateIndex_InArray() > 0) {
+                    Log.d(TAG, "Clicked On BTN_MapMode_Previous: -1");
+                    arena.setArenaStateIndex_InArray(arena.getArenaStateIndex_InArray() - 1);
+                } else {
+                    showToast_Short("You are at the start state!");
+                }
+                TXTVW_MapModeIndexValue.setText("Index: " + arena.getArenaStateIndex_InArray());
+            }
+            if (controlID == R.id.BTN_MapMode_Next) {
+                Log.d(TAG, "Clicked On BTN_MapMode_Next");
+                if (arena.getArenaStateIndex_InArray() < arena.getArenaInfoSize()) {
+                    Log.d(TAG, "Clicked On BTN_MapMode_Next: +1");
+                    arena.setArenaStateIndex_InArray(arena.getArenaStateIndex_InArray() + 1);
+                } else {
+                    showToast_Short("You can't view the future yet!");
+                }
+                TXTVW_MapModeIndexValue.setText("Index: " + arena.getArenaStateIndex_InArray());
+            }
+            switch (view.getId()) {
+                case R.id.BTN_CMD_GetArenaInfo: {
+                    Log.d(TAG, "Clicked On BTN_CMD_GetArenaInfo");
+                    mBluetoothConnection.write(BluetoothMessageEntity.sendCommand(CMD_SENDARENAINFO));
+                    break;
+                }
+                case R.id.BTN_CMD_Forward: {
+                    if (arena.checkMovement()) {
                         mBluetoothConnection.write(BluetoothMessageEntity.sendCommand(CMD_FORWARD));
-                        mBluetoothConnection.write(BluetoothMessageEntity.sendCommand(CMD_SENDARENAINFO));
-                        TV_RobotStatusValue.setText("Moving forward");
-                        break;
+                        TXTVW_RobotStatusValue.setText("Moving forward");
+                    } else {
+                        showToast_Long("Unable to move forward");
                     }
-                    case R.id.BTN_CMD_Reverse: {
-                        mBluetoothConnection.write(BluetoothMessageEntity.sendCommand(CMD_REVERSE));
-                        mBluetoothConnection.write(BluetoothMessageEntity.sendCommand(CMD_SENDARENAINFO));
-                        TV_RobotStatusValue.setText("Moving reverse");
-                        break;
-                    }
-                    case R.id.BTN_CMD_RotateLeft: {
-                        mBluetoothConnection.write(BluetoothMessageEntity.sendCommand(CMD_ROTATELEFT));
-                        mBluetoothConnection.write(BluetoothMessageEntity.sendCommand(CMD_SENDARENAINFO));
-                        TV_RobotStatusValue.setText("Rotating left");
-                        break;
-                    }
-                    case R.id.BTN_CMD_RotateRight: {
-                        mBluetoothConnection.write(BluetoothMessageEntity.sendCommand(CMD_ROTATERIGHT));
-                        mBluetoothConnection.write(BluetoothMessageEntity.sendCommand(CMD_SENDARENAINFO));
-                        TV_RobotStatusValue.setText("Rotating right");
-                        break;
-                    }
+                    break;
+                }
+                case R.id.BTN_CMD_Reverse: {
+                    mBluetoothConnection.write(BluetoothMessageEntity.sendCommand(CMD_REVERSE));
+                    TXTVW_RobotStatusValue.setText("Moving reverse");
+                    break;
+                }
+                case R.id.BTN_CMD_RotateLeft: {
+                    mBluetoothConnection.write(BluetoothMessageEntity.sendCommand(CMD_ROTATELEFT));
+                    TXTVW_RobotStatusValue.setText("Rotating left");
+                    break;
+                }
+                case R.id.BTN_CMD_RotateRight: {
+                    mBluetoothConnection.write(BluetoothMessageEntity.sendCommand(CMD_ROTATERIGHT));
+                    TXTVW_RobotStatusValue.setText("Rotating right");
+                    break;
                 }
             }
         } else {
-            showToast("Please turn on bluetooth and connect to a device");
-
+            Log.d(TAG, "Please turn on bluetooth and connect to a device");
+            showToast_Short("Please turn on bluetooth and connect to a device");
         }
     }
 
-    private void showToast(String message) {
+    private void showToast_Short(String message) {
         Toast.makeText(getApplicationContext(), message, Toast.LENGTH_SHORT).show();
+    }
+
+    private void showToast_Long(String message) {
+        Toast.makeText(getApplicationContext(), message, Toast.LENGTH_LONG).show();
     }
 
     private void updateGUI_MenuIcon() {
         Log.d(TAG, "updateMenuIcon");
         // update GUI menu icon
         if (menu != null) {
-            if (mBluetoothAdapter != null && mBluetoothConnection != null) {
-                if (mBluetoothAdapter.isEnabled()) {
-                    menu.findItem(R.id.action_settings_bluetooth).setIcon(R.drawable.ic_bluetooth_black_24dp); // default
-                    int currentBTConnectionState = mBluetoothConnection.getBTConnectionState();
-                    if (currentBTConnectionState == GlobalVariables.BT_CONNECTION_STATE_DISCONNECTED) {
+            if (mBluetoothAdapter.isEnabled()) {
+                // BT ON
+                menu.findItem(R.id.action_settings_bluetooth).setIcon(R.drawable.ic_bluetooth_black_24dp); // default
+                menu.findItem(R.id.action_settings_bluetooth_reconnect).setVisible(true);
+                if (mBluetoothAdapter != null && mBluetoothConnection != null) {
+
+                    if (mBTCurrentState == GlobalVariables.BT_CONNECTION_STATE_DISCONNECTED) {
                         // default
-                    } else if (currentBTConnectionState == GlobalVariables.BT_CONNECTION_STATE_CONNECTING) {
+                    } else if (mBTCurrentState == GlobalVariables.BT_CONNECTION_STATE_CONNECTING) {
                         menu.findItem(R.id.action_settings_bluetooth).setIcon(R.drawable.ic_bluetooth_searching_black_24dp);
-                    } else if (currentBTConnectionState == BT_CONNECTION_STATE_CONNECTED) {
+                    } else if (mBTCurrentState == BT_CONNECTION_STATE_CONNECTED) {
                         menu.findItem(R.id.action_settings_bluetooth).setIcon(R.drawable.ic_bluetooth_connected_black_24dp);
-                    } else if (currentBTConnectionState == GlobalVariables.BT_CONNECTION_STATE_DISCONNECTING) {
+                    } else if (mBTCurrentState == GlobalVariables.BT_CONNECTION_STATE_DISCONNECTING) {
                         // default
-                    } else if (currentBTConnectionState == BT_CONNECTION_STATE_IDLE) {
+                    } else if (mBTCurrentState == BT_CONNECTION_STATE_IDLE) {
                         // default
-                    } else if (currentBTConnectionState == GlobalVariables.BT_CONNECTION_STATE_LISTENING) {
+                    } else if (mBTCurrentState == GlobalVariables.BT_CONNECTION_STATE_LISTENING) {
                         // default
                     }
-                } else {
-                    // BT OFF
-                    menu.findItem(R.id.action_settings_bluetooth).setIcon(R.drawable.ic_bluetooth_disabled_black_24dp);
                 }
+            } else {
+                // BT OFF
+                menu.findItem(R.id.action_settings_bluetooth).setIcon(R.drawable.ic_bluetooth_disabled_black_24dp);
+                menu.findItem(R.id.action_settings_bluetooth_reconnect).setVisible(false);
             }
         } else {
             Log.e(TAG, "updateMenuIcon: Menu was null");
@@ -384,10 +452,10 @@ private MotionEvent simulationEvent;
         mBTCommandArrayAdapter = new BTCommandAdapter(mBTCommandArrayList);
         mBTCommandArrayAdapter.notifyDataSetChanged();
         RecyclerView.LayoutManager mLayoutManager = new LinearLayoutManager(getApplicationContext());
-        recyclerView_Command.setLayoutManager(mLayoutManager);
-        recyclerView_Command.setItemAnimator(new DefaultItemAnimator());
-        recyclerView_Command.setAdapter(mBTCommandArrayAdapter);
-        recyclerView_Command.scrollToPosition(mBTCommandArrayList.size() - 1);
+        RCYLRVW_Command.setLayoutManager(mLayoutManager);
+        RCYLRVW_Command.setItemAnimator(new DefaultItemAnimator());
+        RCYLRVW_Command.setAdapter(mBTCommandArrayAdapter);
+        RCYLRVW_Command.scrollToPosition(mBTCommandArrayList.size() - 1);
 
     }
 
@@ -397,9 +465,8 @@ private MotionEvent simulationEvent;
     }
 
     private void updateGUI_ToolBar_BTConnectionState() {
-        int checkCurrentConnectionState = mBluetoothConnection.getBTConnectionState();
         getSupportActionBar().setSubtitle("No device connected");// default status
-        switch (checkCurrentConnectionState) {
+        switch (mBTCurrentState) {
             case GlobalVariables.BT_CONNECTION_STATE_DISCONNECTED:
                 Log.d(TAG, "updateGUI_ToolBar_BTConnectionState: BT connection state: BT_CONNECTION_STATE_DISCONNECTED");
                 break;
@@ -411,7 +478,7 @@ private MotionEvent simulationEvent;
                 if (mBluetoothConnection.getConnectedRemoteDevice() != null) {
                     getSupportActionBar().setSubtitle("Connected to " + mBluetoothConnection.getConnectedRemoteDevice().getName());
                     mBluetoothConnection.write(BluetoothMessageEntity.sendCommand(CMD_SENDARENAINFO));  // get arena info after reconnection
-                    TV_RobotStatusValue.setText("Idling");
+                    TXTVW_RobotStatusValue.setText("Idling");
                 } else {
                     Log.e(TAG, "updateGUI_ToolBar_BTConnectionState: No device connected. Unable to find connected device");
                     getSupportActionBar().setSubtitle("No device connected");
@@ -433,17 +500,17 @@ private MotionEvent simulationEvent;
     }
 
     private void updateGUI_ArenaRobotStatus() {
-        TV_RobotStatusValue.setText("Idling");
+        TXTVW_RobotStatusValue.setText("Idling");
     }
 
     public void setup_ArenaGrid() {
         Log.d(TAG, "setup_ArenaGrid");
         if (arena != null) {
-            arenaGrid.removeView(arena);
+            RLO_ArenaGrid.removeView(arena);
             arena = null;
         }
-        arena = new Arena(this, arenaGrid);
-        arenaGrid.addView(arena);
+        arena = new Arena(this, RLO_ArenaGrid);
+        RLO_ArenaGrid.addView(arena);
         updateGUI_ArenaGrid("NAKEDGRID");
     }
 
@@ -459,23 +526,36 @@ private MotionEvent simulationEvent;
             Log.d(TAG, "mHandler: msg.arg1: " + msg.arg1);
             Log.d(TAG, "mHandler: msg.arg2: " + msg.arg2);
             Log.d(TAG, "mHandler: msg.toString(): " + msg.toString());
-
+            mBTCurrentState = mBluetoothConnection.getBTConnectionState();
             switch (msg.what) {
                 case GlobalVariables.BT_CONNECTION_STATE_CHANGE: {
                     updateGUI_ToolBar_BTConnectionState();
                     updateGUI_MenuIcon();
                     break;
                 }
+                case GlobalVariables.BT_CONNECTION_STATE_CONNECTIONFAILED: {
+                    showToast_Long("Connection with remote device failed");
+                    break;
+                }
+                case GlobalVariables.BT_CONNECTION_STATE_CONNECTIONLOST: {
+                    showToast_Long("Connection with remote device lost");
+                    break;
+                }
                 case GlobalVariables.MESSAGE_READ: {
                     if (msg.obj instanceof BluetoothMessageEntity) {
-                        updateGUI_MessageContent();
-                        updateGUI_ArenaGrid(((BluetoothMessageEntity) msg.obj).getMessageContent());
-                        updateGUI_ArenaRobotStatus();
+                        BluetoothMessageEntity bluetoothMessageEntity = (BluetoothMessageEntity) msg.obj;
+                        if (bluetoothMessageEntity.getMessageType() == MESSAGE_COMMAND) {
+                            updateGUI_MessageContent();
+                            updateGUI_ArenaGrid(((BluetoothMessageEntity) msg.obj).getMessageContent());
+                            updateGUI_ArenaRobotStatus();
+                        }else{
+
+                        }
                     } else {
                         byte[] read = (byte[]) msg.obj;
                         String incomingMessage = new String(read, 0, msg.arg1);  // byte[]; offset; byteCount
                         Log.d(TAG, "MESSAGE_READ: " + incomingMessage);
-                        showToast("Msg received: " + incomingMessage);
+                        showToast_Short("Msg received: " + incomingMessage);
                     }
                     break;
                 }
@@ -486,7 +566,7 @@ private MotionEvent simulationEvent;
                         byte[] read = (byte[]) msg.obj;
                         String incomingMessage = new String(read, 0, msg.arg1);  // byte[]; offset; byteCount
                         Log.d(TAG, "MESSAGE_WRITE: " + incomingMessage);
-                        showToast("Msg sent: " + incomingMessage);
+                        showToast_Short("Msg sent: " + incomingMessage);
                     }
                     break;
                 }
@@ -498,6 +578,7 @@ private MotionEvent simulationEvent;
     // Create a BroadcastReceiver to capture bluetooth activities
     private final BroadcastReceiver mReceiver = new BroadcastReceiver() {
         public void onReceive(Context context, Intent intent) {
+            Log.d(TAG, "onReceive");
             String action = intent.getAction();
             // ON/OFF STATES
             final int currentState_ThisDevice = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.ERROR);
@@ -509,6 +590,8 @@ private MotionEvent simulationEvent;
             final int currentConnectionState_ThisDevice = intent.getIntExtra(BluetoothAdapter.EXTRA_CONNECTION_STATE, BluetoothDevice.ERROR);
             final int preivousConnectionState_ThisDevice = intent.getIntExtra(BluetoothAdapter.EXTRA_PREVIOUS_CONNECTION_STATE, BluetoothDevice.ERROR);
             BluetoothDevice mRemoteDevice = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
+
+            mBTCurrentState = mBluetoothConnection.getBTConnectionState();
             switch (action) {
                 // handle BT connection state
                 case BluetoothDevice.ACTION_ACL_CONNECTED:
@@ -520,21 +603,38 @@ private MotionEvent simulationEvent;
                 case BluetoothDevice.ACTION_ACL_DISCONNECT_REQUESTED:
                     Log.d(TAG, "onReceive: ACTION_ACL_DISCONNECT_REQUESTED " + mRemoteDevice.getName());
                     break;
+                case BluetoothDevice.ACTION_PAIRING_REQUEST:
+                    Log.d(TAG, "onReceive: ACTION_PAIRING_REQUEST");
+                    break;
+                // BT ON/OFF
+                case BluetoothAdapter.ACTION_STATE_CHANGED:
+                    // 10 = OFF, 11 = TURNING ON, 12 = ON, 13 = TURNING OFF
+                    if (currentState_ThisDevice == BluetoothAdapter.STATE_ON) {
+                        Log.d(TAG, "currentState_ThisDevice: STATE_ON (" + currentState_ThisDevice + ")");
+                    } else if (currentState_ThisDevice == BluetoothAdapter.STATE_TURNING_ON) {
+                        Log.d(TAG, "currentState_ThisDevice: STATE_TURNING_ON (" + currentState_ThisDevice + ")");
+                    } else if (currentState_ThisDevice == BluetoothAdapter.STATE_TURNING_OFF) {
+                        Log.d(TAG, "currentState_ThisDevice: STATE_TURNING_OFF (" + currentState_ThisDevice + ")");
+                    } else if (currentState_ThisDevice == BluetoothAdapter.STATE_OFF) {
+                        Log.d(TAG, "currentState_ThisDevice: STATE_OFF (" + currentState_ThisDevice + ")");
+                    }
+                    break;
                 case BluetoothAdapter.ACTION_CONNECTION_STATE_CHANGED:
                     Log.d(TAG, "onReceive: ACTION_CONNECTION_STATE_CHANGED");
                     // 0 = disconnected, 1 = connecting ON, 2 = connected, 3 = disconnecting
                     if (currentConnectionState_ThisDevice == BluetoothAdapter.STATE_DISCONNECTED) {
-                        Log.d(TAG, "onReceive: currentConnectionState_ThisDevice: STATE_DISCONNECTED (" + currentConnectionState_ThisDevice + ")" + mRemoteDevice.getName());
+                        Log.d(TAG, "onReceive: currentConnectionState_ThisDevice: STATE_DISCONNECTED (" + currentConnectionState_ThisDevice + "), " + mRemoteDevice.getName());
                     } else if (currentConnectionState_ThisDevice == BluetoothAdapter.STATE_CONNECTING) {
-                        Log.d(TAG, "onReceive: currentConnectionState_ThisDevice: STATE_CONNECTING (" + currentConnectionState_ThisDevice + ")" + mRemoteDevice.getName());
+                        Log.d(TAG, "onReceive: currentConnectionState_ThisDevice: STATE_CONNECTING (" + currentConnectionState_ThisDevice + "), " + mRemoteDevice.getName());
                     } else if (currentConnectionState_ThisDevice == BluetoothAdapter.STATE_CONNECTED) {
                         Log.d(TAG, "onReceive: currentConnectionState_ThisDevice: STATE_CONNECTED (" + currentConnectionState_ThisDevice + "), " + mRemoteDevice.getName());
-
+                        mBluetoothConnection.startConnectThread(mRemoteDevice, true);
                     } else if (currentConnectionState_ThisDevice == BluetoothAdapter.STATE_DISCONNECTING) {
-                        Log.d(TAG, "onReceive: currentConnectionState_ThisDevice: STATE_DISCONNECTING (" + currentConnectionState_ThisDevice + ")" + mRemoteDevice.getName());
+                        Log.d(TAG, "onReceive: currentConnectionState_ThisDevice: STATE_DISCONNECTING (" + currentConnectionState_ThisDevice + "), " + mRemoteDevice.getName());
                     } else {
                         Log.d(TAG, "onReceive: currentConnectionState_ThisDevice: action: (" + action.toString() + ")");
                     }
+
                     updateGUI_ToolBar_BTConnectionState();
                     updateGUI_MenuIcon();
                     break;

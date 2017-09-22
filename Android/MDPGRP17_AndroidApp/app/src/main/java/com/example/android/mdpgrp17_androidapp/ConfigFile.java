@@ -1,7 +1,5 @@
 package com.example.android.mdpgrp17_androidapp;
 
-import android.bluetooth.BluetoothDevice;
-
 /**
  * Created by szean on 14/9/2017.
  */
@@ -36,23 +34,23 @@ public class ConfigFile {
     }
 
     public class BluetoothConfig {
-        private BluetoothDevice lastConnectedDevice;
+        // private BluetoothSocket lastConnectedDevice_Socket;
         private String lastConnectedDevice_Name;
         private String lastConnectedDevice_MACAddress;
 
-        public BluetoothConfig(BluetoothDevice lastConnectedDevice, String lastConnectedDevice_Name, String lastConnectedDevice_MACAddress) {
-            this.lastConnectedDevice = lastConnectedDevice;
+        public BluetoothConfig(String lastConnectedDevice_Name, String lastConnectedDevice_MACAddress) {
+            // this.lastConnectedDevice_Socket = lastConnectedDevice_Socket;
             this.lastConnectedDevice_Name = lastConnectedDevice_Name;
             this.lastConnectedDevice_MACAddress = lastConnectedDevice_MACAddress;
         }
 
-        public BluetoothDevice getLastConnectedDevice() {
-            return lastConnectedDevice;
-        }
-
-        public void setLastConnectedDevice(BluetoothDevice lastConnectedDevice) {
-            this.lastConnectedDevice = lastConnectedDevice;
-        }
+//        public BluetoothSocket getLastConnectedDevice_Socket() {
+//            return lastConnectedDevice_Socket;
+//        }
+//
+//        public void setLastConnectedDevice_Socket(BluetoothSocket lastConnectedDevice_Socket) {
+//            this.lastConnectedDevice_Socket = lastConnectedDevice_Socket;
+//        }
 
         public String getLastConnectedDevice_Name() {
             return lastConnectedDevice_Name;

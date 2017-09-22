@@ -82,7 +82,7 @@
                     android:id="@+id/devices_nearby"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Devices Nearby"
+                    android:text="Devices"
                     android:textSize="@dimen/article_titles"
                     android:textStyle="bold" />
 

@@ -33,12 +33,13 @@ public class ConfigFileHandler {
     }
 
     public ConfigFile getConfigFile() {
+        Log.d(TAG, "getConfigFile");
         configFile = readFromExternalStorage();
         if (configFile == null) {
-            ConfigFile.BluetoothConfig bluetoothConfig = new ConfigFile().new BluetoothConfig(null, "no device", "99-99-99-99-99");
+            ConfigFile.BluetoothConfig bluetoothConfig = new ConfigFile().new BluetoothConfig("no device", "99-99-99-99-99");
             ConfigFile.FunctionConfig functionConfig = new ConfigFile().new FunctionConfig("f1", "f2", "f3");
             this.configFile = new ConfigFile(bluetoothConfig, functionConfig);
-            writeToExternalStorage(configFile);    // write into internal storage
+            writeToExternalStorage(configFile);    // write into external storage
         }
         return configFile;
     }
@@ -51,7 +52,7 @@ public class ConfigFileHandler {
 
             // bluetooth config
             JSONObject jsonAdd_BluetoothConfig = new JSONObject();
-            jsonAdd_BluetoothConfig.put("lastConnectedDevice", configFile.bluetoothConfig.getLastConnectedDevice());
+//            jsonAdd_BluetoothConfig.put("lastConnectedDevice_Socket", configFile.bluetoothConfig.getLastConnectedDevice_Socket());
             jsonAdd_BluetoothConfig.put("lastConnectedDevice_Name", configFile.bluetoothConfig.getLastConnectedDevice_Name());
             jsonAdd_BluetoothConfig.put("lastConnectedDevice_MACAddress", configFile.bluetoothConfig.getLastConnectedDevice_MACAddress());
             // add the object to the main object
@@ -82,7 +83,7 @@ public class ConfigFileHandler {
                 JSONObject jsonObj = new JSONObject(jsonString); // the whole json object
                 JSONObject jsonObj_BluetoothConfig = jsonObj.getJSONObject("bluetoothConfig"); // the Bluetooth Config object
                 ConfigFile.BluetoothConfig bluetoothConfig =
-                        new ConfigFile().new BluetoothConfig(null,
+                        new ConfigFile().new BluetoothConfig(
                                 jsonObj_BluetoothConfig.getString("lastConnectedDevice_Name"),
                                 jsonObj_BluetoothConfig.getString("lastConnectedDevice_MACAddress"));
                 JSONObject jsonObj_FunctionConfig = jsonObj.getJSONObject("functionConfig");// the Function Config object

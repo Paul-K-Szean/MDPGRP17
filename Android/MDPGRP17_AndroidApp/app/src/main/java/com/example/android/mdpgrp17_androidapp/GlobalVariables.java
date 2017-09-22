@@ -31,15 +31,23 @@ public class GlobalVariables {
     public static final int BT_CONNECTION_STATE_CHANGE = 6;
     public static final int BT_CONNECTION_STATE_OFF = 7;
 
+    public static final int BT_CONNECTION_STATE_CONNECTIONLOST = 8;
+    public static final int BT_CONNECTION_STATE_CONNECTIONFAILED = 9;
+
     // Arena State
     public static final int ARENA_GRID = 0;
-    public static final int ARENA_OBSTACLE = 1;
+    public static final int ARENA_GRID_OBSTACLE = 1;
     public static final int ARENA_GRID_START = 2;
     public static final int ARENA_GRID_END = 3;
     public static final int ARENA_GRID_WAYPOINT = 4;
-    public static final int ARENA_ROBOTPOSITION = 5;
-    public static final int ARENA_ROBOTDIRECTION = 6;
-    public static final int ARENA_ROBOTTRAVELPATH = 7;
+    public static final int ARENA_ROBOT_POSITION = 5;
+    public static final int ARENA_ROBOT_POSITION_WITH_WAYPOINT = 6; // robot on way point
+    public static final int ARENA_ROBOT_DIRECTION = 7;
+    public static final int ARENA_ROBOT_TRAVELPATH = 8;
+    public static final int ARENA_ROBOT_TRAVELPATH_WITH_WAYPOINT = 9;   // travel path with way point
+
+
+    // Set Way Point
 
 
 }
