@@ -15,7 +15,7 @@ public class ArenaThread extends Thread {
     private static final String TAG = "ArenaThread";
     private Arena arena;
     private boolean running = false;
-    private final static int sleepTime = 200;
+    private final static int sleepTime = 300;
 
     public ArenaThread(Arena arena) {
         super();

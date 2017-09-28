@@ -1,19 +1,7 @@
 [
     {
-        "merged": "C:\\Users\\szean\\Documents\\AndroidProjects\\MDP\\MDPGRP17\\app\\build\\intermediates\\res\\merged\\debug\\drawable-nodpi\\b_avator.png",
-        "source": "C:\\Users\\szean\\Documents\\AndroidProjects\\MDP\\MDPGRP17\\app\\src\\main\\res\\drawable-nodpi\\b_avator.png"
-    },
-    {
-        "merged": "C:\\Users\\szean\\Documents\\AndroidProjects\\MDP\\MDPGRP17\\app\\build\\intermediates\\res\\merged\\debug\\drawable-nodpi\\d_avator.png",
-        "source": "C:\\Users\\szean\\Documents\\AndroidProjects\\MDP\\MDPGRP17\\app\\src\\main\\res\\drawable-nodpi\\d_avator.png"
-    },
-    {
-        "merged": "C:\\Users\\szean\\Documents\\AndroidProjects\\MDP\\MDPGRP17\\app\\build\\intermediates\\res\\merged\\debug\\drawable-nodpi\\c_avator.png",
-        "source": "C:\\Users\\szean\\Documents\\AndroidProjects\\MDP\\MDPGRP17\\app\\src\\main\\res\\drawable-nodpi\\c_avator.png"
-    },
-    {
-        "merged": "C:\\Users\\szean\\Documents\\AndroidProjects\\MDP\\MDPGRP17\\app\\build\\intermediates\\res\\merged\\debug\\drawable-nodpi\\c.png",
-        "source": "C:\\Users\\szean\\Documents\\AndroidProjects\\MDP\\MDPGRP17\\app\\src\\main\\res\\drawable-nodpi\\c.png"
+        "merged": "C:\\Users\\szean\\Documents\\AndroidProjects\\MDP\\MDPGRP17_AndroidApp\\app\\build\\intermediates\\res\\merged\\debug\\drawable-nodpi\\a.png",
+        "source": "C:\\Users\\szean\\Documents\\AndroidProjects\\MDP\\MDPGRP17_AndroidApp\\app\\src\\main\\res\\drawable-nodpi\\a.png"
     },
     {
         "merged": "C:\\Users\\szean\\Documents\\AndroidProjects\\MDP\\MDPGRP17_AndroidApp\\app\\build\\intermediates\\res\\merged\\debug\\drawable-nodpi\\c.png",
@@ -24,36 +12,8 @@
         "source": "C:\\Users\\szean\\Documents\\AndroidProjects\\MDP\\MDPGRP17_AndroidApp\\app\\src\\main\\res\\drawable-nodpi\\e.png"
     },
     {
-        "merged": "C:\\Users\\szean\\Documents\\AndroidProjects\\MDP\\MDPGRP17\\app\\build\\intermediates\\res\\merged\\debug\\drawable-nodpi\\f.png",
-        "source": "C:\\Users\\szean\\Documents\\AndroidProjects\\MDP\\MDPGRP17\\app\\src\\main\\res\\drawable-nodpi\\f.png"
-    },
-    {
-        "merged": "C:\\Users\\szean\\Documents\\AndroidProjects\\MDP\\MDPGRP17\\app\\build\\intermediates\\res\\merged\\debug\\drawable-nodpi\\a_avator.png",
-        "source": "C:\\Users\\szean\\Documents\\AndroidProjects\\MDP\\MDPGRP17\\app\\src\\main\\res\\drawable-nodpi\\a_avator.png"
-    },
-    {
         "merged": "C:\\Users\\szean\\Documents\\AndroidProjects\\MDP\\MDPGRP17_AndroidApp\\app\\build\\intermediates\\res\\merged\\debug\\drawable-nodpi\\a_avator.png",
         "source": "C:\\Users\\szean\\Documents\\AndroidProjects\\MDP\\MDPGRP17_AndroidApp\\app\\src\\main\\res\\drawable-nodpi\\a_avator.png"
-    },
-    {
-        "merged": "C:\\Users\\szean\\Documents\\AndroidProjects\\MDP\\MDPGRP17_AndroidApp\\app\\build\\intermediates\\res\\merged\\debug\\drawable-nodpi\\d.png",
-        "source": "C:\\Users\\szean\\Documents\\AndroidProjects\\MDP\\MDPGRP17_AndroidApp\\app\\src\\main\\res\\drawable-nodpi\\d.png"
-    },
-    {
-        "merged": "C:\\Users\\szean\\Documents\\AndroidProjects\\MDP\\MDPGRP17_AndroidApp\\app\\build\\intermediates\\res\\merged\\debug\\drawable-nodpi\\a.png",
-        "source": "C:\\Users\\szean\\Documents\\AndroidProjects\\MDP\\MDPGRP17_AndroidApp\\app\\src\\main\\res\\drawable-nodpi\\a.png"
-    },
-    {
-        "merged": "C:\\Users\\szean\\Documents\\AndroidProjects\\MDP\\MDPGRP17\\app\\build\\intermediates\\res\\merged\\debug\\drawable-nodpi\\d.png",
-        "source": "C:\\Users\\szean\\Documents\\AndroidProjects\\MDP\\MDPGRP17\\app\\src\\main\\res\\drawable-nodpi\\d.png"
-    },
-    {
-        "merged": "C:\\Users\\szean\\Documents\\AndroidProjects\\MDP\\MDPGRP17\\app\\build\\intermediates\\res\\merged\\debug\\drawable-nodpi\\a.png",
-        "source": "C:\\Users\\szean\\Documents\\AndroidProjects\\MDP\\MDPGRP17\\app\\src\\main\\res\\drawable-nodpi\\a.png"
-    },
-    {
-        "merged": "C:\\Users\\szean\\Documents\\AndroidProjects\\MDP\\MDPGRP17\\app\\build\\intermediates\\res\\merged\\debug\\drawable-nodpi\\e.png",
-        "source": "C:\\Users\\szean\\Documents\\AndroidProjects\\MDP\\MDPGRP17\\app\\src\\main\\res\\drawable-nodpi\\e.png"
     },
     {
         "merged": "C:\\Users\\szean\\Documents\\AndroidProjects\\MDP\\MDPGRP17_AndroidApp\\app\\build\\intermediates\\res\\merged\\debug\\drawable-nodpi\\b_avator.png",
@@ -72,10 +32,6 @@
         "source": "C:\\Users\\szean\\Documents\\AndroidProjects\\MDP\\MDPGRP17_AndroidApp\\app\\src\\main\\res\\drawable-nodpi\\c_avator.png"
     },
     {
-        "merged": "C:\\Users\\szean\\Documents\\AndroidProjects\\MDP\\MDPGRP17\\app\\build\\intermediates\\res\\merged\\debug\\drawable-nodpi\\f_avator.png",
-        "source": "C:\\Users\\szean\\Documents\\AndroidProjects\\MDP\\MDPGRP17\\app\\src\\main\\res\\drawable-nodpi\\f_avator.png"
-    },
-    {
         "merged": "C:\\Users\\szean\\Documents\\AndroidProjects\\MDP\\MDPGRP17_AndroidApp\\app\\build\\intermediates\\res\\merged\\debug\\drawable-nodpi\\d_avator.png",
         "source": "C:\\Users\\szean\\Documents\\AndroidProjects\\MDP\\MDPGRP17_AndroidApp\\app\\src\\main\\res\\drawable-nodpi\\d_avator.png"
     },
@@ -84,15 +40,11 @@
         "source": "C:\\Users\\szean\\Documents\\AndroidProjects\\MDP\\MDPGRP17_AndroidApp\\app\\src\\main\\res\\drawable-nodpi\\f_avator.png"
     },
     {
-        "merged": "C:\\Users\\szean\\Documents\\AndroidProjects\\MDP\\MDPGRP17\\app\\build\\intermediates\\res\\merged\\debug\\drawable-nodpi\\b.png",
-        "source": "C:\\Users\\szean\\Documents\\AndroidProjects\\MDP\\MDPGRP17\\app\\src\\main\\res\\drawable-nodpi\\b.png"
+        "merged": "C:\\Users\\szean\\Documents\\AndroidProjects\\MDP\\MDPGRP17_AndroidApp\\app\\build\\intermediates\\res\\merged\\debug\\drawable-nodpi\\d.png",
+        "source": "C:\\Users\\szean\\Documents\\AndroidProjects\\MDP\\MDPGRP17_AndroidApp\\app\\src\\main\\res\\drawable-nodpi\\d.png"
     },
     {
         "merged": "C:\\Users\\szean\\Documents\\AndroidProjects\\MDP\\MDPGRP17_AndroidApp\\app\\build\\intermediates\\res\\merged\\debug\\drawable-nodpi\\e_avator.png",
         "source": "C:\\Users\\szean\\Documents\\AndroidProjects\\MDP\\MDPGRP17_AndroidApp\\app\\src\\main\\res\\drawable-nodpi\\e_avator.png"
-    },
-    {
-        "merged": "C:\\Users\\szean\\Documents\\AndroidProjects\\MDP\\MDPGRP17\\app\\build\\intermediates\\res\\merged\\debug\\drawable-nodpi\\e_avator.png",
-        "source": "C:\\Users\\szean\\Documents\\AndroidProjects\\MDP\\MDPGRP17\\app\\src\\main\\res\\drawable-nodpi\\e_avator.png"
     }
 ]

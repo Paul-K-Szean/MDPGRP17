@@ -27,6 +27,7 @@ import android.os.Handler;
 import android.os.Message;
 import android.support.design.widget.NavigationView;
 import android.support.graphics.drawable.VectorDrawableCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.content.res.ResourcesCompat;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
@@ -40,6 +41,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
@@ -55,6 +57,7 @@ import java.util.List;
 
 import static com.example.android.mdpgrp17_androidapp.GlobalVariables.BT_CONNECTION_STATE_CONNECTED;
 import static com.example.android.mdpgrp17_androidapp.GlobalVariables.BT_CONNECTION_STATE_IDLE;
+import static com.example.android.mdpgrp17_androidapp.GlobalVariables.BT_CONNECTION_STATE_LISTENING;
 import static com.example.android.mdpgrp17_androidapp.GlobalVariables.CMD_FORWARD;
 import static com.example.android.mdpgrp17_androidapp.GlobalVariables.CMD_REVERSE;
 import static com.example.android.mdpgrp17_androidapp.GlobalVariables.CMD_ROTATELEFT;
@@ -67,7 +70,7 @@ import static com.example.android.mdpgrp17_androidapp.GlobalVariables.MESSAGE_FR
 /**
  * Provides UI for the main screen.
  */
-public class MainActivity extends AppCompatActivity implements View.OnClickListener {
+public class MainActivity extends AppCompatActivity implements View.OnClickListener, View.OnTouchListener {
     private static final String TAG = "MainActivity";
 
     // GUI Objects
@@ -76,6 +79,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private RecyclerView RCYLRVW_Command;
     private RelativeLayout RLO_ArenaGrid;
     private LinearLayout LLO_MapMode_PreviousNext;
+    private LinearLayout LLO_WayPoint;
     private Button BTN_CMD_GetArenaInfo;
     private Button BTN_CMD_Forward;
     private Button BTN_CMD_Reverse;
@@ -87,6 +91,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private TextView TXTVW_RobotStatusValue;
     private TextView TXTVW_MapModeIndexValue;
     private TextView TXTVW_WayPointValue;
+    private TextView TXTVW_WayPoint;
     private ToggleButton TGLBTN_MapMode;
     // Bluetooth objects
     private BluetoothConnection mBluetoothConnection;
@@ -96,6 +101,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private int mBTCurrentState;
     // Arena objects
     private Arena arena;
+    private boolean isWayPointLocked;
 
     // Config objects
     private ConfigFileHandler configFileHandler;
@@ -125,17 +131,24 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             Intent intent_settings = new Intent(this, SettingsActivity.class);
             startActivity(intent_settings);
         } else if (id == R.id.action_settings_bluetooth_reconnect) {
-            BluetoothDevice lastConnectedDevice = mBluetoothConnection.getConnectedRemoteDevice();
-            if (lastConnectedDevice != null) {
-                mBluetoothConnection.startConnectThread(lastConnectedDevice, true);
-            } else {
-                lastConnectedDevice = mBluetoothAdapter.getRemoteDevice(configFileHandler.getConfigFile().getBluetoothConfig().getLastConnectedDevice_MACAddress());
+
+            if (mBTCurrentState == BT_CONNECTION_STATE_CONNECTED) {
+                mBluetoothConnection.disconnect();
+            }
+            if (mBTCurrentState == BT_CONNECTION_STATE_LISTENING) {
+                BluetoothDevice lastConnectedDevice = mBluetoothConnection.getConnectedRemoteDevice();
                 if (lastConnectedDevice != null) {
                     mBluetoothConnection.startConnectThread(lastConnectedDevice, true);
                 } else {
-                    showToast_Short("You have not connected to any device yet.");
+                    lastConnectedDevice = mBluetoothAdapter.getRemoteDevice(configFileHandler.getConfigFile().getBluetoothConfig().getLastConnectedDevice_MACAddress());
+                    if (lastConnectedDevice != null) {
+                        mBluetoothConnection.startConnectThread(lastConnectedDevice, true);
+                    } else {
+                        showToast_Short("You have not connected to any device yet.");
+                    }
                 }
             }
+
         } else if (id == android.R.id.home) {
             mDrawerLayout.openDrawer(GravityCompat.START);
         }
@@ -158,6 +171,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         // GUI Objects
         RLO_ArenaGrid = (RelativeLayout) findViewById(R.id.RLO_ArenaGrid);
         LLO_MapMode_PreviousNext = (LinearLayout) findViewById(R.id.LLO_MapMode_PreviousNext);
+        LLO_WayPoint = (LinearLayout) findViewById(R.id.LLO_WayPoint);
         RCYLRVW_Command = (RecyclerView) findViewById(R.id.RCYLRVW_Command);
         BTN_CMD_GetArenaInfo = (Button) findViewById(R.id.BTN_CMD_GetArenaInfo);
         BTN_CMD_Forward = (Button) findViewById(R.id.BTN_CMD_Forward);
@@ -170,6 +184,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         TXTVW_RobotStatusValue = (TextView) findViewById(R.id.TXTVW_RobotStatusValue);
         TXTVW_MapModeIndexValue = (TextView) findViewById(R.id.TXTVW_MapModeIndexValue);
         TXTVW_WayPointValue = (TextView) findViewById(R.id.TXTVW_WayPointValue);
+        TXTVW_WayPoint = (TextView) findViewById(R.id.TXTVW_WayPoint);
         TGLBTN_MapMode = (ToggleButton) findViewById(R.id.TGLBTN_MapMode);
         // Adding Toolbar to Main screen
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
@@ -235,6 +250,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         BTN_MapMode_Next.setOnClickListener(this);
         BTN_Reset.setOnClickListener(this);
         TGLBTN_MapMode.setOnClickListener(this);
+        LLO_WayPoint.setOnTouchListener(this);
+
     }
 
     @Override
@@ -247,7 +264,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     protected void onResume() {
         Log.d(TAG, "onResume");
-        setup_ArenaGrid();
         mBluetoothConnection = BluetoothConnection.getmBluetoothConnection(mHandler);
         mBluetoothConnection.setHandler(mHandler);
         mBTCurrentState = mBluetoothConnection.getBTConnectionState();
@@ -256,9 +272,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             // BT on
             if (mBTCurrentState == BT_CONNECTION_STATE_IDLE) {
                 mBluetoothConnection.startAcceptThread(true);
+                setup_ArenaGrid();
             }
             if (mBTCurrentState == BT_CONNECTION_STATE_CONNECTED) {
                 mBluetoothConnection.write(BluetoothMessageEntity.sendCommand(CMD_SENDARENAINFO));
+                // updates the Arena GUI at handler
             }
             updateGUI_ToolBar_BTConnectionState();
             updateGUI_MessageContent();
@@ -267,6 +285,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             // BT off
             Log.d(TAG, "onResume: BT off");
             TXTVW_RobotStatusValue.setText("None");
+            setup_ArenaGrid();
         }
 
 
@@ -301,27 +320,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         super.onDestroy();
     }
 
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        Log.d(TAG, "onActivityResult");
-    }
-
     public void onClick(View view) {
         int controlID = view.getId();
-        if (controlID == R.id.BTN_Reset) {
-            Log.d(TAG, "Clicked On BTN_Reset");
-            arena.setMapMode(true);
-            arena.setArenaStateIndex_Pause(-1);
-            arena.setArenaStateIndex_InArray(-1);
-            arena.setupNakedGrid();
-            arena.setSaveState_ArenaInfo(new ArrayList<int[][]>());
-            arena.setSaveState_TravelInfo(new ArrayList<int[][]>());
-            if (mBTCurrentState == BT_CONNECTION_STATE_CONNECTED) {
-                mBluetoothConnection.write(BluetoothMessageEntity.sendCommand(CMD_SENDARENAINFO));
-            }
-            TXTVW_MapModeIndexValue.setText("Auto");
-            TXTVW_WayPointValue.setText("0,0");
-        }
+
         if (mBTCurrentState == BT_CONNECTION_STATE_CONNECTED) {
             if (controlID == R.id.TGLBTN_MapMode) {
                 Log.d(TAG, "Clicked On TGLBTN_MapMode");
@@ -331,76 +332,149 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     // auto map mode
                     LLO_MapMode_PreviousNext.setVisibility(View.INVISIBLE);
                     TXTVW_MapModeIndexValue.setText("Auto");
-                    arena.setArenaStateIndex_Pause(-1); // reset the pause index
-                    arena.setArenaStateIndex_InArray(-1);// reset the transverse index
+                    arena.setSaveStateIndex_Pause(-1); // reset the pause index
+                    arena.setSaveStateIndex_InArray(-1);// reset the transverse index
                 } else {
                     // manual map mode
                     LLO_MapMode_PreviousNext.setVisibility(View.VISIBLE);
-                    // set the pause index to the current index count
-                    // already increased to the next state, so need to decrease the index to view the current state
-                    arena.setArenaStateIndex_Pause(arena.getArenaInfoSize() - 1);
+                    // set the pause index to the current arena info size
+                    arena.setSaveStateIndex_Pause((arena.getArenaSaveStateArrayListSize() - 1));
                     // check if index of transverse was set to the initial value of the pause index
-                    if (arena.getArenaStateIndex_InArray() == -1)
-                        arena.setArenaStateIndex_InArray(arena.getArenaStateIndex_Pause());
-
-                    TXTVW_MapModeIndexValue.setText("Index: " + arena.getArenaStateIndex_InArray());
+                    if (arena.getSaveStateIndex_InArray() == -1)
+                        arena.setSaveStateIndex_InArray(arena.getSaveStateIndex_Pause());
+                    arena.printArenaInfo();
                 }
             }
             if (controlID == R.id.BTN_MapMode_Previous) {
-                Log.d(TAG, "Clicked On BTN_MapMode_Previous");
-                if (arena.getArenaStateIndex_InArray() > 0) {
+                if (arena.getSaveStateIndex_InArray() > 0) {
                     Log.d(TAG, "Clicked On BTN_MapMode_Previous: -1");
-                    arena.setArenaStateIndex_InArray(arena.getArenaStateIndex_InArray() - 1);
+                    arena.setSaveStateIndex_InArray(arena.getSaveStateIndex_InArray() - 1);
+                    if (arena.getSaveStateArrayList().get(arena.getSaveStateIndex_InArray()).getWayPointReached()) {
+                        TXTVW_WayPointValue.setTextColor(ContextCompat.getColor(this, R.color.color_Arena_StartPosition));
+                        TXTVW_WayPoint.setTextColor(ContextCompat.getColor(this, R.color.color_Arena_StartPosition));
+                    } else {
+                        TXTVW_WayPointValue.setTextColor(ContextCompat.getColor(this, R.color.color_Arena_WayPoint));
+                        TXTVW_WayPoint.setTextColor(ContextCompat.getColor(this, R.color.color_Arena_WayPoint));
+                    }
                 } else {
+                    Log.d(TAG, "Clicked On BTN_MapMode_Previous: at the start");
                     showToast_Short("You are at the start state!");
                 }
-                TXTVW_MapModeIndexValue.setText("Index: " + arena.getArenaStateIndex_InArray());
             }
             if (controlID == R.id.BTN_MapMode_Next) {
-                Log.d(TAG, "Clicked On BTN_MapMode_Next");
-                if (arena.getArenaStateIndex_InArray() < arena.getArenaInfoSize()) {
+                if (arena.getSaveStateIndex_InArray() < (arena.getArenaSaveStateArrayListSize() - 1)) {
                     Log.d(TAG, "Clicked On BTN_MapMode_Next: +1");
-                    arena.setArenaStateIndex_InArray(arena.getArenaStateIndex_InArray() + 1);
+                    arena.setSaveStateIndex_InArray(arena.getSaveStateIndex_InArray() + 1);
+                    if (arena.getSaveStateArrayList().get(arena.getSaveStateIndex_InArray()).getWayPointReached()) {
+                        TXTVW_WayPointValue.setTextColor(ContextCompat.getColor(this, R.color.color_Arena_StartPosition));
+                        TXTVW_WayPoint.setTextColor(ContextCompat.getColor(this, R.color.color_Arena_StartPosition));
+                    } else {
+                        TXTVW_WayPointValue.setTextColor(ContextCompat.getColor(this, R.color.color_Arena_WayPoint));
+                        TXTVW_WayPoint.setTextColor(ContextCompat.getColor(this, R.color.color_Arena_WayPoint));
+                    }
                 } else {
+                    Log.d(TAG, "Clicked On BTN_MapMode_Next: ");
                     showToast_Short("You can't view the future yet!");
                 }
-                TXTVW_MapModeIndexValue.setText("Index: " + arena.getArenaStateIndex_InArray());
             }
-            switch (view.getId()) {
-                case R.id.BTN_CMD_GetArenaInfo: {
-                    Log.d(TAG, "Clicked On BTN_CMD_GetArenaInfo");
-                    mBluetoothConnection.write(BluetoothMessageEntity.sendCommand(CMD_SENDARENAINFO));
-                    break;
-                }
-                case R.id.BTN_CMD_Forward: {
-                    if (arena.checkMovement()) {
-                        mBluetoothConnection.write(BluetoothMessageEntity.sendCommand(CMD_FORWARD));
-                        TXTVW_RobotStatusValue.setText("Moving forward");
-                    } else {
-                        showToast_Long("Unable to move forward");
+            if (controlID == R.id.BTN_CMD_GetArenaInfo) {
+                Log.d(TAG, "Clicked On BTN_CMD_GetArenaInfo: at the end");
+                mBluetoothConnection.write(BluetoothMessageEntity.sendCommand(CMD_SENDARENAINFO));
+            }
+
+            if (isWayPointLocked) {
+                switch (view.getId()) {
+                    case R.id.BTN_CMD_Forward: {
+                        if (arena.checkMovement(CMD_FORWARD)) {
+                            mBluetoothConnection.write(BluetoothMessageEntity.sendCommand(CMD_FORWARD));
+                            TXTVW_RobotStatusValue.setText("Moving forward");
+                        } else {
+                            showToast_Long("Unable to move forward");
+                        }
+                        break;
                     }
-                    break;
+                    case R.id.BTN_CMD_Reverse: {
+                        if (arena.checkMovement(CMD_REVERSE)) {
+                            mBluetoothConnection.write(BluetoothMessageEntity.sendCommand(CMD_REVERSE));
+                            TXTVW_RobotStatusValue.setText("Moving reverse");
+                        } else {
+                            showToast_Long("Unable to move backward");
+                        }
+                        break;
+                    }
+                    case R.id.BTN_CMD_RotateLeft: {
+                        mBluetoothConnection.write(BluetoothMessageEntity.sendCommand(CMD_ROTATELEFT));
+                        TXTVW_RobotStatusValue.setText("Rotating left");
+                        break;
+                    }
+                    case R.id.BTN_CMD_RotateRight: {
+                        mBluetoothConnection.write(BluetoothMessageEntity.sendCommand(CMD_ROTATERIGHT));
+                        TXTVW_RobotStatusValue.setText("Rotating right");
+                        break;
+                    }
                 }
-                case R.id.BTN_CMD_Reverse: {
-                    mBluetoothConnection.write(BluetoothMessageEntity.sendCommand(CMD_REVERSE));
-                    TXTVW_RobotStatusValue.setText("Moving reverse");
-                    break;
-                }
-                case R.id.BTN_CMD_RotateLeft: {
-                    mBluetoothConnection.write(BluetoothMessageEntity.sendCommand(CMD_ROTATELEFT));
-                    TXTVW_RobotStatusValue.setText("Rotating left");
-                    break;
-                }
-                case R.id.BTN_CMD_RotateRight: {
-                    mBluetoothConnection.write(BluetoothMessageEntity.sendCommand(CMD_ROTATERIGHT));
-                    TXTVW_RobotStatusValue.setText("Rotating right");
-                    break;
-                }
+            } else {
+                showToast_Short("Please lock the way point first");
+            }
+
+            if (arena.getMapMode()) {
+
+            } else {
+                // manual mode
+                TXTVW_MapModeIndexValue.setText("At: " + arena.getSaveStateIndex_InArray() + "/" + (arena.getArenaSaveStateArrayListSize() - 1));
             }
         } else {
             Log.d(TAG, "Please turn on bluetooth and connect to a device");
             showToast_Short("Please turn on bluetooth and connect to a device");
         }
+
+        if (controlID == R.id.BTN_Reset) {
+            Log.d(TAG, "Clicked On BTN_Reset");
+            setup_ArenaGrid();
+            arena.setMapMode(true);
+            TGLBTN_MapMode.setChecked(true);
+            LLO_MapMode_PreviousNext.setVisibility(View.INVISIBLE);
+            arena.setSaveStateIndex_Pause(-1);
+            arena.setSaveStateIndex_InArray(-1);
+            arena.setupNakedGrid();
+            arena.setSaveStateArrayList(new ArrayList<ArenaSaveState>());
+            isWayPointLocked = false;
+            updateGUI_WayPoint();
+            if (mBTCurrentState == BT_CONNECTION_STATE_CONNECTED) {
+                mBluetoothConnection.write(BluetoothMessageEntity.sendCommand(CMD_SENDARENAINFO));
+            }
+            TXTVW_MapModeIndexValue.setText("Auto");
+            TXTVW_WayPointValue.setText("0,0");
+        }
+    }
+
+    @Override
+    public boolean onTouch(View view, MotionEvent motionEvent) {
+        // TODO Auto-generated method stub
+        switch (motionEvent.getAction()) {
+            case MotionEvent.ACTION_DOWN:
+                Log.d(TAG, "onTouch: isWayPointLocked: " + isWayPointLocked + "; " + arena.getWayPointPosition_Row_Center() + "," + arena.getWayPointPosition_Col_Center());
+                if (isWayPointLocked) {
+                    // go to unlock mode
+                    isWayPointLocked = false;
+                } else {
+                    // go to locked mode
+                    if (arena.getWayPointPosition_Row_Center() != 0 && arena.getWayPointPosition_Col_Center() != 0) {
+                        isWayPointLocked = true;
+                    } else {
+                        isWayPointLocked = false;
+                        showToast_Short("Please select a way point first");
+                    }
+                }
+                updateGUI_WayPoint();
+                break;
+            case MotionEvent.ACTION_MOVE:
+                //Log.d(TAG, String.format("ACTION_MOVE | x:%s y:%s",
+                break;
+            case MotionEvent.ACTION_UP:
+                break;
+        }
+        return true;
     }
 
     private void showToast_Short(String message) {
@@ -431,7 +505,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         // default
                     } else if (mBTCurrentState == BT_CONNECTION_STATE_IDLE) {
                         // default
-                    } else if (mBTCurrentState == GlobalVariables.BT_CONNECTION_STATE_LISTENING) {
+                    } else if (mBTCurrentState == BT_CONNECTION_STATE_LISTENING) {
                         // default
                     }
                 }
@@ -457,6 +531,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         RCYLRVW_Command.setAdapter(mBTCommandArrayAdapter);
         RCYLRVW_Command.scrollToPosition(mBTCommandArrayList.size() - 1);
 
+    }
+
+    public void updateGUI_WayPoint() {
+        if (isWayPointLocked) {
+            LLO_WayPoint.setBackgroundResource(R.drawable.border_locked);
+        } else {
+            LLO_WayPoint.setBackgroundResource(R.drawable.border_unlocked);
+        }
     }
 
     public void updateGUI_ArenaGrid(String messageContent) {
@@ -490,7 +572,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             case BT_CONNECTION_STATE_IDLE:
                 Log.d(TAG, "updateGUI_ToolBar_BTConnectionState: BT connection state: BT_CONNECTION_STATE_IDLE");
                 break;
-            case GlobalVariables.BT_CONNECTION_STATE_LISTENING:
+            case BT_CONNECTION_STATE_LISTENING:
                 Log.d(TAG, "updateGUI_ToolBar_BTConnectionState: BT connection state: BT_CONNECTION_STATE_LISTENING");
                 break;
             case GlobalVariables.BT_CONNECTION_STATE_OFF:
@@ -511,7 +593,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
         arena = new Arena(this, RLO_ArenaGrid);
         RLO_ArenaGrid.addView(arena);
-        updateGUI_ArenaGrid("NAKEDGRID");
+        updateGUI_ArenaGrid("NakedArena");
     }
 
     private void hideVirtualKeyboard() {
@@ -546,9 +628,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         BluetoothMessageEntity bluetoothMessageEntity = (BluetoothMessageEntity) msg.obj;
                         if (bluetoothMessageEntity.getMessageType() == MESSAGE_COMMAND) {
                             updateGUI_MessageContent();
-                            updateGUI_ArenaGrid(((BluetoothMessageEntity) msg.obj).getMessageContent());
+                            updateGUI_ArenaGrid(bluetoothMessageEntity.getMessageContent());
                             updateGUI_ArenaRobotStatus();
-                        }else{
+                        } else {
 
                         }
                     } else {
@@ -596,6 +678,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 // handle BT connection state
                 case BluetoothDevice.ACTION_ACL_CONNECTED:
                     Log.d(TAG, "onReceive: ACTION_ACL_CONNECTED: " + mRemoteDevice.getName());
+                    mBluetoothConnection.startConnectThread(mRemoteDevice, true);
                     break;
                 case BluetoothDevice.ACTION_ACL_DISCONNECTED:
                     Log.d(TAG, "onReceive: ACTION_ACL_DISCONNECTED: " + mRemoteDevice.getName());
@@ -642,6 +725,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     };
 
+    // Getter and Setters
+    public boolean getIsWayPointLocked() {
+        return isWayPointLocked;
+    }
+
+    public void setIsWayPointLocked(boolean wayPointLocked) {
+        isWayPointLocked = wayPointLocked;
+    }
 
     public class BTCommandAdapter extends RecyclerView.Adapter<BTCommandAdapter.MyViewHolder> {
 
@@ -683,12 +774,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             } else {
                 // FROM mRemoteDevice = receiver
                 holder.textView_message.setBackgroundResource(R.color.receiver_background);
-                if (bluetoothMessageEntity.getMessageContent().contains("GRID")) {
-                    String displayMsg = "";
-                    holder.textView_message.setText(displayMsg);
-                } else {
-                    holder.textView_message.setText(bluetoothMessageEntity.getMessageContent());
-                }
+                holder.textView_message.setText(bluetoothMessageEntity.getMessageContent());
                 RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) holder.textView_message.getLayoutParams();
                 params.addRule(RelativeLayout.ALIGN_PARENT_LEFT);
                 params.width = ViewGroup.LayoutParams.WRAP_CONTENT;

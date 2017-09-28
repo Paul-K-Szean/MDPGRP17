@@ -37,15 +37,17 @@
                 android:focusableInTouchMode="true"
                 android:gravity="center_horizontal"
                 android:orientation="vertical"
-                android:paddingTop="2dp"
+
                 app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
                 <RelativeLayout
                     android:id="@+id/RLO_ArenaGrid"
                     android:layout_width="520dp"
                     android:layout_height="660dp"
-                    android:layout_weight="1"
-                    android:paddingTop="0dp"></RelativeLayout>
+                    android:padding="0dp"
+                    android:layout_marginTop="-10dp"
+                    android:layout_marginBottom="6dp"
+                    android:layout_weight="1"></RelativeLayout>
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -136,13 +138,15 @@
                     </LinearLayout>
 
                     <LinearLayout
+                        android:id="@+id/LLO_WayPoint"
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
                         android:layout_weight="1"
-                        android:orientation="vertical">
+                        android:orientation="vertical"
+                        android:background="@drawable/border_unlocked">
 
                         <TextView
-                            android:id="@+id/TV_WayPoint"
+                            android:id="@+id/TXTVW_WayPoint"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"

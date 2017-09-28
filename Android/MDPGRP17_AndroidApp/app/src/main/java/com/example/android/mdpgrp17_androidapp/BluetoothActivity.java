@@ -304,7 +304,6 @@ public class BluetoothActivity extends AppCompatActivity {
                     device_MACAddress.setText(mRemoteDevice.getAddress());
                     if (mBTDeviceList.get(position).getBondState() == BluetoothDevice.BOND_BONDED) {
                         if (mBTCurrentState == BT_CONNECTION_STATE_CONNECTED && mRemoteDevice == mBluetoothConnection.getConnectedRemoteDevice()) {
-
                             device_status.setText("Connected");
                         } else if (mBTCurrentState == BT_CONNECTION_STATE_CONNECTING && mRemoteDevice == mBluetoothConnection.getConnectedRemoteDevice()) {
                             device_status.setText("Connecting");

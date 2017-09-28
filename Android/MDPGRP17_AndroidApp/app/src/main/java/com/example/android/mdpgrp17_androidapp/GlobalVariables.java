@@ -37,14 +37,13 @@ public class GlobalVariables {
     // Arena State
     public static final int ARENA_GRID = 0;
     public static final int ARENA_GRID_OBSTACLE = 1;
-    public static final int ARENA_GRID_START = 2;
-    public static final int ARENA_GRID_END = 3;
-    public static final int ARENA_GRID_WAYPOINT = 4;
+    public static final int ARENA_GRID_POSITION_START = 2;
+    public static final int ARENA_GRID_POSITION_END = 3;
+    public static final int ARENA_GRID_POSITIN_WAYPOINT = 4;
     public static final int ARENA_ROBOT_POSITION = 5;
-    public static final int ARENA_ROBOT_POSITION_WITH_WAYPOINT = 6; // robot on way point
-    public static final int ARENA_ROBOT_DIRECTION = 7;
-    public static final int ARENA_ROBOT_TRAVELPATH = 8;
-    public static final int ARENA_ROBOT_TRAVELPATH_WITH_WAYPOINT = 9;   // travel path with way point
+    public static final int ARENA_ROBOT_DIRECTION = 6;
+    public static final int ARENA_ROBOT_TRAVELPATH = 7;
+    public static final int ARENA_ROBOT_TRAVELPATH_WITH_WAYPOINT = 8;   // travel path with way point
 
 
     // Set Way Point
