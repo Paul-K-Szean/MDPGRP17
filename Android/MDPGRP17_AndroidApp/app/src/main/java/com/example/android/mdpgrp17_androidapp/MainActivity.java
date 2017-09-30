@@ -51,7 +51,9 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
-
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -70,7 +72,7 @@ import static com.example.android.mdpgrp17_androidapp.GlobalVariables.MESSAGE_FR
 /**
  * Provides UI for the main screen.
  */
-public class MainActivity extends AppCompatActivity implements View.OnClickListener, View.OnTouchListener {
+public class MainActivity extends AppCompatActivity implements View.OnClickListener, View.OnTouchListener, SensorEventListener {
     private static final String TAG = "MainActivity";
 
     // GUI Objects
@@ -102,6 +104,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     // Arena objects
     private Arena arena;
     private boolean isWayPointLocked;
+    //declaring Sensor Manager 
+    private SensorManager sensorManager;
+    private Sensor sensor;
 
     // Config objects
     private ConfigFileHandler configFileHandler;
@@ -251,6 +256,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         BTN_Reset.setOnClickListener(this);
         TGLBTN_MapMode.setOnClickListener(this);
         LLO_WayPoint.setOnTouchListener(this);
+        sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+        sensor = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
 
     }
 
@@ -290,12 +297,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
 
         super.onResume();
+        sensorManager.registerListener(this, sensor, SensorManager.SENSOR_DELAY_NORMAL);
     }
 
     @Override
     protected void onPause() {
         Log.d(TAG, "onPause");
         super.onPause();
+        sensorManager.unregisterListener(this);
     }
 
     @Override
@@ -319,7 +328,40 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         unregisterReceiver(mReceiver);
         super.onDestroy();
     }
+public void onAccuracyChanged(Sensor arg0, int arg1) {
+    }
+   
+    public void onSensorChanged(SensorEvent event) {
+        float x = event.values[0];
+        float y = event.values[1];
+        if (Math.abs(x) > Math.abs(y)) {
+            if (x < 0) {
 
+                arena.onSensorChanged(event);
+
+            }
+            if (x > 0) {
+
+                //textView.setText("You tilt the device left \n" );
+                arena.onSensorChanged(event);
+            }
+        } else {
+            if (y < 0) {
+
+                //textView.setText("You tilt the device up \n" );
+                arena.onSensorChanged(event);
+            }
+            if (y > 0) {
+
+                //textView.setText("You tilt the device down \n" );
+                arena.onSensorChanged(event);
+            }
+        }
+        if (x > (-2) && x < (2) && y > (-2) && y < (2)) {
+
+           // textView.setText("Not tilt device");
+        }
+    }
     public void onClick(View view) {
         int controlID = view.getId();
 
