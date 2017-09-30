@@ -12,7 +12,10 @@ import android.view.View;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
-
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
 import java.util.ArrayList;
 import java.util.Arrays;
 
@@ -53,7 +56,10 @@ public class Arena extends View {
     private Boolean isMapMode_Auto = true; // always auto update map
     private int saveStateIndex_Pause, saveStateIndex_InArray;   // negative to ensure default value, use to transverse the array of the saved state
     private ArrayList<ArenaSaveState> saveStateArrayList;
+    private SensorManager sensorManager;
 
+
+    public Sensor sensor;
     // Paint objects
     private Paint paint;
     private int X;
@@ -80,7 +86,56 @@ public class Arena extends View {
         this.arenaThread = new ArenaThread(this);
         arenaThread.startThread();
     }
+    public void onAccuracyChanged(Sensor arg0, int arg1) {
+    }
 
+    public void onSensorChanged(SensorEvent event) {
+
+
+        float x = event.values[0];
+        float y = event.values[1];
+        if (Math.abs(x) > Math.abs(y)) {
+
+                int touched_Col = (int) (x / grid_Size);
+                int touched_Row = (int) (y / grid_Size);
+                if (touched_Col == wayPointPosition_Col_Center && touched_Row == wayPointPosition_Row_Center) {
+                    // remove existing way points
+                    removeWayPoint();
+                } else {
+                    // remove existing way points
+                    removeWayPoint();
+                    //
+                    wayPointPosition_Col_Center = touched_Col;
+                    wayPointPosition_Row_Center = touched_Row;
+                    // check if touched point is within the grid
+                    if (wayPointPosition_Row_Center >= 1 && wayPointPosition_Row_Center <= 20 && grid_Col >= 1 && grid_Col <= 15) {
+                        // check if touched point is a valid way point
+                        if (arenaInfo[wayPointPosition_Row_Center - 1][wayPointPosition_Col_Center - 1] == ARENA_GRID) {
+                            drawWayPoint();
+                        } else {
+                            // touched point is not a valid way point, reset
+                            showToast("Unable to set way point on (" + wayPointPosition_Row_Center + "," + wayPointPosition_Col_Center + ")");
+                            if (wayPointPosition_Row_Center != 0 && wayPointPosition_Col_Center != 0) {
+                                wayPointPosition_Row_Center = wayPointPosition_Col_Center = 0;  // reset value for way point
+                            }
+                            TXTVW_WayPointValue.setText("0,0");
+                            TXTVW_WayPointValue.setTextColor(ContextCompat.getColor(getContext(), R.color.color_Arena_Default));
+                            TXTVW_WayPoint.setTextColor(ContextCompat.getColor(getContext(), R.color.color_Arena_Default));
+                        }
+                    } else {
+                        // check if existing way point is set
+                        String[] existingWayPoint = TXTVW_WayPointValue.getText().toString().split(",");
+                        wayPointPosition_Col_Center = Integer.parseInt(existingWayPoint[0]);
+                        wayPointPosition_Row_Center = Integer.parseInt(existingWayPoint[1]);
+                        if (wayPointPosition_Col_Center != 0 && wayPointPosition_Row_Center != 0) {
+                            drawWayPoint();
+                        }
+                    }
+                }
+                invalidate();
+            }
+
+        }
     @Override
     public boolean onTouchEvent(MotionEvent event) {
         MainActivity mainActivity = (MainActivity) getContext();
