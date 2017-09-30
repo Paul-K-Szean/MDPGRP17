@@ -35,7 +35,7 @@ import static com.example.android.mdpgrp17_androidapp.GlobalVariables.CMD_REVERS
  * Created by szean on 8/9/2017.
  */
 
-public class Arena extends View {
+public class Arena extends View implements SensorEventListener {
     private static final String TAG = "Arena";
     // GUI objects
     private RelativeLayout RLO_ArenaGrid;
