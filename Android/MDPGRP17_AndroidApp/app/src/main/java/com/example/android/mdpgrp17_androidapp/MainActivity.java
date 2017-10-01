@@ -49,9 +49,7 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
-import android.hardware.Sensor;
-import android.hardware.SensorEvent;
-import android.hardware.SensorEventListener;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -85,11 +83,7 @@ import static com.example.android.mdpgrp17_androidapp.R.color.color_ControlMode_
 /**
  * Provides UI for the main screen.
  */
-<<<<<<< HEAD
 public class MainActivity extends AppCompatActivity implements View.OnClickListener, View.OnTouchListener, OnCheckedChangeListener, SensorEventListener {
-=======
-public class MainActivity extends AppCompatActivity implements View.OnClickListener, View.OnTouchListener, SensorEventListener {
->>>>>>> 20010ae76e8fa4202c000857e5f109963c532832
     private static final String TAG = "MainActivity";
 
     // GUI Objects
@@ -124,16 +118,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private int mBTCurrentState;
     // Arena objects
     private Arena arena;
-<<<<<<< HEAD
     private boolean isWayPointLocked, isFastestStarted, isExplorationStarted, isTiltModeStarted;
     private int gameMode, controlMode;
-=======
-    private boolean isWayPointLocked;
-    //declaring Sensor Manager 
-    private SensorManager sensorManager;
-    private Sensor sensor;
-
->>>>>>> 20010ae76e8fa4202c000857e5f109963c532832
     // Config objects
     private ConfigFileHandler configFileHandler;
     private ConfigFile configFile;
@@ -350,18 +336,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         BTN_MapMode_Previous.setOnClickListener(this);
         BTN_MapMode_Next.setOnClickListener(this);
-<<<<<<< HEAD
         TGLBTN_MapMode.setOnCheckedChangeListener(this);
         TGLBTN_CalibrateTilt.setOnCheckedChangeListener(this);
         TGLBTN_StartTiltMode.setOnCheckedChangeListener(this);
-=======
-        BTN_Reset.setOnClickListener(this);
-        TGLBTN_MapMode.setOnClickListener(this);
-        LLO_WayPoint.setOnTouchListener(this);
-        sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
-        sensor = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-
->>>>>>> 20010ae76e8fa4202c000857e5f109963c532832
     }
 
     @Override
@@ -400,7 +377,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 mSensorManager.unregisterListener(this);
         }
         super.onResume();
-        sensorManager.registerListener(this, sensor, SensorManager.SENSOR_DELAY_NORMAL);
     }
 
     @Override
@@ -409,7 +385,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         if (mSensorManager != null)
             mSensorManager.unregisterListener(this);
         super.onPause();
-        sensorManager.unregisterListener(this);
     }
 
     @Override
@@ -435,27 +410,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             mSensorManager.unregisterListener(this);
         super.onDestroy();
     }
-public void onAccuracyChanged(Sensor arg0, int arg1) {
-    }
-   
-    public void onSensorChanged(SensorEvent event) {
-        float x = event.values[0];
-        float y = event.values[1];
-        if (Math.abs(x) > Math.abs(y)) {
-            if (x < 0) {
 
-                arena.onSensorChanged(event);
-
-            }
-            if (x > 0) {
-
-                //textView.setText("You tilt the device left \n" );
-                arena.onSensorChanged(event);
-            }
-        } else {
-            if (y < 0) {
-
-<<<<<<< HEAD
     @Override
     public void onBackPressed() {
         if (mSensorManager != null)
@@ -465,23 +420,6 @@ public void onAccuracyChanged(Sensor arg0, int arg1) {
 
     @Override
     public boolean onTouch(View view, MotionEvent motionEvent) {
-=======
-                //textView.setText("You tilt the device up \n" );
-                arena.onSensorChanged(event);
-            }
-            if (y > 0) {
-
-                //textView.setText("You tilt the device down \n" );
-                arena.onSensorChanged(event);
-            }
-        }
-        if (x > (-2) && x < (2) && y > (-2) && y < (2)) {
-
-           // textView.setText("Not tilt device");
-        }
-    }
-    public void onClick(View view) {
->>>>>>> 20010ae76e8fa4202c000857e5f109963c532832
         int controlID = view.getId();
 
         // to lock, unlock way point
