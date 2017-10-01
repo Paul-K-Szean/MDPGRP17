@@ -18,7 +18,7 @@ public class GlobalVariables {
     public static final String CMD_BEGINEXPLORE = "cam";
     public static final String CMD_BEGINFASTEST = "can";
     public static final String CMD_SENDARENAINFO = "cmd_sendarenainfo";
-
+    public static final String CMD_SENDWAYPOINT = "cmd_sendWayPoint";
 
     // Bluetooth Connection State
     // 0 = disconnected, 1 = connecting, 2 = connected, 3 = disconnecting, 4 = idle, 5 = listening, 6 = state changed
@@ -27,26 +27,47 @@ public class GlobalVariables {
     public static final int BT_CONNECTION_STATE_CONNECTED = 2;
     public static final int BT_CONNECTION_STATE_DISCONNECTING = 3;
     public static final int BT_CONNECTION_STATE_IDLE = 4; // ON
-    public static final int BT_CONNECTION_STATE_LISTENING = 5;
-    public static final int BT_CONNECTION_STATE_CHANGE = 6;
-    public static final int BT_CONNECTION_STATE_OFF = 7;
-
-    public static final int BT_CONNECTION_STATE_CONNECTIONLOST = 8;
-    public static final int BT_CONNECTION_STATE_CONNECTIONFAILED = 9;
+    public static final int BT_CONNECTION_STATE_CANNOTLISTEN = 5; // Cannot start accept thread
+    public static final int BT_CONNECTION_STATE_LISTENING = 6;
+    public static final int BT_CONNECTION_STATE_CHANGE = 7;
+    public static final int BT_CONNECTION_STATE_OFF = 8;
+    public static final int BT_CONNECTION_STATE_CONNECTIONLOST = 9;
+    public static final int BT_CONNECTION_STATE_CONNECTIONFAILED = 10;
+    public static final int BT_CONNECTION_STATE_DISCOVERABLE_DURATION = 300; // in secs
 
     // Arena State
     public static final int ARENA_GRID = 0;
     public static final int ARENA_GRID_OBSTACLE = 1;
     public static final int ARENA_GRID_POSITION_START = 2;
     public static final int ARENA_GRID_POSITION_END = 3;
-    public static final int ARENA_GRID_POSITIN_WAYPOINT = 4;
+    public static final int ARENA_GRID_POSITION_WAYPOINT = 4;
     public static final int ARENA_ROBOT_POSITION = 5;
-    public static final int ARENA_ROBOT_DIRECTION = 6;
-    public static final int ARENA_ROBOT_TRAVELPATH = 7;
-    public static final int ARENA_ROBOT_TRAVELPATH_WITH_WAYPOINT = 8;   // travel path with way point
+    public static final int ARENA_ROBOT_POSITION_WITH_WAYPOINT = 6;
+    public static final int ARENA_ROBOT_DIRECTION = 7;
+    public static final int ARENA_ROBOT_DIRECTION_WITH_WAYPOINT = 8;
+    public static final int ARENA_ROBOT_TRAVELPATH = 9;
+    public static final int ARENA_ROBOT_TRAVELPATH_WITH_WAYPOINT = 10;   // travel path with way point
+    public static final int ARENA_ROBOT_TRAVELPATH_WITH_STARTPOSITION = 11;   // travel path with way point
+    public static final int ARENA_ROBOT_TRAVELPATH_WITH_ENDPOSITION = 12;   // travel path with way point
 
+    public static final int ARENA_GAME_MODE_FASTEST = 0;
+    public static final int ARENA_GAME_MODE_EXPLORATION = 1;
+    public static final int ARENA_GAME_MODE_MANUALCONTROL = 2;
 
-    // Set Way Point
+    public static final int ARENA_CONTROL_MODE_BUTTON = 0;
+    public static final int ARENA_CONTROL_MODE_SWIPE = 1;
+    public static final int ARENA_CONTROL_MODE_TILT = 2;
+    public static final int SWIPE_MINIMUM_DISTANCE = 220;
+    public static final int TILT_MINIMUM_UP = 3;
+    public static final int TILT_MINIMUM_DOWN = -3;
+    public static final int TILT_MINIMUM_LEFT = -3;
+    public static final int TILT_MINIMUM_RIGHT = 3;
+    public static final float TILT_SENSITIVITY = 0.3f;
 
+    public static final int REQUESTCODE_YES = 300;
+    public static final int REQUESTCODE_NO = 0;
+    public static final int REQUESTCODE_BLUETOOTH_CONNECTABLE_DISCOVERABLE = 1;
 
+    public static final int TIMER_ONTICK = 0;
+    public static final int TIMER_ONFINISHED = 1;
 }

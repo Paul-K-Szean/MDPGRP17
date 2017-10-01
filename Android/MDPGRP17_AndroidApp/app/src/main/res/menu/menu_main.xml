@@ -28,8 +28,33 @@
         android:title="@string/action_settings_bluetooth"
         app:showAsAction="ifRoom" />
     <item
+        android:id="@+id/action_settings_chat"
+        android:icon="@drawable/ic_chat_black_24dp"
+        android:title="@string/action_settings_chat"
+        app:showAsAction="ifRoom" />
+    <item
         android:id="@+id/action_settings"
         android:icon="@drawable/ic_settings_black_24dp"
         android:title="@string/action_settings"
-        app:showAsAction="ifRoom" />
+        app:showAsAction="ifRoom">
+        <menu>
+            <item
+                android:id="@+id/action_settings_getarenainfo"
+                android:title="Get Arena Info" />
+            <item
+                android:id="@+id/action_settings_controlmode_reset"
+                android:title="Reset" />
+            <item
+                android:id="@+id/action_settings_controlmode_button"
+                android:title="Button Control" />
+            <item
+                android:id="@+id/action_settings_controlmode_swipe"
+                android:title="Swipe Control" />
+            <item
+                android:id="@+id/action_settings_controlmode_tilt"
+                android:title="Tilt Control" />
+        </menu>
+    </item>
+    >
+
 </menu>

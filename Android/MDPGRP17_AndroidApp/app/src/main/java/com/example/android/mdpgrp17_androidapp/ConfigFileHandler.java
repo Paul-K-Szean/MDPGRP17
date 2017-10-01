@@ -38,7 +38,8 @@ public class ConfigFileHandler {
         if (configFile == null) {
             ConfigFile.BluetoothConfig bluetoothConfig = new ConfigFile().new BluetoothConfig("no device", "99-99-99-99-99");
             ConfigFile.FunctionConfig functionConfig = new ConfigFile().new FunctionConfig("f1", "f2", "f3");
-            this.configFile = new ConfigFile(bluetoothConfig, functionConfig);
+            ConfigFile.TiltConfig tiltConfig = new ConfigFile().new TiltConfig(2.5f, 7.5f, -3.5f, 3.5f);
+            this.configFile = new ConfigFile(bluetoothConfig, functionConfig, tiltConfig);
             writeToExternalStorage(configFile);    // write into external storage
         }
         return configFile;
@@ -52,7 +53,6 @@ public class ConfigFileHandler {
 
             // bluetooth config
             JSONObject jsonAdd_BluetoothConfig = new JSONObject();
-//            jsonAdd_BluetoothConfig.put("lastConnectedDevice_Socket", configFile.bluetoothConfig.getLastConnectedDevice_Socket());
             jsonAdd_BluetoothConfig.put("lastConnectedDevice_Name", configFile.bluetoothConfig.getLastConnectedDevice_Name());
             jsonAdd_BluetoothConfig.put("lastConnectedDevice_MACAddress", configFile.bluetoothConfig.getLastConnectedDevice_MACAddress());
             // add the object to the main object
@@ -65,6 +65,17 @@ public class ConfigFileHandler {
             jsonAdd_FunctionConfig.put("function03", configFile.functionConfig.getFunction03());
             // add the object to the main object
             jsonObj.put("functionConfig", jsonAdd_FunctionConfig);
+
+            // function config
+            JSONObject jsonAdd_TiltConfig = new JSONObject();
+            jsonAdd_TiltConfig.put("minimum_Up", configFile.tiltConfig.getMinimum_Up());
+            jsonAdd_TiltConfig.put("minimum_Down", configFile.tiltConfig.getMinimum_Down());
+            jsonAdd_TiltConfig.put("minimum_Left", configFile.tiltConfig.getMinimum_Left());
+            jsonAdd_TiltConfig.put("minimum_Right", configFile.tiltConfig.getMinimum_Right());
+            // add the object to the main object
+            jsonObj.put("tiltConfig", jsonAdd_TiltConfig);
+
+
             Log.d(TAG, jsonObj.toString());
             return jsonObj.toString();
 
@@ -92,7 +103,14 @@ public class ConfigFileHandler {
                                 jsonObj_FunctionConfig.getString("function01"),
                                 jsonObj_FunctionConfig.getString("function02"),
                                 jsonObj_FunctionConfig.getString("function03"));
-                configFile = new ConfigFile(bluetoothConfig, functionConfig);
+                JSONObject jsonObj_TiltConfig = jsonObj.getJSONObject("tiltConfig");// the Title Config object
+                ConfigFile.TiltConfig tiltConfig =
+                        new ConfigFile().new TiltConfig(
+                                (float) jsonObj_TiltConfig.getDouble("minimum_Up"),
+                                (float) jsonObj_TiltConfig.getDouble("minimum_Down"),
+                                (float) jsonObj_TiltConfig.getDouble("minimum_Left"),
+                                (float) jsonObj_TiltConfig.getDouble("minimum_Right"));
+                configFile = new ConfigFile(bluetoothConfig, functionConfig, tiltConfig);
 
             } catch (JSONException ex) {
                 ex.printStackTrace();

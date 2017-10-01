@@ -8,13 +8,15 @@ public class ConfigFile {
 
     BluetoothConfig bluetoothConfig;
     FunctionConfig functionConfig;
+    TiltConfig tiltConfig;
 
     public ConfigFile() {
     }
 
-    public ConfigFile(BluetoothConfig bluetoothConfig, FunctionConfig functionConfig) {
+    public ConfigFile(BluetoothConfig bluetoothConfig, FunctionConfig functionConfig, TiltConfig tiltConfig) {
         this.bluetoothConfig = bluetoothConfig;
         this.functionConfig = functionConfig;
+        this.tiltConfig = tiltConfig;
     }
 
     public BluetoothConfig getBluetoothConfig() {
@@ -33,6 +35,14 @@ public class ConfigFile {
         this.functionConfig = functionConfig;
     }
 
+    public TiltConfig getTiltConfig() {
+        return tiltConfig;
+    }
+
+    public void setTiltConfig(TiltConfig tiltConfig) {
+        this.tiltConfig = tiltConfig;
+    }
+
     public class BluetoothConfig {
         // private BluetoothSocket lastConnectedDevice_Socket;
         private String lastConnectedDevice_Name;
@@ -43,14 +53,6 @@ public class ConfigFile {
             this.lastConnectedDevice_Name = lastConnectedDevice_Name;
             this.lastConnectedDevice_MACAddress = lastConnectedDevice_MACAddress;
         }
-
-//        public BluetoothSocket getLastConnectedDevice_Socket() {
-//            return lastConnectedDevice_Socket;
-//        }
-//
-//        public void setLastConnectedDevice_Socket(BluetoothSocket lastConnectedDevice_Socket) {
-//            this.lastConnectedDevice_Socket = lastConnectedDevice_Socket;
-//        }
 
         public String getLastConnectedDevice_Name() {
             return lastConnectedDevice_Name;
@@ -105,5 +107,51 @@ public class ConfigFile {
         }
 
 
+    }
+
+    public class TiltConfig {
+        private float minimum_Up;
+        private float minimum_Down;
+        private float minimum_Left;
+        private float minimum_Right;
+
+        public TiltConfig(float minimum_Up, float minimum_Down, float minimum_Left, float minimum_Right) {
+            this.minimum_Up = minimum_Up;
+            this.minimum_Down = minimum_Down;
+            this.minimum_Left = minimum_Left;
+            this.minimum_Right = minimum_Right;
+        }
+
+        public float getMinimum_Left() {
+            return minimum_Left;
+        }
+
+        public void setMinimum_Left(float minimum_Left) {
+            this.minimum_Left = minimum_Left;
+        }
+
+        public float getMinimum_Right() {
+            return minimum_Right;
+        }
+
+        public void setMinimum_Right(float minimum_Right) {
+            this.minimum_Right = minimum_Right;
+        }
+
+        public float getMinimum_Up() {
+            return minimum_Up;
+        }
+
+        public void setMinimum_Up(float minimum_Up) {
+            this.minimum_Up = minimum_Up;
+        }
+
+        public float getMinimum_Down() {
+            return minimum_Down;
+        }
+
+        public void setMinimum_Down(float minimum_Down) {
+            this.minimum_Down = minimum_Down;
+        }
     }
 }

@@ -41,9 +41,10 @@
             android:name="com.example.android.mdpgrp17_androidapp.BluetoothActivity"
             android:screenOrientation="portrait" />
         <activity
-            android:name="com.example.android.mdpgrp17_androidapp.SettingsActivity"
+            android:name="com.example.android.mdpgrp17_androidapp.ChatActivity"
             android:screenOrientation="portrait" />
 
+        <service android:name=".CountDownTimerService" />
     </application>
 
 </manifest>

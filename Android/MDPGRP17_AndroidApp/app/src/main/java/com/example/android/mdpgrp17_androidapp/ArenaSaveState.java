@@ -7,30 +7,30 @@ package com.example.android.mdpgrp17_androidapp;
 public class ArenaSaveState {
     private int[][] arenaInfo, travelInfo;
     private boolean isWayPointReached;
-    private int wayPointPosition_Row_Center, wayPointPosition_Col_Center;   // center of way point
+    private int robotPosition_Row_Center, robotPosition_Col_Center;   // center of way point
 
-    public ArenaSaveState(int[][] arenaInfo, int[][] travelInfo, boolean isWayPointReached, int wayPointPosition_Row_Center, int wayPointPosition_Col_Center) {
+    public ArenaSaveState(int[][] arenaInfo, int[][] travelInfo, boolean isWayPointReached, int robotPosition_Row_Center, int robotPosition_Col_Center) {
         this.arenaInfo = arenaInfo;
         this.travelInfo = travelInfo;
         this.isWayPointReached = isWayPointReached;
-        this.wayPointPosition_Row_Center = wayPointPosition_Row_Center;
-        this.wayPointPosition_Col_Center = wayPointPosition_Col_Center;
+        this.robotPosition_Row_Center = robotPosition_Row_Center;
+        this.robotPosition_Col_Center = robotPosition_Col_Center;
     }
 
-    public int getWayPointPosition_Row_Center() {
-        return wayPointPosition_Row_Center;
+    public int getRobotPosition_Row_Center() {
+        return robotPosition_Row_Center;
     }
 
-    public void setWayPointPosition_Row_Center(int wayPointPosition_Row_Center) {
-        this.wayPointPosition_Row_Center = wayPointPosition_Row_Center;
+    public void setRobotPosition_Row_Center(int robotPosition_Row_Center) {
+        this.robotPosition_Row_Center = robotPosition_Row_Center;
     }
 
-    public int getWayPointPosition_Col_Center() {
-        return wayPointPosition_Col_Center;
+    public int getRobotPosition_Col_Center() {
+        return robotPosition_Col_Center;
     }
 
-    public void setWayPointPosition_Col_Center(int wayPointPosition_Col_Center) {
-        this.wayPointPosition_Col_Center = wayPointPosition_Col_Center;
+    public void setRobotPosition_Col_Center(int robotPosition_Col_Center) {
+        this.robotPosition_Col_Center = robotPosition_Col_Center;
     }
 
     public int[][] getArenaInfo() {

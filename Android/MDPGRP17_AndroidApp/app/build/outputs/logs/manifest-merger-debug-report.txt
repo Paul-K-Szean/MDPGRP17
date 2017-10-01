@@ -1,6 +1,6 @@
 -- Merging decision tree log ---
 manifest
-ADDED from C:\Users\szean\Documents\AndroidProjects\MDP\MDPGRP17_AndroidApp\app\src\main\AndroidManifest.xml:16:1-49:12
+ADDED from C:\Users\szean\Documents\AndroidProjects\MDP\MDPGRP17_AndroidApp\app\src\main\AndroidManifest.xml:16:1-50:12
 	package
 		ADDED from C:\Users\szean\Documents\AndroidProjects\MDP\MDPGRP17_AndroidApp\app\src\main\AndroidManifest.xml:17:5-54
 		INJECTED from C:\Users\szean\Documents\AndroidProjects\MDP\MDPGRP17_AndroidApp\app\src\main\AndroidManifest.xml
@@ -34,7 +34,7 @@ ADDED from C:\Users\szean\Documents\AndroidProjects\MDP\MDPGRP17_AndroidApp\app\
 	android:name
 		ADDED from C:\Users\szean\Documents\AndroidProjects\MDP\MDPGRP17_AndroidApp\app\src\main\AndroidManifest.xml:23:22-77
 application
-ADDED from C:\Users\szean\Documents\AndroidProjects\MDP\MDPGRP17_AndroidApp\app\src\main\AndroidManifest.xml:25:5-47:19
+ADDED from C:\Users\szean\Documents\AndroidProjects\MDP\MDPGRP17_AndroidApp\app\src\main\AndroidManifest.xml:25:5-48:19
 MERGED from [com.android.support:design:23.4.0] C:\Users\szean\.android\build-cache\96e68b64afd7f5be0802c8789468c73bec68fb5c\output\AndroidManifest.xml:22:5-20
 MERGED from [com.android.support:appcompat-v7:23.4.0] C:\Users\szean\.android\build-cache\8eaeee0584d658b9d5f6798c1b5e64283ee8c1bb\output\AndroidManifest.xml:25:5-20
 MERGED from [com.android.support:animated-vector-drawable:23.4.0] C:\Users\szean\.android\build-cache\0b64c83ba31b790415626b71668665e2e9a703a8\output\AndroidManifest.xml:7:5-20
@@ -76,12 +76,16 @@ ADDED from C:\Users\szean\Documents\AndroidProjects\MDP\MDPGRP17_AndroidApp\app\
 		ADDED from C:\Users\szean\Documents\AndroidProjects\MDP\MDPGRP17_AndroidApp\app\src\main\AndroidManifest.xml:42:13-49
 	android:name
 		ADDED from C:\Users\szean\Documents\AndroidProjects\MDP\MDPGRP17_AndroidApp\app\src\main\AndroidManifest.xml:41:13-85
-activity#com.example.android.mdpgrp17_androidapp.SettingsActivity
+activity#com.example.android.mdpgrp17_androidapp.ChatActivity
 ADDED from C:\Users\szean\Documents\AndroidProjects\MDP\MDPGRP17_AndroidApp\app\src\main\AndroidManifest.xml:43:9-45:52
 	android:screenOrientation
 		ADDED from C:\Users\szean\Documents\AndroidProjects\MDP\MDPGRP17_AndroidApp\app\src\main\AndroidManifest.xml:45:13-49
 	android:name
-		ADDED from C:\Users\szean\Documents\AndroidProjects\MDP\MDPGRP17_AndroidApp\app\src\main\AndroidManifest.xml:44:13-84
+		ADDED from C:\Users\szean\Documents\AndroidProjects\MDP\MDPGRP17_AndroidApp\app\src\main\AndroidManifest.xml:44:13-80
+service#com.example.android.mdpgrp17_androidapp.CountDownTimerService
+ADDED from C:\Users\szean\Documents\AndroidProjects\MDP\MDPGRP17_AndroidApp\app\src\main\AndroidManifest.xml:47:9-58
+	android:name
+		ADDED from C:\Users\szean\Documents\AndroidProjects\MDP\MDPGRP17_AndroidApp\app\src\main\AndroidManifest.xml:47:18-55
 uses-sdk
 INJECTED from C:\Users\szean\Documents\AndroidProjects\MDP\MDPGRP17_AndroidApp\app\src\main\AndroidManifest.xml reason: use-sdk injection requested
 MERGED from [com.android.support:design:23.4.0] C:\Users\szean\.android\build-cache\96e68b64afd7f5be0802c8789468c73bec68fb5c\output\AndroidManifest.xml:20:5-43

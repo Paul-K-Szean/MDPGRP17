@@ -8,7 +8,7 @@
 
 
     <TextView
-        android:id="@+id/TV_Notice"
+        android:id="@+id/TXTVW_Notice"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:gravity="center"
@@ -16,7 +16,7 @@
         android:textSize="20sp" />
 
     <RelativeLayout
-        android:id="@+id/layout_MessageArea"
+        android:id="@+id/RLO_MessageArea"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
@@ -24,7 +24,7 @@
         android:padding="@dimen/md_keylines">
 
         <ImageButton
-            android:id="@+id/imageButton_Send"
+            android:id="@+id/IMGBTN_Send"
             android:layout_width="@dimen/cards_button_width"
             android:layout_height="wrap_content"
             android:layout_alignParentEnd="true"
@@ -35,11 +35,11 @@
             android:src="@android:drawable/ic_menu_send" />
 
         <EditText
-            android:id="@+id/ET_MessageArea"
+            android:id="@+id/ETTXT_MessageArea"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignParentLeft="true"
-            android:layout_toLeftOf="@id/imageButton_Send"
+            android:layout_toLeftOf="@id/IMGBTN_Send"
             android:hint="Write a message"
             android:textColor="#CFD8DC"
             android:textColorHint="#CFD8DC" />
@@ -47,10 +47,81 @@
 
     </RelativeLayout>
 
-    <ListView
-        android:id="@+id/listView_MessageContent"
+    <LinearLayout
+        android:id="@+id/LLO_FunctionButtons"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_above="@id/RLO_MessageArea"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/BTN_Function01"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Function01" />
+
+        <Button
+            android:id="@+id/BTN_Function02"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Function02" />
+
+        <Button
+            android:id="@+id/BTN_Function03"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Function03" />
+    </LinearLayout>
+
+
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_above="@id/layout_MessageArea" />
+        android:layout_above="@id/LLO_FunctionButtons"
+        android:orientation="vertical"
+        android:padding="6dp">
+
+        <TextView
+            android:id="@+id/TXTVW_MessageLog"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:text="Message Log"
+            android:textSize="20sp"
+            android:textStyle="bold" />
+
+        <ListView
+            android:id="@+id/LTVW_MessageContent"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="@drawable/border_conversation"
+
+            android:padding="6dp" />
+
+        <TextView
+            android:id="@+id/TXTVW_CommandLog"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:text="Command Log"
+            android:textSize="20sp"
+            android:textStyle="bold" />
+
+
+        <ListView
+            android:id="@+id/LTVW_CommandContent"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="@drawable/border_command"
+
+            android:padding="6dp" />
+
+
+    </LinearLayout>
 
 </RelativeLayout>

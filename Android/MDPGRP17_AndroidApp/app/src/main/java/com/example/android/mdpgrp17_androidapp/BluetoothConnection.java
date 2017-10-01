@@ -53,6 +53,7 @@ public class BluetoothConnection {
     private ArrayList<BluetoothMessageEntity> mBTCommandArrayList;
     private ConfigFileHandler configFileHandler;
     private ConfigFile configFile;
+    private boolean isUserDisconnect = false;
 
     // constructor
     public BluetoothConnection(Handler mHandler) {
@@ -95,6 +96,9 @@ public class BluetoothConnection {
         return mBTCommandArrayList;
     }
 
+    public void setmBTCommandArrayList(ArrayList<BluetoothMessageEntity> mBTCommandArrayList) {
+        this.mBTCommandArrayList = mBTCommandArrayList;
+    }
 
     /**
      * Start the chat service. Specifically startAcceptThread AcceptThread to begin a
@@ -102,21 +106,13 @@ public class BluetoothConnection {
      */
     public synchronized void startAcceptThread(boolean isSecureConnection) {
         if (isSecureConnection) {
-            if (mSecureAcceptThread == null) {
-                mSecureAcceptThread = new AcceptThread(isSecureConnection);
-                mSecureAcceptThread.start();
-            } else {
-                Log.d(TAG, "mSecureAcceptThread: Accept thread already started");
-                Log.d(TAG, "mSecureAcceptThread: " + mSecureAcceptThread.getName());
-            }
+            mSecureAcceptThread= null;
+            mSecureAcceptThread = new AcceptThread(isSecureConnection);
+            mSecureAcceptThread.start();
         } else {
-            if (mInSecureAcceptThread == null) {
-                mInSecureAcceptThread = new AcceptThread(isSecureConnection);
-                mInSecureAcceptThread.start();
-            } else {
-                Log.d(TAG, "mInSecureAcceptThread: Accept thread already started");
-                Log.d(TAG, "mInSecureAcceptThread: " + mSecureAcceptThread.toString());
-            }
+            mInSecureAcceptThread= null;
+            mInSecureAcceptThread = new AcceptThread(isSecureConnection);
+            mInSecureAcceptThread.start();
         }
     }
 
@@ -140,10 +136,10 @@ public class BluetoothConnection {
 
     public synchronized void disconnect() {
         Log.d(TAG, "disconnect");
+        isUserDisconnect = true;
         if (mConnectedThread != null) {
             mConnectedThread.cancel();
         }
-        startAcceptThread(true);
     }
 
     /**
@@ -208,9 +204,12 @@ public class BluetoothConnection {
                 Log.d(TAG, "getBTConnectionState: Current State: BT_CONNECTION_STATE_IDLE (" + mBTCurrentState + ")");
                 break;
             case 5:
-                Log.d(TAG, "getBTConnectionState: Current State: BT_CONNECTION_STATE_LISTENING (" + mBTCurrentState + ")");
+                Log.d(TAG, "getBTConnectionState: Current State: BT_CONNECTION_STATE_CANNOTLISTEN (" + mBTCurrentState + ")");
                 break;
             case 6:
+                Log.d(TAG, "getBTConnectionState: Current State: BT_CONNECTION_STATE_LISTENING (" + mBTCurrentState + ")");
+                break;
+            case 7:
                 Log.d(TAG, "getBTConnectionState: Current State: BT_CONNECTION_STATE_CHANGE (" + mBTCurrentState + ")");
                 break;
         }
@@ -277,13 +276,16 @@ public class BluetoothConnection {
                 }
             } catch (IOException e) {
                 // cannot start listening for connection
-                setBTConnectionState(GlobalVariables.BT_CONNECTION_STATE_IDLE);
-                mHandler.obtainMessage(GlobalVariables.BT_CONNECTION_STATE_CHANGE, GlobalVariables.BT_CONNECTION_STATE_IDLE, 0).sendToTarget();
+                setBTConnectionState(GlobalVariables.BT_CONNECTION_STATE_CANNOTLISTEN);
+                mHandler.obtainMessage(GlobalVariables.BT_CONNECTION_STATE_CHANGE, GlobalVariables.BT_CONNECTION_STATE_CANNOTLISTEN, 0).sendToTarget();
                 if (isConnectionSecure) {
                     Log.e(TAG, "AcceptThread: mBluetoothAdapter.listenUsingRfcommWithServiceRecord(): " + e.getMessage());
+                    mSecureAcceptThread = null;
                 } else {
                     Log.e(TAG, "AcceptThread: mBluetoothAdapter.listenUsingInsecureRfcommWithServiceRecord(): " + e.getMessage());
+                    mInSecureAcceptThread = null;
                 }
+                cancel();
             }
             mServerSocket = tmp;
         }
@@ -419,8 +421,6 @@ public class BluetoothConnection {
                     // connection failed
                     mHandler.obtainMessage(GlobalVariables.BT_CONNECTION_STATE_CONNECTIONFAILED).sendToTarget();
                     startAcceptThread(true);
-
-
                 }
                 // Once connected, reset ConnectThread
                 synchronized (BluetoothConnection.this) {
@@ -497,9 +497,15 @@ public class BluetoothConnection {
                     BluetoothMessageEntity mBluetoothMessageEntity;
                     if (incomingMessage.contains("GRID ")) {
                         // command message received
-                        mBluetoothMessageEntity = new BluetoothMessageEntity(mConnectedRemoteDevice.getName(), "MDPGRP17", MESSAGE_COMMAND, incomingMessage);
+                        mBluetoothMessageEntity = new BluetoothMessageEntity(mConnectedRemoteDevice.getName(), "MDPGRP17_Android", MESSAGE_COMMAND, incomingMessage);
                         mBTCommandArrayList.add(mBluetoothMessageEntity);
                     } else {
+                        // TODO:
+                        char destination = incomingMessage.charAt(0);
+                        char source = incomingMessage.charAt(1);
+                        String content = incomingMessage.substring(2);
+
+
                         mBluetoothMessageEntity = new BluetoothMessageEntity(mConnectedRemoteDevice.getName(), "MDPGRP17", MESSAGE_CONVERSATION, incomingMessage);
                         mBTConversationArrayList.add(mBluetoothMessageEntity);
                     }
@@ -512,8 +518,15 @@ public class BluetoothConnection {
                     Log.e(TAG, "ConnectedThread: Write: mmInStream.read(buffer); failed. " + e.getMessage());
 
                     // connection lost
-                    startAcceptThread(true);
-                    mHandler.obtainMessage(GlobalVariables.BT_CONNECTION_STATE_CONNECTIONLOST).sendToTarget();
+                    if (isUserDisconnect) {
+                        // no need to reconnect to last device
+                    } else {
+                        stopAllThreads();
+                        startAcceptThread(true);
+                        mHandler.obtainMessage(GlobalVariables.BT_CONNECTION_STATE_CONNECTIONLOST).sendToTarget();
+                        // startConnectThread(mConnectedRemoteDevice, true);
+                    }
+
                     break;
                 }
             }
@@ -558,7 +571,6 @@ public class BluetoothConnection {
         }
 
     }
-
 
 }
 

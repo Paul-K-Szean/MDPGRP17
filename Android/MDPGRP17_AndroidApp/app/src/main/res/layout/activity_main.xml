@@ -25,382 +25,368 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
-        <android.support.v4.widget.NestedScrollView
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
+            android:layout_height="wrap_content"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
+            android:gravity="center_horizontal"
+            android:orientation="vertical"
+
             app:layout_behavior="@string/appbar_scrolling_view_behavior">
+
+            <RelativeLayout
+                android:id="@+id/RLO_ArenaGrid"
+                android:layout_width="520dp"
+                android:layout_height="660dp"
+                android:layout_marginBottom="6dp"
+                android:layout_marginTop="-10dp"
+                android:layout_weight="1"
+                android:padding="0dp"></RelativeLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:gravity="center_horizontal"
+                android:orientation="horizontal">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/TV_RobotStatus"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_below="@id/RLO_ArenaGrid"
+                        android:layout_weight="1"
+                        android:gravity="center"
+                        android:text="Robot"
+                        android:textSize="20sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/TXTVW_RobotStatusValue"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_below="@id/RLO_ArenaGrid"
+                        android:layout_weight="1"
+                        android:gravity="center"
+                        android:text="None"
+                        android:textSize="16sp" />
+
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/LLO_Fastest"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/TV_FastestTime"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:gravity="center"
+                        android:text="Fastest"
+                        android:textSize="20sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/TV_FastestTimeValue"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:gravity="center"
+                        android:text="00:00"
+                        android:textSize="20sp" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/LLO_Exploration"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/TV_ExplorationTime"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:gravity="center"
+                        android:text="Exploration"
+                        android:textSize="20sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/TV_ExplorationTimeValue"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:gravity="center"
+                        android:text="00:00"
+                        android:textSize="20sp" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/LLO_WayPoint"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:background="@drawable/border_unlocked"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/TXTVW_WayPoint"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:gravity="center"
+                        android:text="Way Point"
+                        android:textSize="20sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/TXTVW_WayPointValue"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:gravity="center"
+                        android:text="0,0"
+                        android:textSize="20sp" />
+
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/TV_MapModeIndex"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:gravity="center"
+                        android:text="Map Mode"
+                        android:textSize="20sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/TXTVW_MapModeIndexValue"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:gravity="center"
+                        android:text="Auto"
+                        android:textSize="20sp" />
+
+                </LinearLayout>
+
+            </LinearLayout>
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:focusable="true"
-                android:focusableInTouchMode="true"
-                android:gravity="center_horizontal"
-                android:orientation="vertical"
-
-                app:layout_behavior="@string/appbar_scrolling_view_behavior">
-
-                <RelativeLayout
-                    android:id="@+id/RLO_ArenaGrid"
-                    android:layout_width="520dp"
-                    android:layout_height="660dp"
-                    android:padding="0dp"
-                    android:layout_marginTop="-10dp"
-                    android:layout_marginBottom="6dp"
-                    android:layout_weight="1"></RelativeLayout>
+                android:layout_weight="1"
+                android:gravity="center"
+                android:orientation="horizontal"
+                android:paddingLeft="@dimen/list_body"
+                android:paddingRight="@dimen/list_body">
 
                 <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:gravity="center_horizontal"
-                    android:orientation="horizontal">
+                    android:gravity="center"
+                    android:orientation="vertical">
 
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:layout_weight="1"
-                        android:orientation="vertical">
-
-                        <TextView
-                            android:id="@+id/TV_RobotStatus"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_below="@id/RLO_ArenaGrid"
-                            android:layout_weight="1"
-                            android:gravity="center"
-                            android:text="Robot Status"
-                            android:textSize="20sp"
-                            android:textStyle="bold" />
-
-                        <TextView
-                            android:id="@+id/TXTVW_RobotStatusValue"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_below="@id/RLO_ArenaGrid"
-                            android:layout_weight="1"
-                            android:gravity="center"
-                            android:text="None"
-                            android:textSize="20sp" />
-
-                    </LinearLayout>
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:layout_weight="1"
-                        android:orientation="vertical">
-
-                        <TextView
-                            android:id="@+id/TV_FastestTime"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:gravity="center"
-                            android:text="Fastest"
-                            android:textSize="20sp"
-                            android:textStyle="bold" />
-
-                        <TextView
-                            android:id="@+id/TV_FastestTimeValue"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:gravity="center"
-                            android:text="00:00:00"
-                            android:textSize="20sp" />
-                    </LinearLayout>
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:layout_weight="1"
-                        android:orientation="vertical">
-
-                        <TextView
-                            android:id="@+id/TV_ExplorationTime"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:gravity="center"
-                            android:text="Exploration"
-                            android:textSize="20sp"
-                            android:textStyle="bold" />
-
-                        <TextView
-                            android:id="@+id/TV_ExplorationTimeValue"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:gravity="center"
-                            android:text="00:00:00"
-                            android:textSize="20sp" />
-                    </LinearLayout>
-
-                    <LinearLayout
-                        android:id="@+id/LLO_WayPoint"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:layout_weight="1"
-                        android:orientation="vertical"
-                        android:background="@drawable/border_unlocked">
-
-                        <TextView
-                            android:id="@+id/TXTVW_WayPoint"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:gravity="center"
-                            android:text="Way Point"
-                            android:textSize="20sp"
-                            android:textStyle="bold" />
-
-                        <TextView
-                            android:id="@+id/TXTVW_WayPointValue"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:gravity="center"
-                            android:text="0,0"
-                            android:textSize="20sp" />
-
-                    </LinearLayout>
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:layout_weight="1"
-                        android:orientation="vertical">
-
-                        <TextView
-                            android:id="@+id/TV_MapModeIndex"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:gravity="center"
-                            android:text="Map Mode"
-                            android:textSize="20sp"
-                            android:textStyle="bold" />
-
-                        <TextView
-                            android:id="@+id/TXTVW_MapModeIndexValue"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:gravity="center"
-                            android:text="Auto"
-                            android:textSize="20sp" />
-
-                    </LinearLayout>
-
-                </LinearLayout>
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="500dp"
-                    android:layout_weight="1"
-                    android:orientation="horizontal"
-                    android:paddingLeft="@dimen/list_body"
-                    android:paddingRight="@dimen/list_body">
-
-                    <LinearLayout
+                    <TextView
+                        android:id="@+id/TXTVW_ControlMode"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:gravity="center_horizontal"
-                        android:orientation="vertical">
+                        android:gravity="center"
+                        android:text="Fastest"
+                        android:textSize="20sp"
+                        android:textStyle="bold"
+                        android:visibility="gone" />
+
+                    <LinearLayout
+                        android:id="@+id/LLO_TiltMode"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_gravity="center"
+                        android:layout_weight="1"
+                        android:orientation="horizontal"
+                        android:visibility="gone">
 
                         <LinearLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
+                            android:layout_width="wrap_content"
+                            android:layout_height="match_parent"
+                            android:layout_gravity="center"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
 
-                            android:gravity="center_horizontal"
-                            android:orientation="horizontal">
-
-                            <LinearLayout
+                            <TextView
+                                android:id="@+id/TXTVW_SensorValues"
                                 android:layout_width="match_parent"
-                                android:layout_height="match_parent"
-                                android:layout_gravity="center_horizontal"
+                                android:layout_height="wrap_content"
                                 android:layout_weight="1"
-                                android:orientation="vertical"
-                                app:layout_behavior="@string/appbar_scrolling_view_behavior">
+                                android:gravity="center"
+                                android:text="SensorValues"
+                                android:textSize="18dp" />
 
-                                <Button
-                                    android:id="@+id/BTN_CMD_RotateLeft"
-                                    android:layout_width="match_parent"
-                                    android:layout_height="match_parent"
-                                    android:layout_weight="1"
-                                    android:text="Rotate Left" />
-                            </LinearLayout>
-
-                            <LinearLayout
+                            <TextView
+                                android:id="@+id/TXTVW_CalibratedValues"
                                 android:layout_width="match_parent"
-                                android:layout_height="match_parent"
-                                android:layout_gravity="center_horizontal"
+                                android:layout_height="wrap_content"
                                 android:layout_weight="1"
-                                android:orientation="vertical"
-                                app:layout_behavior="@string/appbar_scrolling_view_behavior">
-
-                                <Button
-                                    android:id="@+id/BTN_CMD_Forward"
-                                    android:layout_width="match_parent"
-                                    android:layout_height="match_parent"
-                                    android:layout_weight="1"
-                                    android:text="Forward" />
-
-                                <Button
-                                    android:id="@+id/BTN_CMD_Reverse"
-                                    android:layout_width="match_parent"
-                                    android:layout_height="match_parent"
-                                    android:layout_weight="1"
-                                    android:text="Reverse" />
-
-                            </LinearLayout>
-
-                            <LinearLayout
-                                android:layout_width="match_parent"
-                                android:layout_height="match_parent"
-                                android:layout_gravity="center_horizontal"
-                                android:layout_weight="1"
-                                android:orientation="vertical">
-
-                                <Button
-                                    android:id="@+id/BTN_CMD_RotateRight"
-                                    android:layout_width="match_parent"
-                                    android:layout_height="match_parent"
-                                    android:layout_weight="1"
-                                    android:text="Rotate Right" />
-
-                            </LinearLayout>
+                                android:gravity="center"
+                                android:text="CalibratedValues"
+                                android:textSize="18dp" />
                         </LinearLayout>
 
-                        <TextView
-                            android:id="@+id/TV_CommandLog"
+                        <ToggleButton
+                            android:id="@+id/TGLBTN_CalibrateTilt"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_below="@id/RLO_ArenaGrid"
                             android:layout_weight="1"
-                            android:gravity="center"
-                            android:text="Command Log"
-                            android:textSize="20sp"
-                            android:textStyle="bold" />
+                            android:checked="false"
+                            android:textOff="Calibrate"
+                            android:textOn="Calibrating" />
 
-                        <android.support.v7.widget.RecyclerView
-                            android:id="@+id/RCYLRVW_Command"
+                        <ToggleButton
+                            android:id="@+id/TGLBTN_StartTiltMode"
                             android:layout_width="wrap_content"
-                            android:layout_height="380dp"
-                            android:layout_below="@id/TV_CommandLog"
-                            android:layout_weight="1" />
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:checked="false"
+                            android:textOff="Stop"
+                            android:textOn="Start" />
 
                     </LinearLayout>
 
                     <LinearLayout
-                        android:layout_width="180dp"
+                        android:id="@+id/LLO_ButtonControl"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_gravity="center_horizontal"
                         android:gravity="center_horizontal"
-                        android:orientation="vertical">
-
-                        <ToggleButton
-                            android:id="@+id/TGLBTN_MapMode"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:checked="true"
-                            android:textOff="Manual Map"
-                            android:textOn="Auto Map" />
+                        android:orientation="horizontal">
 
                         <LinearLayout
-                            android:id="@+id/LLO_MapMode_PreviousNext"
                             android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_gravity="center"
+                            android:layout_height="match_parent"
+                            android:layout_gravity="center_horizontal"
                             android:layout_weight="1"
-                            android:orientation="horizontal"
-                            android:visibility="invisible">
+                            android:orientation="vertical"
+                            app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
                             <Button
-                                android:id="@+id/BTN_MapMode_Previous"
+                                android:id="@+id/BTN_CMD_RotateLeft"
                                 android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
+                                android:layout_height="match_parent"
                                 android:layout_weight="1"
-                                android:text="Previous" />
+                                android:text="Rotate Left" />
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:layout_gravity="center_horizontal"
+                            android:layout_weight="1"
+                            android:orientation="vertical"
+                            app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
                             <Button
-                                android:id="@+id/BTN_MapMode_Next"
+                                android:id="@+id/BTN_CMD_Forward"
                                 android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
+                                android:layout_height="match_parent"
                                 android:layout_weight="1"
-                                android:text="Next" />
+                                android:text="Forward" />
+
+                            <Button
+                                android:id="@+id/BTN_CMD_Reverse"
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent"
+                                android:layout_weight="1"
+                                android:text="Reverse" />
 
                         </LinearLayout>
 
-                        <Button
-                            android:id="@+id/BTN_CMD_GetArenaInfo"
+                        <LinearLayout
                             android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
+                            android:layout_height="match_parent"
+                            android:layout_gravity="center_horizontal"
                             android:layout_weight="1"
-                            android:text="GetArenaInfo" />
-                        <Button
-                            android:id="@+id/BTN_Reset"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="Reset" />
+                            android:orientation="vertical">
+
+                            <Button
+                                android:id="@+id/BTN_CMD_RotateRight"
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent"
+                                android:layout_weight="1"
+                                android:text="Rotate Right" />
+
+                        </LinearLayout>
                     </LinearLayout>
 
                 </LinearLayout>
 
                 <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:layout_weight="1"
-                    android:orientation="vertical"
-                    app:layout_behavior="@string/appbar_scrolling_view_behavior">
+                    android:layout_width="180dp"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_horizontal"
+                    android:gravity="center_horizontal"
+                    android:orientation="vertical">
 
-                    <Button
-                        android:id="@+id/BTN_JsonTest_Write"
+                    <ToggleButton
+                        android:id="@+id/TGLBTN_MapMode"
                         android:layout_width="match_parent"
-                        android:layout_height="match_parent"
+                        android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="Write JsonTest" />
+                        android:checked="true"
+                        android:textOff="Manual Map"
+                        android:textOn="Auto Map" />
 
-                    <TextView
-                        android:id="@+id/TV_JsonTest_Write"
+                    <LinearLayout
+                        android:id="@+id/LLO_MapMode_PreviousNext"
                         android:layout_width="match_parent"
-                        android:layout_height="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
                         android:layout_weight="1"
-                        android:text="None"
-                        android:textSize="20sp" />
+                        android:orientation="horizontal"
+                        android:visibility="invisible">
 
-                    <Button
-                        android:id="@+id/BTN_JsonTest_Read"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:layout_weight="1"
-                        android:text="Read JsonTest" />
+                        <Button
+                            android:id="@+id/BTN_MapMode_Previous"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Previous" />
 
-                    <TextView
-                        android:id="@+id/TV_JsonTest_Read"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:layout_weight="1"
-                        android:text="None"
-                        android:textSize="20sp" />
+                        <Button
+                            android:id="@+id/BTN_MapMode_Next"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Next" />
 
-                    <TextView
-                        android:id="@+id/textView"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:layout_weight="1"
-                        android:text="None"
-                        android:textSize="20sp" />
+                    </LinearLayout>
 
                 </LinearLayout>
 
-
             </LinearLayout>
-        </android.support.v4.widget.NestedScrollView>
+
+
+        </LinearLayout>
 
         <android.support.design.widget.AppBarLayout
             android:id="@+id/appbar"

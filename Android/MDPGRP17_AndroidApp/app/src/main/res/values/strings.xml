@@ -20,7 +20,7 @@
     <string name="action_settings_bluetooth">Bluetooth</string>
     <string name="action_settings_refresh">Refresh</string>
     <string name="action_settings_reconect">Reconnect</string>
-    <string name="action_settings_cast">CastToDevice</string>
+    <string name="action_settings_chat">Chat</string>
     <!--items-->
     <string name="item_title">Palais Garnier</string>
     <string name="item_desc">The Palais Garnier which locates in Paris was built from 1861 for
