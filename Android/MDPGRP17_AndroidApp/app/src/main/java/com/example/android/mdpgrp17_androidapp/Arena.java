@@ -44,7 +44,7 @@ import static com.example.android.mdpgrp17_androidapp.GlobalVariables.SWIPE_MINI
  * Created by szean on 8/9/2017.
  */
 
-public class Arena extends View implements SensorEventListener {
+public class Arena extends View {
     private static final String TAG = "Arena";
     // GUI objects
     private RelativeLayout RLO_ArenaGrid;
