@@ -36,4 +36,5 @@
     <color name="color_Arena_RobotDirection">#8bc34a</color>
     <color name="color_Arena_RobotTravelPath">#4997d0</color>
     <color name="color_error">#ff0000</color>
+    <color name="color_transparent">#8000000000</color>
 </resources>

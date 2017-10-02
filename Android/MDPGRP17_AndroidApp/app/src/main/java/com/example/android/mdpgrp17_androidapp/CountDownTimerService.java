@@ -10,6 +10,7 @@ import android.util.Log;
 import java.util.concurrent.TimeUnit;
 
 import static com.example.android.mdpgrp17_androidapp.GlobalVariables.BT_CONNECTION_STATE_DISCOVERABLE_DURATION;
+import static com.example.android.mdpgrp17_androidapp.GlobalVariables.COUNTDOWNTIMER_SERVICE;
 
 /**
  * Created by szean on 26/9/2017.
@@ -18,16 +19,13 @@ import static com.example.android.mdpgrp17_androidapp.GlobalVariables.BT_CONNECT
 
 public class CountDownTimerService extends Service {
     private final static String TAG = "CountDownTimerService";
-    public static final String COUNTDOWNTIMER_BR = "countDownTimerService";
-    Intent intent_CountDownTimerService = new Intent(COUNTDOWNTIMER_BR);
+    Intent intent_CountDownTimerService = new Intent(COUNTDOWNTIMER_SERVICE);
     CountDownTimer cdt = null;
 
     @Override
     public void onCreate() {
         super.onCreate();
-        Log.i(TAG, "onCreate: Starting timer...");
-
-
+        Log.i(TAG, "onCreate: Timer Started");
         cdt = new CountDownTimer((BT_CONNECTION_STATE_DISCOVERABLE_DURATION) * 1000, 1000) {
             @Override
             public void onTick(long millisUntilFinished) {

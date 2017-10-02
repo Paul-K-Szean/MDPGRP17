@@ -36,6 +36,9 @@ import static com.example.android.mdpgrp17_androidapp.GlobalVariables.CMD_REVERS
 import static com.example.android.mdpgrp17_androidapp.GlobalVariables.CMD_ROTATELEFT;
 import static com.example.android.mdpgrp17_androidapp.GlobalVariables.CMD_ROTATERIGHT;
 import static com.example.android.mdpgrp17_androidapp.GlobalVariables.SWIPE_MINIMUM_DISTANCE;
+import static com.example.android.mdpgrp17_androidapp.GlobalVariables.TOUCHMODE_SETROBOTPOSITION;
+import static com.example.android.mdpgrp17_androidapp.GlobalVariables.TOUCHMODE_SETWAYPOINT;
+import static com.example.android.mdpgrp17_androidapp.GlobalVariables.TOUCHMODE_SWIPE;
 
 /**
  * Created by szean on 8/9/2017.
@@ -57,6 +60,7 @@ public class Arena extends View {
     private int robotDirection;                                     // 0, 90, 180, 270
     private boolean isUpDown, isWayPointReached = false;            // 0 || 180 for isUpDown
     private boolean isRobotAtStartPosition = false, isRobotAtEndPosition = false;
+    private int touchMode;
     private int[] arenaInfoString = new int[300];   // to store arena info
     private int[][] arenaInfo = new int[20][15], travelInfo = new int[20][15], displayInfo = new int[20][15];
     private Boolean isMapMode_Auto = true; // always auto update map
@@ -88,74 +92,18 @@ public class Arena extends View {
         // a thread to update the grid
         this.arenaThread = new ArenaThread(this);
         this.arenaThread.startThread();
+        this.touchMode = TOUCHMODE_SETWAYPOINT;
     }
-
 
     private float downX, downY, upX, upY;
 
     @Override
     public boolean onTouchEvent(MotionEvent motionEvent) {
+        int touchAction = motionEvent.getAction();
         final MainActivity mainActivity = (MainActivity) getContext();
-
-        if (mainActivity.getIsWayPointLocked()) {
-            // locked, cannot touch screen, check if in swipe mode
-            if (mainActivity.getControlMode() == ARENA_CONTROL_MODE_SWIPE) {
-                switch (motionEvent.getAction()) {
-                    case MotionEvent.ACTION_DOWN: {
-                        downX = motionEvent.getX();
-                        downY = motionEvent.getY();
-                        return true;
-                    }
-                    case MotionEvent.ACTION_UP: {
-                        upX = motionEvent.getX();
-                        upY = motionEvent.getY();
-
-                        float deltaX = downX - upX;
-                        float deltaY = downY - upY;
-
-                        // swipe left/right?
-                        if (Math.abs(deltaX) > SWIPE_MINIMUM_DISTANCE) {
-                            // left or right
-                            if (deltaX < 0) {
-                                Log.i(TAG, "Swipe Right");
-                                mainActivity.moveRobot(CMD_ROTATERIGHT);
-                                return true;
-                            }
-                            if (deltaX > 0) {
-                                Log.i(TAG, "Swipe Left");
-                                mainActivity.moveRobot(CMD_ROTATELEFT);
-                                return true;
-                            }
-                        } else {
-                            Log.i(TAG, "Swipe was only " + Math.abs(deltaX) + " long horizontally, need at least " + SWIPE_MINIMUM_DISTANCE);
-                            // return false; // We don't consume the event
-                        }
-
-                        // swipe up/down?
-                        if (Math.abs(deltaY) > SWIPE_MINIMUM_DISTANCE) {
-                            // top or down
-                            if (deltaY < 0) {
-                                Log.i(TAG, "Swipe Down");
-                                mainActivity.moveRobot(CMD_REVERSE);
-                                return true;
-                            }
-                            if (deltaY > 0) {
-                                Log.i(TAG, "Swipe Up");
-                                mainActivity.moveRobot(CMD_FORWARD);
-                                return true;
-                            }
-                        } else {
-                            Log.i(TAG, "Swipe was only " + Math.abs(deltaY) + " long vertically, need at least " + SWIPE_MINIMUM_DISTANCE);
-                            // return false; // We don't consume the event
-                        }
-                        return false;
-                    }
-                }
-            } else {
-                showToast_Short("Way point is locked");
-            }
-        } else {
-            if (motionEvent.getAction() == MotionEvent.ACTION_DOWN) {
+        if (touchMode == TOUCHMODE_SETWAYPOINT) {
+            Log.d(TAG, "onTouchEvent: TOUCHMODE_SETWAYPOINT");
+            if (touchAction == MotionEvent.ACTION_DOWN) {
                 int touched_Col = (int) (motionEvent.getX() / grid_Size);
                 int touched_Row = (int) (motionEvent.getY() / grid_Size);
                 if (touched_Col == wayPointPosition_Col_Center && touched_Row == wayPointPosition_Row_Center) {
@@ -194,7 +142,110 @@ public class Arena extends View {
                 }
                 invalidate();
             }
+        } else if (touchMode == TOUCHMODE_SETROBOTPOSITION) {
+            if (touchAction == MotionEvent.ACTION_DOWN) {
+                Log.d(TAG, "onTouchEvent: TOUCHMODE_SETROBOTPOSITION grid_Size: " + grid_Size);
+                for (int rowIndex = 1; rowIndex <= grid_Row; rowIndex++) {
+                    for (int colIndex = 1; colIndex <= grid_Col; colIndex++) {
+                        if (arenaInfo[rowIndex - 1][colIndex - 1] == ARENA_ROBOT_POSITION ||
+                                arenaInfo[rowIndex - 1][colIndex - 1] == ARENA_ROBOT_POSITION_WITH_WAYPOINT ||
+                                arenaInfo[rowIndex - 1][colIndex - 1] == ARENA_ROBOT_DIRECTION ||
+                                arenaInfo[rowIndex - 1][colIndex - 1] == ARENA_ROBOT_DIRECTION_WITH_WAYPOINT) {
+                            arenaInfo[rowIndex - 1][colIndex - 1] = ARENA_GRID;
+                        }
+                    }
+                }
+
+                robotPosition_Col_Center = (int) (motionEvent.getX() / grid_Size);
+                robotPosition_Row_Center = (int) (motionEvent.getY() / grid_Size);
+                robotPosition_Col = robotPosition_Col_Center - 1;
+                robotPosition_Row = robotPosition_Row_Center - 1;
+                robotDirection = 0;
+                drawRobotPosition();
+                drawRobotDirection();
+
+                int[][] saveState_Temp_ArenaInfo = new int[grid_Row][grid_Col];  // temp variable to save the state
+                for (int rowIndex = 1; rowIndex <= grid_Row; rowIndex++) {
+                    for (int colIndex = 1; colIndex <= grid_Col; colIndex++) {
+                        saveState_Temp_ArenaInfo[rowIndex - 1][colIndex - 1] = arenaInfo[rowIndex - 1][colIndex - 1];
+                    }
+                }
+                int[][] saveState_Temp_TravelInfo = new int[grid_Row][grid_Col];  // temp variable to save the state
+                for (int rowIndex = 1; rowIndex <= grid_Row; rowIndex++) {
+                    for (int colIndex = 1; colIndex <= grid_Col; colIndex++) {
+                        saveState_Temp_TravelInfo[rowIndex - 1][colIndex - 1] = travelInfo[rowIndex - 1][colIndex - 1];
+                    }
+                }
+                ArenaSaveState arenaSaveState = new ArenaSaveState(saveState_Temp_ArenaInfo, saveState_Temp_TravelInfo,
+                        isWayPointReached, robotPosition_Row_Center, robotPosition_Col_Center);
+                saveStateArrayList.add(arenaSaveState);
+                drawWayPoint();
+
+            }
+        } else if (touchMode == TOUCHMODE_SWIPE) {
+            Log.d(TAG, "onTouchEvent: TOUCHMODE_SWIPE");
+            if (mainActivity.getIsWayPointLocked()) {
+                // locked, cannot touch screen, check if in swipe mode
+                if (mainActivity.getRobotControlMode() == ARENA_CONTROL_MODE_SWIPE) {
+                    switch (touchAction) {
+                        case MotionEvent.ACTION_DOWN: {
+                            downX = motionEvent.getX();
+                            downY = motionEvent.getY();
+                            return true;
+                        }
+                        case MotionEvent.ACTION_UP: {
+                            upX = motionEvent.getX();
+                            upY = motionEvent.getY();
+
+                            float deltaX = downX - upX;
+                            float deltaY = downY - upY;
+
+                            // swipe left/right?
+                            if (Math.abs(deltaX) > SWIPE_MINIMUM_DISTANCE) {
+                                // left or right
+                                if (deltaX < 0) {
+                                    Log.i(TAG, "Swipe Right");
+                                    mainActivity.moveRobot(CMD_ROTATERIGHT);
+                                    return true;
+                                }
+                                if (deltaX > 0) {
+                                    Log.i(TAG, "Swipe Left");
+                                    mainActivity.moveRobot(CMD_ROTATELEFT);
+                                    return true;
+                                }
+                            } else {
+                                Log.i(TAG, "Swipe was only " + Math.abs(deltaX) + " long horizontally, need at least " + SWIPE_MINIMUM_DISTANCE);
+                                // return false; // We don't consume the event
+                            }
+
+                            // swipe up/down?
+                            if (Math.abs(deltaY) > SWIPE_MINIMUM_DISTANCE) {
+                                // top or down
+                                if (deltaY < 0) {
+                                    Log.i(TAG, "Swipe Down");
+                                    mainActivity.moveRobot(CMD_REVERSE);
+                                    return true;
+                                }
+                                if (deltaY > 0) {
+                                    Log.i(TAG, "Swipe Up");
+                                    mainActivity.moveRobot(CMD_FORWARD);
+                                    return true;
+                                }
+                            } else {
+                                Log.i(TAG, "Swipe was only " + Math.abs(deltaY) + " long vertically, need at least " + SWIPE_MINIMUM_DISTANCE);
+                                // return false; // We don't consume the event
+                            }
+                            return false;
+                        }
+                    }
+                } else {
+                    showToast_Short("Way point is locked");
+                }
+            }else{
+                showToast_Short("Please lock the way point first");
+            }
         }
+
         return true;
     }
 
@@ -618,7 +669,6 @@ public class Arena extends View {
     }
 
     private void checkWayPointReached() {
-
         if (robotPosition_Row_Center != 0 && robotPosition_Col_Center != 0) {
             int checkWayPointArray[][];
             if (isMapMode_Auto) {
@@ -626,14 +676,19 @@ public class Arena extends View {
             } else {
                 checkWayPointArray = saveStateArrayList.get(saveStateIndex_InArray).getArenaInfo();
             }
-            for (int rowIndex = robotPosition_Row; rowIndex <= robotPosition_Row + 2; rowIndex++) {
-                for (int colIndex = robotPosition_Col; colIndex <= robotPosition_Col + 2; colIndex++) {
-                    if (checkWayPointArray[rowIndex - 1][colIndex - 1] == ARENA_GRID_POSITION_WAYPOINT) {
-                        Log.d(TAG, "checkWayPointReached: Way Point Reached");
-                        isWayPointReached = true;
-                        break;
-                    }
 
+            if (robotPosition_Row < 1 || robotPosition_Row > grid_Row || robotPosition_Col < 1 || robotPosition_Col > grid_Col) {
+
+            } else {
+                for (int rowIndex = robotPosition_Row; rowIndex <= robotPosition_Row + 2; rowIndex++) {
+                    for (int colIndex = robotPosition_Col; colIndex <= robotPosition_Col + 2; colIndex++) {
+                        if (checkWayPointArray[rowIndex - 1][colIndex - 1] == ARENA_GRID_POSITION_WAYPOINT) {
+                            Log.d(TAG, "checkWayPointReached: Way Point Reached");
+                            isWayPointReached = true;
+                            break;
+                        }
+
+                    }
                 }
             }
         }
@@ -724,6 +779,16 @@ public class Arena extends View {
 
     public void setWayPointPosition_Col_Center(int wayPointPosition_Col_Center) {
         this.wayPointPosition_Col_Center = wayPointPosition_Col_Center;
+    }
+
+    public int getTouchMode() {
+        Log.d(TAG, "getTouchMode");
+        return touchMode;
+    }
+
+    public void setTouchMode(int touchMode) {
+        Log.d(TAG, "setTouchMode");
+        this.touchMode = touchMode;
     }
 
     // Arena Draw Methods

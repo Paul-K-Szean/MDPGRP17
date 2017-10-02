@@ -15,10 +15,9 @@ public class GlobalVariables {
     public static final String CMD_REVERSE = "bak";
     public static final String CMD_ROTATELEFT = "baj";
     public static final String CMD_ROTATERIGHT = "bal";
-    public static final String CMD_BEGINEXPLORE = "cam";
-    public static final String CMD_BEGINFASTEST = "can";
+    public static final String CMD_BEGINEXPLORE = "cmd_beginexploration";
+    public static final String CMD_BEGINFASTEST = "cmd_beginfastest";
     public static final String CMD_SENDARENAINFO = "cmd_sendarenainfo";
-    public static final String CMD_SENDWAYPOINT = "cmd_sendWayPoint";
 
     // Bluetooth Connection State
     // 0 = disconnected, 1 = connecting, 2 = connected, 3 = disconnecting, 4 = idle, 5 = listening, 6 = state changed
@@ -62,12 +61,18 @@ public class GlobalVariables {
     public static final int TILT_MINIMUM_DOWN = -3;
     public static final int TILT_MINIMUM_LEFT = -3;
     public static final int TILT_MINIMUM_RIGHT = 3;
-    public static final float TILT_SENSITIVITY = 0.3f;
+    public static final float TILT_SENSITIVITY = 0.0000008f;
 
     public static final int REQUESTCODE_YES = 300;
     public static final int REQUESTCODE_NO = 0;
     public static final int REQUESTCODE_BLUETOOTH_CONNECTABLE_DISCOVERABLE = 1;
 
-    public static final int TIMER_ONTICK = 0;
-    public static final int TIMER_ONFINISHED = 1;
+    public static final int TOUCHMODE_SETWAYPOINT = 0;
+    public static final int TOUCHMODE_SETROBOTPOSITION = 1;
+    public static final int TOUCHMODE_SWIPE = 2;
+
+    // Services
+    public static final String COUNTDOWNTIMER_SERVICE = "countDownTimerService";
+    public static final String STOPWATCH_SERVICE = "stopWatchService";
+
 }

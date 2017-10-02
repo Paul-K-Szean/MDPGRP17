@@ -32,7 +32,6 @@ import java.util.ArrayList;
 import java.util.Set;
 
 import static android.bluetooth.BluetoothAdapter.SCAN_MODE_CONNECTABLE_DISCOVERABLE;
-import static com.example.android.mdpgrp17_androidapp.CountDownTimerService.COUNTDOWNTIMER_BR;
 import static com.example.android.mdpgrp17_androidapp.GlobalVariables.BT_CONNECTION_STATE_CANNOTLISTEN;
 import static com.example.android.mdpgrp17_androidapp.GlobalVariables.BT_CONNECTION_STATE_CONNECTED;
 import static com.example.android.mdpgrp17_androidapp.GlobalVariables.BT_CONNECTION_STATE_CONNECTING;
@@ -40,6 +39,7 @@ import static com.example.android.mdpgrp17_androidapp.GlobalVariables.BT_CONNECT
 import static com.example.android.mdpgrp17_androidapp.GlobalVariables.BT_CONNECTION_STATE_CONNECTIONLOST;
 import static com.example.android.mdpgrp17_androidapp.GlobalVariables.BT_CONNECTION_STATE_DISCOVERABLE_DURATION;
 import static com.example.android.mdpgrp17_androidapp.GlobalVariables.BT_CONNECTION_STATE_IDLE;
+import static com.example.android.mdpgrp17_androidapp.GlobalVariables.COUNTDOWNTIMER_SERVICE;
 import static com.example.android.mdpgrp17_androidapp.GlobalVariables.MESSAGE_READ;
 import static com.example.android.mdpgrp17_androidapp.GlobalVariables.MESSAGE_WRITE;
 import static com.example.android.mdpgrp17_androidapp.GlobalVariables.REQUESTCODE_BLUETOOTH_CONNECTABLE_DISCOVERABLE;
@@ -150,7 +150,7 @@ public class BluetoothActivity extends AppCompatActivity implements CompoundButt
 
         //  Register all the activities
         registerReceiver(mReceiver, intent_filter);
-        registerReceiver(mReceiver_CountDownTimer, new IntentFilter(COUNTDOWNTIMER_BR));
+        registerReceiver(mReceiver_CountDownTimer, new IntentFilter(COUNTDOWNTIMER_SERVICE));
         if (mBTDeviceList != null)
             updateGUI_ListView_BTDeviceList();
         RLO_BT_ThisDevice.setOnTouchListener(this);
@@ -357,7 +357,7 @@ public class BluetoothActivity extends AppCompatActivity implements CompoundButt
                         if (mBTCurrentState == BT_CONNECTION_STATE_CONNECTED && mRemoteDevice.equals(mBluetoothDevice_Selected)) {
                             device_status.setText("Connected");
                         } else if (mBTCurrentState == BT_CONNECTION_STATE_CONNECTING && mRemoteDevice.equals(mBluetoothDevice_Selected)) {
-                                device_status.setText("Connecting");
+                            device_status.setText("Connecting");
                         } else {
                             device_status.setText("Paired");
                         }
@@ -583,13 +583,13 @@ public class BluetoothActivity extends AppCompatActivity implements CompoundButt
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
             switch (action) {
-                case COUNTDOWNTIMER_BR:
+                case COUNTDOWNTIMER_SERVICE:
                     if (intent.getExtras() != null) {
                         String mTime = intent.getStringExtra("countDownTimerService_mTime");
-                        Log.i(TAG, "onReceived: getExtras(): mTime: " + mTime);
+                        Log.i(TAG, "mReceiver_CountDownTimer: getExtras(): mTime: " + mTime);
                         TXTVW_BT_ThisDevice_Discoverable.setText("Visible for " + mTime);
                     } else {
-                        Log.i(TAG, "onReceived: getExtras(): null");
+                        Log.i(TAG, "mReceiver_CountDownTimer: getExtras(): null");
                         TXTVW_BT_ThisDevice_Discoverable.setText("Not visible to other device");
                     }
                     break;

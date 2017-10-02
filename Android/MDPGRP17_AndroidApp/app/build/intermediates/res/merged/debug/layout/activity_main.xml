@@ -52,6 +52,7 @@
                 android:orientation="horizontal">
 
                 <LinearLayout
+                    android:id="@+id/LLO_Robot"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
@@ -87,24 +88,24 @@
                     android:layout_weight="1"
                     android:orientation="vertical">
 
-                    <TextView
-                        android:id="@+id/TV_FastestTime"
+                    <ToggleButton
+                        android:id="@+id/TGLBTN_StartFastest"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:gravity="center"
-                        android:text="Fastest"
-                        android:textSize="20sp"
-                        android:textStyle="bold" />
+                        android:checked="false"
+                        android:textOff="Start Fastest"
+                        android:textOn="Stop Fastest" />
 
-                    <TextView
-                        android:id="@+id/TV_FastestTimeValue"
+                    <Chronometer
+                        android:id="@+id/CHRNOMTR_Fastest"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:gravity="center"
-                        android:text="00:00"
+                        android:textColor="@color/color_Arena_Default"
                         android:textSize="20sp" />
+
                 </LinearLayout>
 
                 <LinearLayout
@@ -114,23 +115,24 @@
                     android:layout_weight="1"
                     android:orientation="vertical">
 
-                    <TextView
-                        android:id="@+id/TV_ExplorationTime"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:gravity="center"
-                        android:text="Exploration"
-                        android:textSize="20sp"
-                        android:textStyle="bold" />
 
-                    <TextView
-                        android:id="@+id/TV_ExplorationTimeValue"
+                    <ToggleButton
+                        android:id="@+id/TGLBTN_StartExploration"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:checked="false"
+                        android:textOff="Start Explore"
+                        android:textOn="Stop Explore" />
+
+
+                    <Chronometer
+                        android:id="@+id/CHRNOMTR_Exploration"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:gravity="center"
-                        android:text="00:00"
+                        android:textColor="@color/color_Arena_Default"
                         android:textSize="20sp" />
                 </LinearLayout>
 
@@ -139,7 +141,6 @@
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
-                    android:background="@drawable/border_unlocked"
                     android:orientation="vertical">
 
                     <TextView
