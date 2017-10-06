@@ -6,7 +6,6 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.RectF;
 import android.support.v4.content.ContextCompat;
-import android.support.v4.widget.NestedScrollView;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
@@ -15,17 +14,21 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 
 import static com.example.android.mdpgrp17_androidapp.GlobalVariables.ARENA_CONTROL_MODE_SWIPE;
+import static com.example.android.mdpgrp17_androidapp.GlobalVariables.ARENA_GAME_MODE_FASTEST;
 import static com.example.android.mdpgrp17_androidapp.GlobalVariables.ARENA_GRID;
+import static com.example.android.mdpgrp17_androidapp.GlobalVariables.ARENA_GRID_ENDPOSITION;
 import static com.example.android.mdpgrp17_androidapp.GlobalVariables.ARENA_GRID_OBSTACLE;
-import static com.example.android.mdpgrp17_androidapp.GlobalVariables.ARENA_GRID_POSITION_END;
-import static com.example.android.mdpgrp17_androidapp.GlobalVariables.ARENA_GRID_POSITION_START;
-import static com.example.android.mdpgrp17_androidapp.GlobalVariables.ARENA_GRID_POSITION_WAYPOINT;
+import static com.example.android.mdpgrp17_androidapp.GlobalVariables.ARENA_GRID_STARTPOSITION;
+import static com.example.android.mdpgrp17_androidapp.GlobalVariables.ARENA_GRID_WAYPOINT;
 import static com.example.android.mdpgrp17_androidapp.GlobalVariables.ARENA_ROBOT_DIRECTION;
+import static com.example.android.mdpgrp17_androidapp.GlobalVariables.ARENA_ROBOT_DIRECTION_WITH_ENDPOSITION;
+import static com.example.android.mdpgrp17_androidapp.GlobalVariables.ARENA_ROBOT_DIRECTION_WITH_STARTPOSITION;
 import static com.example.android.mdpgrp17_androidapp.GlobalVariables.ARENA_ROBOT_DIRECTION_WITH_WAYPOINT;
 import static com.example.android.mdpgrp17_androidapp.GlobalVariables.ARENA_ROBOT_POSITION;
+import static com.example.android.mdpgrp17_androidapp.GlobalVariables.ARENA_ROBOT_POSITION_WITH_ENDPOSITION;
+import static com.example.android.mdpgrp17_androidapp.GlobalVariables.ARENA_ROBOT_POSITION_WITH_STARTPOSITION;
 import static com.example.android.mdpgrp17_androidapp.GlobalVariables.ARENA_ROBOT_POSITION_WITH_WAYPOINT;
 import static com.example.android.mdpgrp17_androidapp.GlobalVariables.ARENA_ROBOT_TRAVELPATH;
 import static com.example.android.mdpgrp17_androidapp.GlobalVariables.ARENA_ROBOT_TRAVELPATH_WITH_ENDPOSITION;
@@ -39,6 +42,9 @@ import static com.example.android.mdpgrp17_androidapp.GlobalVariables.SWIPE_MINI
 import static com.example.android.mdpgrp17_androidapp.GlobalVariables.TOUCHMODE_SETROBOTPOSITION;
 import static com.example.android.mdpgrp17_androidapp.GlobalVariables.TOUCHMODE_SETWAYPOINT;
 import static com.example.android.mdpgrp17_androidapp.GlobalVariables.TOUCHMODE_SWIPE;
+import static com.example.android.mdpgrp17_androidapp.R.color.color_Arena_RobotPosition;
+import static com.example.android.mdpgrp17_androidapp.R.color.color_Arena_WayPoint;
+import static java.util.Arrays.deepToString;
 
 /**
  * Created by szean on 8/9/2017.
@@ -48,15 +54,19 @@ public class Arena extends View {
     private static final String TAG = "Arena";
     // GUI objects
     private RelativeLayout RLO_ArenaGrid;
+    private TextView TXTVW_RobotStatusValue;
     private TextView TXTVW_WayPointValue;
     private TextView TXTVW_WayPoint;
-    private NestedScrollView NSV_Main;
+
     // Arena objects/variables
     private int grid_Row, grid_Col, grid_Size;
     private int startPosition_Row_Center = 19, startPosition_Col_Center = 2, endPosition_Row_Center = 2, endPosition_Col_Center = 14;
-    private int wayPointPosition_Row_Center, wayPointPosition_Col_Center;   // center of way point
-    private int robotPosition_Row, robotPosition_Col;               // top left reference point from arena info
+    private int wayPointPosition_Row_Center = -1, wayPointPosition_Col_Center = -1;   // center of way point
+    private int robotPosition_Row;
+    private int robotPosition_Col;               // top left reference point from arena info
     private int robotPosition_Row_Center, robotPosition_Col_Center; // center reference point robotPosition_Row, robotPosition_Col
+
+
     private int robotDirection;                                     // 0, 90, 180, 270
     private boolean isUpDown, isWayPointReached = false;            // 0 || 180 for isUpDown
     private boolean isRobotAtStartPosition = false, isRobotAtEndPosition = false;
@@ -64,7 +74,7 @@ public class Arena extends View {
     private int[] arenaInfoString = new int[300];   // to store arena info
     private int[][] arenaInfo = new int[20][15], travelInfo = new int[20][15], displayInfo = new int[20][15];
     private Boolean isMapMode_Auto = true; // always auto update map
-    private int saveStateIndex_Pause, saveStateIndex_InArray;   // negative to ensure default value, use to transverse the array of the saved state
+    private int saveStateIndex_Pause, saveStateIndex_InArray, saveStateIndex_WayPointWasSetAt;   // negative to ensure default value, use to transverse the array of the saved state
     private ArrayList<ArenaSaveState> saveStateArrayList;
 
     // Paint objects
@@ -73,9 +83,9 @@ public class Arena extends View {
     private int Y;
     private int _X;
     private int _Y;
-    private Canvas canvas;
     // Thread object
     private ArenaThread arenaThread;
+    private float downX, downY, upX, upY;
 
     public Arena(Context context, RelativeLayout RLO_ArenaGrid) {
         super(context);
@@ -85,6 +95,7 @@ public class Arena extends View {
         this.saveStateArrayList = new ArrayList<>();
         this.saveStateIndex_Pause = -1;     // negative to ensure default value, use to save at which index the manual map mode is set
         this.saveStateIndex_InArray = -1;   // negative to ensure default value, use to transverse the array of the saved state
+        this.saveStateIndex_WayPointWasSetAt = -1;
         // to paint the grid with styles
         this.paint = new Paint();
         this.paint.setAntiAlias(true);
@@ -95,51 +106,26 @@ public class Arena extends View {
         this.touchMode = TOUCHMODE_SETWAYPOINT;
     }
 
-    private float downX, downY, upX, upY;
-
     @Override
     public boolean onTouchEvent(MotionEvent motionEvent) {
         int touchAction = motionEvent.getAction();
         final MainActivity mainActivity = (MainActivity) getContext();
         if (touchMode == TOUCHMODE_SETWAYPOINT) {
-            Log.d(TAG, "onTouchEvent: TOUCHMODE_SETWAYPOINT");
             if (touchAction == MotionEvent.ACTION_DOWN) {
+                Log.d(TAG, "onTouchEvent: TOUCHMODE_SETWAYPOINT");
                 int touched_Col = (int) (motionEvent.getX() / grid_Size);
                 int touched_Row = (int) (motionEvent.getY() / grid_Size);
-                if (touched_Col == wayPointPosition_Col_Center && touched_Row == wayPointPosition_Row_Center) {
-                    // remove existing way points
+                if (touched_Row == wayPointPosition_Row_Center && touched_Col == wayPointPosition_Col_Center) {
+                    removeWayPoint();   // remove existing way points
+
+                } else { // remove existing way points and add new way point
                     removeWayPoint();
-                } else {
-                    // remove existing way points
-                    removeWayPoint();
-                    //
                     wayPointPosition_Col_Center = touched_Col;
                     wayPointPosition_Row_Center = touched_Row;
-                    // check if touched point is within the grid
-                    if (wayPointPosition_Row_Center >= 1 && wayPointPosition_Row_Center <= 20 && grid_Col >= 1 && grid_Col <= 15) {
-                        // check if touched point is a valid way point
-                        if (arenaInfo[wayPointPosition_Row_Center - 1][wayPointPosition_Col_Center - 1] == ARENA_GRID) {
-                            drawWayPoint();
-                        } else {
-                            // touched point is not a valid way point, reset
-                            showToast_Short("Unable to set way point on (" + wayPointPosition_Col_Center + "," + wayPointPosition_Row_Center + ")");
-                            if (wayPointPosition_Row_Center != 0 && wayPointPosition_Col_Center != 0) {
-                                wayPointPosition_Row_Center = wayPointPosition_Col_Center = 0;  // reset value for way point
-                            }
-                            TXTVW_WayPointValue.setText("0,0");
-                            TXTVW_WayPointValue.setTextColor(ContextCompat.getColor(getContext(), R.color.color_Arena_Default));
-                            TXTVW_WayPoint.setTextColor(ContextCompat.getColor(getContext(), R.color.color_Arena_Default));
-                        }
-                    } else {
-                        // check if existing way point is set
-                        String[] existingWayPoint = TXTVW_WayPointValue.getText().toString().split(",");
-                        wayPointPosition_Col_Center = Integer.parseInt(existingWayPoint[0]);
-                        wayPointPosition_Row_Center = Integer.parseInt(existingWayPoint[1]);
-                        if (wayPointPosition_Col_Center != 0 && wayPointPosition_Row_Center != 0) {
-                            drawWayPoint();
-                        }
-                    }
+                    drawWayPoint();
+
                 }
+                saveArenaState(); // save way point into new state
                 invalidate();
             }
         } else if (touchMode == TOUCHMODE_SETROBOTPOSITION) {
@@ -151,98 +137,82 @@ public class Arena extends View {
                                 arenaInfo[rowIndex - 1][colIndex - 1] == ARENA_ROBOT_POSITION_WITH_WAYPOINT ||
                                 arenaInfo[rowIndex - 1][colIndex - 1] == ARENA_ROBOT_DIRECTION ||
                                 arenaInfo[rowIndex - 1][colIndex - 1] == ARENA_ROBOT_DIRECTION_WITH_WAYPOINT) {
-                            arenaInfo[rowIndex - 1][colIndex - 1] = ARENA_GRID;
+                            arenaInfo[rowIndex - 1][colIndex - 1] = ARENA_GRID; // remove existing robot position
                         }
                     }
                 }
-
+                // getting robot position from touched points
                 robotPosition_Col_Center = (int) (motionEvent.getX() / grid_Size);
                 robotPosition_Row_Center = (int) (motionEvent.getY() / grid_Size);
                 robotPosition_Col = robotPosition_Col_Center - 1;
                 robotPosition_Row = robotPosition_Row_Center - 1;
                 robotDirection = 0;
+
                 drawRobotPosition();
                 drawRobotDirection();
-
-                int[][] saveState_Temp_ArenaInfo = new int[grid_Row][grid_Col];  // temp variable to save the state
-                for (int rowIndex = 1; rowIndex <= grid_Row; rowIndex++) {
-                    for (int colIndex = 1; colIndex <= grid_Col; colIndex++) {
-                        saveState_Temp_ArenaInfo[rowIndex - 1][colIndex - 1] = arenaInfo[rowIndex - 1][colIndex - 1];
-                    }
-                }
-                int[][] saveState_Temp_TravelInfo = new int[grid_Row][grid_Col];  // temp variable to save the state
-                for (int rowIndex = 1; rowIndex <= grid_Row; rowIndex++) {
-                    for (int colIndex = 1; colIndex <= grid_Col; colIndex++) {
-                        saveState_Temp_TravelInfo[rowIndex - 1][colIndex - 1] = travelInfo[rowIndex - 1][colIndex - 1];
-                    }
-                }
-                ArenaSaveState arenaSaveState = new ArenaSaveState(saveState_Temp_ArenaInfo, saveState_Temp_TravelInfo,
-                        isWayPointReached, robotPosition_Row_Center, robotPosition_Col_Center);
-                saveStateArrayList.add(arenaSaveState);
-                drawWayPoint();
+                saveArenaState();       // save new robot position
+                drawWayPoint();         // redraw the way point
+                drawStartPosition();    // redraw the start position
+                drawEndPosition();      // redraw the end position
 
             }
         } else if (touchMode == TOUCHMODE_SWIPE) {
             Log.d(TAG, "onTouchEvent: TOUCHMODE_SWIPE");
-            if (mainActivity.getIsWayPointLocked()) {
-                // locked, cannot touch screen, check if in swipe mode
-                if (mainActivity.getRobotControlMode() == ARENA_CONTROL_MODE_SWIPE) {
-                    switch (touchAction) {
-                        case MotionEvent.ACTION_DOWN: {
-                            downX = motionEvent.getX();
-                            downY = motionEvent.getY();
-                            return true;
-                        }
-                        case MotionEvent.ACTION_UP: {
-                            upX = motionEvent.getX();
-                            upY = motionEvent.getY();
-
-                            float deltaX = downX - upX;
-                            float deltaY = downY - upY;
-
-                            // swipe left/right?
-                            if (Math.abs(deltaX) > SWIPE_MINIMUM_DISTANCE) {
-                                // left or right
-                                if (deltaX < 0) {
-                                    Log.i(TAG, "Swipe Right");
-                                    mainActivity.moveRobot(CMD_ROTATERIGHT);
-                                    return true;
-                                }
-                                if (deltaX > 0) {
-                                    Log.i(TAG, "Swipe Left");
-                                    mainActivity.moveRobot(CMD_ROTATELEFT);
-                                    return true;
-                                }
-                            } else {
-                                Log.i(TAG, "Swipe was only " + Math.abs(deltaX) + " long horizontally, need at least " + SWIPE_MINIMUM_DISTANCE);
-                                // return false; // We don't consume the event
-                            }
-
-                            // swipe up/down?
-                            if (Math.abs(deltaY) > SWIPE_MINIMUM_DISTANCE) {
-                                // top or down
-                                if (deltaY < 0) {
-                                    Log.i(TAG, "Swipe Down");
-                                    mainActivity.moveRobot(CMD_REVERSE);
-                                    return true;
-                                }
-                                if (deltaY > 0) {
-                                    Log.i(TAG, "Swipe Up");
-                                    mainActivity.moveRobot(CMD_FORWARD);
-                                    return true;
-                                }
-                            } else {
-                                Log.i(TAG, "Swipe was only " + Math.abs(deltaY) + " long vertically, need at least " + SWIPE_MINIMUM_DISTANCE);
-                                // return false; // We don't consume the event
-                            }
-                            return false;
-                        }
+            // locked, cannot touch screen, check if in swipe mode
+            if (mainActivity.getRobotControlMode() == ARENA_CONTROL_MODE_SWIPE) {
+                switch (touchAction) {
+                    case MotionEvent.ACTION_DOWN: {
+                        downX = motionEvent.getX();
+                        downY = motionEvent.getY();
+                        return true;
                     }
-                } else {
-                    showToast_Short("Way point is locked");
+                    case MotionEvent.ACTION_UP: {
+                        upX = motionEvent.getX();
+                        upY = motionEvent.getY();
+
+                        float deltaX = downX - upX;
+                        float deltaY = downY - upY;
+
+                        // swipe left/right?
+                        if (Math.abs(deltaX) > SWIPE_MINIMUM_DISTANCE) {
+                            // left or right
+                            if (deltaX < 0) {
+                                Log.i(TAG, "Swipe Right");
+                                mainActivity.moveRobot(CMD_ROTATERIGHT);
+                                return true;
+                            }
+                            if (deltaX > 0) {
+                                Log.i(TAG, "Swipe Left");
+                                mainActivity.moveRobot(CMD_ROTATELEFT);
+                                return true;
+                            }
+                        } else {
+                            Log.i(TAG, "Swipe was only " + Math.abs(deltaX) + " long horizontally, need at least " + SWIPE_MINIMUM_DISTANCE);
+                            // return false; // We don't consume the event
+                        }
+
+                        // swipe up/down?
+                        if (Math.abs(deltaY) > SWIPE_MINIMUM_DISTANCE) {
+                            // top or down
+                            if (deltaY < 0) {
+                                Log.i(TAG, "Swipe Down");
+                                mainActivity.moveRobot(CMD_REVERSE);
+                                return true;
+                            }
+                            if (deltaY > 0) {
+                                Log.i(TAG, "Swipe Up");
+                                mainActivity.moveRobot(CMD_FORWARD);
+                                return true;
+                            }
+                        } else {
+                            Log.i(TAG, "Swipe was only " + Math.abs(deltaY) + " long vertically, need at least " + SWIPE_MINIMUM_DISTANCE);
+                            // return false; // We don't consume the event
+                        }
+                        return false;
+                    }
                 }
-            }else{
-                showToast_Short("Please lock the way point first");
+            } else {
+                showToast_Short("Way point is locked");
             }
         }
 
@@ -277,7 +247,6 @@ public class Arena extends View {
     @Override
     public void onDraw(Canvas canvas) {
         try {
-            this.canvas = canvas;
             drawArenaGrid(canvas);
         } catch (Exception e) {
         }
@@ -296,58 +265,48 @@ public class Arena extends View {
                     drawCell(rowIndex, colIndex, grid_Size, R.color.color_Arena_Grid, canvas);
                 }
                 // paint start position
-                if (arenaInfoValue == ARENA_GRID_POSITION_START) {
+                if (arenaInfoValue == ARENA_GRID_STARTPOSITION) {
                     drawCell(rowIndex, colIndex, grid_Size, R.color.color_Arena_StartPosition, canvas);
                 }
                 // paint end position
-                if (arenaInfoValue == ARENA_GRID_POSITION_END) {
+                if (arenaInfoValue == ARENA_GRID_ENDPOSITION) {
                     drawCell(rowIndex, colIndex, grid_Size, R.color.color_Arena_EndPosition, canvas);
-                }
-                // draw robot position
-                if (robotPosition_Row_Center == startPosition_Row_Center && robotPosition_Col_Center == startPosition_Col_Center) {
-                    // draw robot position with border color
-                    if (arenaInfoValue == ARENA_ROBOT_POSITION) {
-                        drawCellWithBorder_StartPosition(rowIndex, colIndex, grid_Size, R.color.color_Arena_RobotPosition, canvas); //  dark orange with way point border color
-                    }
-                    // draw robot direction with border color
-                    if (arenaInfoValue == ARENA_ROBOT_DIRECTION) {
-                        drawCellWithBorder_StartPosition(rowIndex, colIndex, grid_Size, R.color.color_Arena_RobotDirection, canvas); //  dark orchid with way point border color
-                    }
-                } else if (robotPosition_Row_Center == endPosition_Row_Center && robotPosition_Col_Center == endPosition_Col_Center) {
-                    // draw robot position with border color
-                    if (arenaInfoValue == ARENA_ROBOT_POSITION) {
-                        drawCellWithBorder_EndPosition(rowIndex, colIndex, grid_Size, R.color.color_Arena_RobotPosition, canvas); //  dark orange with way point border color
-                    }
-                    // draw robot direction with border color
-                    if (arenaInfoValue == ARENA_ROBOT_DIRECTION) {
-                        drawCellWithBorder_EndPosition(rowIndex, colIndex, grid_Size, R.color.color_Arena_RobotDirection, canvas); //  dark orchid with way point border color
-                    }
-                } else {
-                    // draw robot position
-                    if (arenaInfoValue == ARENA_ROBOT_POSITION) {
-                        drawCell(rowIndex, colIndex, grid_Size, R.color.color_Arena_RobotPosition, canvas);
-                    }
-                    // draw robot direction
-                    if (arenaInfoValue == ARENA_ROBOT_DIRECTION) {
-                        drawCell(rowIndex, colIndex, grid_Size, R.color.color_Arena_RobotDirection, canvas);
-                    }
-                    // draw robot position with way point
-                    if (arenaInfoValue == ARENA_ROBOT_POSITION_WITH_WAYPOINT) {
-                        drawCellWithBorder_WayPoint(rowIndex, colIndex, grid_Size, R.color.color_Arena_WayPoint, canvas);
-                    }
-                    // draw robot direction with way point
-                    if (arenaInfoValue == ARENA_ROBOT_DIRECTION_WITH_WAYPOINT) {
-                        drawCellWithBorder_WayPoint(rowIndex, colIndex, grid_Size, R.color.color_Arena_WayPoint, canvas);
-                    }
                 }
                 // draw obstacle
                 if (arenaInfoValue == ARENA_GRID_OBSTACLE) {
                     drawCell(rowIndex, colIndex, grid_Size, R.color.color_Arena_Obstacle, canvas);
                 }
                 // draw way point
-                if (arenaInfoValue == ARENA_GRID_POSITION_WAYPOINT) {
-                    drawCell(rowIndex, colIndex, grid_Size, R.color.color_Arena_WayPoint, canvas);
+                if (arenaInfoValue == ARENA_GRID_WAYPOINT) {
+                    drawCell(rowIndex, colIndex, grid_Size, color_Arena_WayPoint, canvas);
                 }
+                // draw robot position
+                if (arenaInfoValue == ARENA_ROBOT_POSITION) {
+                    drawCell(rowIndex, colIndex, grid_Size, R.color.color_Arena_RobotPosition, canvas);
+                }
+                if (arenaInfoValue == ARENA_ROBOT_POSITION_WITH_WAYPOINT) {
+                    drawCellWithBorder_WayPoint(rowIndex, colIndex, grid_Size, R.color.color_Arena_WayPointReached, canvas);
+                }
+                if (arenaInfoValue == ARENA_ROBOT_POSITION_WITH_STARTPOSITION) {
+                    drawCellWithBorder_StartPosition(rowIndex, colIndex, grid_Size, R.color.color_Arena_RobotPosition, canvas);
+                }
+                if (arenaInfoValue == ARENA_ROBOT_POSITION_WITH_ENDPOSITION) {
+                    drawCellWithBorder_EndPosition(rowIndex, colIndex, grid_Size, R.color.color_Arena_RobotPosition, canvas);
+                }
+                // draw robot direction
+                if (arenaInfoValue == ARENA_ROBOT_DIRECTION) {
+                    drawCell(rowIndex, colIndex, grid_Size, R.color.color_Arena_RobotDirection, canvas);
+                }
+                if (arenaInfoValue == ARENA_ROBOT_DIRECTION_WITH_WAYPOINT) {
+                    drawCellWithBorder_WayPoint(rowIndex, colIndex, grid_Size, R.color.color_Arena_WayPointReached, canvas);
+                }
+                if (arenaInfoValue == ARENA_ROBOT_DIRECTION_WITH_STARTPOSITION) {
+                    drawCellWithBorder_StartPosition(rowIndex, colIndex, grid_Size, R.color.color_Arena_RobotDirection, canvas);
+                }
+                if (arenaInfoValue == ARENA_ROBOT_DIRECTION_WITH_ENDPOSITION) {
+                    drawCellWithBorder_EndPosition(rowIndex, colIndex, grid_Size, R.color.color_Arena_RobotDirection, canvas);
+                }
+
                 // draw travel path
                 if (arenaInfoValue == ARENA_ROBOT_TRAVELPATH) {
                     drawCell(rowIndex, colIndex, grid_Size, R.color.color_Arena_RobotTravelPath, canvas);
@@ -362,7 +321,7 @@ public class Arena extends View {
                 }
                 // draw way point reached
                 if (arenaInfoValue == ARENA_ROBOT_TRAVELPATH_WITH_WAYPOINT) {
-                    drawCellWithBorder_WayPoint(rowIndex, colIndex, grid_Size, R.color.color_Arena_WayPoint, canvas);
+                    drawCellWithBorder_WayPoint(rowIndex, colIndex, grid_Size, R.color.color_Arena_WayPointReached, canvas);
                 }
             }
         }
@@ -384,7 +343,7 @@ public class Arena extends View {
 
     }
 
-    // WITH WAY POINT BORDER
+    // Draw Robot With Border
     public void drawCellWithBorder_WayPoint(int row, int col, int gridSize, int c, Canvas canvas) {
         Y = row * gridSize - gridSize / 2;
         _Y = row * gridSize + gridSize / 2;
@@ -395,7 +354,7 @@ public class Arena extends View {
         paint.setStyle(Paint.Style.FILL);
         canvas.drawRect(new RectF(X, Y, _X, _Y), paint);
         // paint the stroke border
-        paint.setColor(ContextCompat.getColor(getContext(), R.color.color_Arena_RobotTravelPath));
+        paint.setColor(ContextCompat.getColor(getContext(), color_Arena_WayPoint));
         paint.setStyle(Paint.Style.STROKE);
         canvas.drawRect(new RectF(X, Y, _X, _Y), paint);
     }
@@ -447,11 +406,12 @@ public class Arena extends View {
         drawStartPosition();
         // set end position
         drawEndPosition();
-
+        drawRobotPosition();
+        drawRobotDirection();
+        saveArenaState();   // save initial setup
     }
 
     public void decodeArenaInfo(String cmdString) {
-
         // decode the cmd string
         if (cmdString.contains("NakedArena")) {
             setupNakedGrid();
@@ -484,18 +444,56 @@ public class Arena extends View {
                 drawWayPoint();
                 // check way point reached
                 checkWayPointReached();
+
                 // set robot position
                 drawRobotPosition();
                 // set robot direction
                 drawRobotDirection();
                 // set robot travel path
                 drawTravelPath();
+                // set way point reached
                 if (isWayPointReached) drawWayPointReached();
             } catch (Exception ex) {
 
             }
         }
-        Log.d(TAG, "********************************SAVE********************************");
+        saveArenaState(); // save get arena info
+    }
+
+    // Debug - not used
+    public void printArenaInfo() {
+        Log.d(TAG, "--------------------Start of Print Arena Info--------------------");
+        Log.d(TAG, "--------------------printArenaInfo--------------------");
+        String printArenaInfoString = deepToString(arenaInfo).replace("[[", "[").replace("]]", "]").replace("], ", "];").trim();
+        String[] printArenaInfoStringArray = printArenaInfoString.split(";");
+        for (String value : printArenaInfoStringArray) {
+            Log.d(TAG, "printArenaInfo: arenaInfo: " + value);
+        }
+        Log.d(TAG, "--------------------printTravelInfo--------------------");
+        String printTravelInfoString = deepToString(travelInfo).replace("[[", "[").replace("]]", "]").replace("], ", "];").trim();
+        String[] printTravelInfoArray = printTravelInfoString.split(";");
+        for (String value : printTravelInfoArray) {
+            Log.d(TAG, "printTravelInfo: travelInfo: " + value);
+        }
+        Log.d(TAG, "--------------------saveArenaState---------------------");
+        Log.d(TAG, "saveArenaState: Index_Pause: " + (saveStateIndex_Pause) + ", Index_InArray: " + (saveStateIndex_InArray) +
+                ", arrListSize: " + saveStateArrayList.size() + ", MapMode: " +
+                isMapMode_Auto + ", WayPointReached: " + saveStateArrayList.get(saveStateArrayList.size() - 1).getWayPointReached());
+        for (int index = 0; index < saveStateArrayList.size(); index++) {
+            int[][] saveArenaState = saveStateArrayList.get(index).getArenaInfo();
+            String saveArenaStateString = deepToString(saveArenaState).replace("[[", "[").replace("]]", "]").replace("], ", "];").trim();
+            String[] saveArenaStateArray = saveArenaStateString.split(";");
+            for (String value : saveArenaStateArray) {
+                Log.d(TAG, "saveArenaState: arenaInfo: " + value);
+            }
+            Log.d(TAG, "------------------------------------------------------- Count: " + index);
+        }
+        Log.d(TAG, "--------------------End of Print Arena Info--------------------");
+
+    }
+
+    public void saveArenaState() {
+        Log.d(TAG, "********************************SAVE ARENA STATE********************************");
         int[][] saveState_Temp_ArenaInfo = new int[grid_Row][grid_Col];  // temp variable to save the state
         for (int rowIndex = 1; rowIndex <= grid_Row; rowIndex++) {
             for (int colIndex = 1; colIndex <= grid_Col; colIndex++) {
@@ -509,53 +507,21 @@ public class Arena extends View {
             }
         }
         ArenaSaveState arenaSaveState = new ArenaSaveState(saveState_Temp_ArenaInfo, saveState_Temp_TravelInfo,
-                isWayPointReached, robotPosition_Row_Center, robotPosition_Col_Center);
+                isWayPointReached, robotPosition_Row_Center, robotPosition_Col_Center, robotDirection);
         saveStateArrayList.add(arenaSaveState);
-        drawWayPoint();
-        // printArenaInfo();
-    }
-
-    // Debug - not used
-    public void printArenaInfo() {
-        Log.d(TAG, "--------------------Start of Print Arena Info--------------------");
-        Log.d(TAG, "--------------------printArenaInfo--------------------");
-        String printArenaInfoString = Arrays.deepToString(arenaInfo).replace("[[", "[").replace("]]", "]").replace("], ", "];").trim();
-        String[] printArenaInfoStringArray = printArenaInfoString.split(";");
-        for (String value : printArenaInfoStringArray) {
-            Log.d(TAG, "printArenaInfo: arenaInfo: " + value);
-        }
-        Log.d(TAG, "--------------------printTravelInfo--------------------");
-        String printTravelInfoString = Arrays.deepToString(travelInfo).replace("[[", "[").replace("]]", "]").replace("], ", "];").trim();
-        String[] printTravelInfoArray = printTravelInfoString.split(";");
-        for (String value : printTravelInfoArray) {
-            Log.d(TAG, "printTravelInfo: travelInfo: " + value);
-        }
-        Log.d(TAG, "--------------------saveArenaState---------------------");
-        Log.d(TAG, "saveArenaState: Index_Pause: " + (saveStateIndex_Pause) + ", Index_InArray: " + (saveStateIndex_InArray) +
-                ", arrListSize: " + saveStateArrayList.size() + ", MapMode: " +
-                isMapMode_Auto + ", WayPointReached: " + saveStateArrayList.get(saveStateArrayList.size() - 1).getWayPointReached());
-        for (int index = 0; index < saveStateArrayList.size(); index++) {
-            int[][] saveArenaState = saveStateArrayList.get(index).getArenaInfo();
-            String saveArenaStateString = Arrays.deepToString(saveArenaState).replace("[[", "[").replace("]]", "]").replace("], ", "];").trim();
-            String[] saveArenaStateArray = saveArenaStateString.split(";");
-            for (String value : saveArenaStateArray) {
-                Log.d(TAG, "saveArenaState: arenaInfo: " + value);
-            }
-            Log.d(TAG, "------------------------------------------------------- Count: " + index);
-        }
-        Log.d(TAG, "--------------------End of Print Arena Info--------------------");
-
+        printArenaInfo();
     }
 
     private void showToast_Short(String message) {
         Toast.makeText(getContext(), message, Toast.LENGTH_SHORT).show();
     }
 
-    // Check user/robot action
+    // Check Methods
     public boolean checkMovement(String moveCmd) {
         Log.d(TAG, "checkMovement");
         boolean isValidMove = true;
         int checkDirection;
+
         if (moveCmd.equals(CMD_FORWARD)) {
             if (robotDirection == 0) { // up
                 checkDirection = robotPosition_Row - 1;
@@ -610,6 +576,7 @@ public class Arena extends View {
                 }
             }
         }
+
         if (moveCmd.equals(CMD_REVERSE)) {
             if (robotDirection == 0) { // up
                 checkDirection = robotPosition_Row + 3;
@@ -669,25 +636,27 @@ public class Arena extends View {
     }
 
     private void checkWayPointReached() {
-        if (robotPosition_Row_Center != 0 && robotPosition_Col_Center != 0) {
-            int checkWayPointArray[][];
+        int checkWayPointArray[][];
+        robotPosition_Row_Center = robotPosition_Col_Center = 0;
+        if (saveStateArrayList.size() != 0) {
             if (isMapMode_Auto) {
                 checkWayPointArray = saveStateArrayList.get(saveStateArrayList.size() - 1).getArenaInfo();
             } else {
                 checkWayPointArray = saveStateArrayList.get(saveStateIndex_InArray).getArenaInfo();
             }
-
-            if (robotPosition_Row < 1 || robotPosition_Row > grid_Row || robotPosition_Col < 1 || robotPosition_Col > grid_Col) {
-
-            } else {
-                for (int rowIndex = robotPosition_Row; rowIndex <= robotPosition_Row + 2; rowIndex++) {
-                    for (int colIndex = robotPosition_Col; colIndex <= robotPosition_Col + 2; colIndex++) {
-                        if (checkWayPointArray[rowIndex - 1][colIndex - 1] == ARENA_GRID_POSITION_WAYPOINT) {
-                            Log.d(TAG, "checkWayPointReached: Way Point Reached");
-                            isWayPointReached = true;
-                            break;
-                        }
-
+            robotPosition_Row_Center = saveStateArrayList.get(saveStateArrayList.size() - 1).getRobotPosition_Row_Center();
+            robotPosition_Col_Center = saveStateArrayList.get(saveStateArrayList.size() - 1).getRobotPosition_Col_Center();
+            for (int rowIndex = robotPosition_Row; rowIndex <= robotPosition_Row + 2; rowIndex++) {
+                for (int colIndex = robotPosition_Col; colIndex <= robotPosition_Col + 2; colIndex++) {
+                    int checkWayPointValue = checkWayPointArray[rowIndex - 1][colIndex - 1];
+                    // Log.d(TAG, "checkWayPointReached: checkWayPointValue: " + checkWayPointValue);
+                    if (checkWayPointValue == ARENA_GRID_WAYPOINT ||
+                            checkWayPointValue == ARENA_ROBOT_DIRECTION_WITH_WAYPOINT ||
+                            checkWayPointValue == ARENA_ROBOT_POSITION_WITH_WAYPOINT) {
+                        Log.d(TAG, "checkWayPointReached: Way Point Reached");
+                        isWayPointReached = true;
+                        // showToast_Short("Way Point Reach!");
+                        break;
                     }
                 }
             }
@@ -728,9 +697,27 @@ public class Arena extends View {
         }
     }
 
-    // Getters and Setters
-    public void setSaveStateArrayList(ArrayList<ArenaSaveState> saveStateArrayList) {
-        this.saveStateArrayList = saveStateArrayList;
+    private void checkRobotDirectionOnAnyThing(int robotDirection_Row, int robotDirection_Col) {
+        robotDirection_Row = robotDirection_Row - 1;
+        robotDirection_Col = robotDirection_Col - 1;
+        int arenaInfoValue = arenaInfo[robotDirection_Row][robotDirection_Col];
+        // Log.d(TAG, "drawRobotDirection: checkRobotDirectionOnAnyThing: " + arenaInfo[robotDirection_Row][robotDirection_Col]);
+        // to draw border on start/end position, redraw way point
+        if (arenaInfoValue == ARENA_ROBOT_POSITION_WITH_STARTPOSITION) {
+//            Log.d(TAG, "drawRobotDirection: checkRobotDirectionOnAnyThing: " + robotPosition_Row + "," + robotPosition_Col + ": at ARENA_GRID_STARTPOSITION");
+            arenaInfo[robotDirection_Row][robotDirection_Col] = ARENA_ROBOT_DIRECTION_WITH_STARTPOSITION;
+        } else if (arenaInfoValue == ARENA_ROBOT_POSITION_WITH_ENDPOSITION) {
+//            Log.d(TAG, "drawRobotDirection: checkRobotDirectionOnAnyThing: " + robotPosition_Row + "," + robotPosition_Col + ": at ARENA_GRID_ENDPOSITION");
+            arenaInfo[robotDirection_Row][robotDirection_Col] = ARENA_ROBOT_DIRECTION_WITH_ENDPOSITION;
+        } else if (arenaInfoValue == ARENA_ROBOT_POSITION_WITH_WAYPOINT) {
+//            Log.d(TAG, "drawRobotDirection: checkRobotDirectionOnAnyThing: " + robotPosition_Row + "," + robotPosition_Col + ": at ARENA_ROBOT_POSITION_WITH_WAYPOINT");
+            arenaInfo[robotDirection_Row][robotDirection_Col] = ARENA_ROBOT_DIRECTION_WITH_WAYPOINT;
+        } else if (arenaInfoValue == ARENA_ROBOT_POSITION) {
+//            Log.d(TAG, "drawRobotDirection: checkRobotDirectionOnAnyThing: " + robotPosition_Row + "," + robotPosition_Col + ": at ARENA_ROBOT_POSITION");
+            arenaInfo[robotDirection_Row][robotDirection_Col] = ARENA_ROBOT_DIRECTION;
+        }
+
+
     }
 
     public Boolean getMapMode() {
@@ -765,6 +752,11 @@ public class Arena extends View {
         return saveStateArrayList;
     }
 
+    // Getters and Setters
+    public void setSaveStateArrayList(ArrayList<ArenaSaveState> saveStateArrayList) {
+        this.saveStateArrayList = saveStateArrayList;
+    }
+
     public int getWayPointPosition_Row_Center() {
         return wayPointPosition_Row_Center;
     }
@@ -791,14 +783,34 @@ public class Arena extends View {
         this.touchMode = touchMode;
     }
 
-    // Arena Draw Methods
+    public int getRobotPosition_Row() {
+        return robotPosition_Row;
+    }
+
+    public void setRobotPosition_Row(int robotPosition_Row) {
+        this.robotPosition_Row += robotPosition_Row;
+    }
+
+    public int getRobotPosition_Col() {
+        return robotPosition_Col;
+    }
+
+    public void setRobotPosition_Col(int robotPosition_Col) {
+        this.robotPosition_Col += robotPosition_Col;
+    }
+
+    public void setRobotDirection(int robotDirection) {
+        this.robotDirection = robotDirection;
+    }
+
+    // Draw Methods
     private void drawStartPosition() {
         Log.d(TAG, "drawStartPosition");
         int startPosition_row = 18, startPosition_col = 1;
         // set start position
         for (int rowIndex = startPosition_row; rowIndex <= 20; rowIndex++) {
             for (int colIndex = startPosition_col; colIndex <= 3; colIndex++) {
-                arenaInfo[rowIndex - 1][colIndex - 1] = ARENA_GRID_POSITION_START;
+                arenaInfo[rowIndex - 1][colIndex - 1] = ARENA_GRID_STARTPOSITION;
             }
         }
     }
@@ -809,52 +821,31 @@ public class Arena extends View {
         // set end position
         for (int rowIndex = endPosition_row; rowIndex <= 3; rowIndex++) {
             for (int colIndex = endPosition_col; colIndex <= 15; colIndex++) {
-                arenaInfo[rowIndex - 1][colIndex - 1] = ARENA_GRID_POSITION_END;
+                arenaInfo[rowIndex - 1][colIndex - 1] = ARENA_GRID_ENDPOSITION;
             }
         }
     }
 
     public void drawWayPoint() {
         Log.d(TAG, "drawWayPoint: " + wayPointPosition_Row_Center + "," + wayPointPosition_Col_Center + ", center reference point");
-
         TXTVW_WayPointValue = (TextView) getRootView().findViewById(R.id.TXTVW_WayPointValue);
         TXTVW_WayPoint = (TextView) getRootView().findViewById(R.id.TXTVW_WayPoint);
-
-        // check if paint points within the grid
-        if (wayPointPosition_Row_Center < 1 || wayPointPosition_Row_Center > grid_Row || wayPointPosition_Col_Center < 1 || wayPointPosition_Col_Center > grid_Col) {
-            Log.d(TAG, "drawWayPoint: paint points outside the grid");
-            // paint points outside the grid
-            if (wayPointPosition_Row_Center == 0 && wayPointPosition_Col_Center == 0) {
-                // showToast_Short("No way point set");
-            } else {
-                showToast_Short("Unable to set way point on (" + wayPointPosition_Row_Center + "," + wayPointPosition_Col_Center + ")");
-                if (wayPointPosition_Row_Center != 0 && wayPointPosition_Col_Center != 0) {
-                    wayPointPosition_Row_Center = wayPointPosition_Col_Center = 0;  // reset value for way point
+        try {
+            if (wayPointPosition_Row_Center > 0 && wayPointPosition_Col_Center > 0) {
+                if (arenaInfo[wayPointPosition_Row_Center - 1][wayPointPosition_Col_Center - 1] == ARENA_GRID) {
+                    arenaInfo[wayPointPosition_Row_Center - 1][wayPointPosition_Col_Center - 1] = ARENA_GRID_WAYPOINT;
+                    saveStateIndex_WayPointWasSetAt = saveStateArrayList.size() - 1;
                 }
             }
-            TXTVW_WayPointValue.setText("0,0");
-            TXTVW_WayPointValue.setTextColor(ContextCompat.getColor(getContext(), R.color.color_Arena_Default));
-            TXTVW_WayPoint.setTextColor(ContextCompat.getColor(getContext(), R.color.color_Arena_Default));
-        } else {
-            // paint points within the grid,
-            Log.d(TAG, "drawWayPoint: paint points within the grid");
-            // update each arena info in the saveState_ArenaInfo
-            for (int index = 0; index < saveStateArrayList.size(); index++) {
-                int[][] arenaInfor = saveStateArrayList.get(index).getArenaInfo();
-                // check if the selected way point contains any obstacles
-                if (arenaInfor[wayPointPosition_Row_Center - 1][wayPointPosition_Col_Center - 1] == ARENA_GRID) {
-                    arenaInfor[wayPointPosition_Row_Center - 1][wayPointPosition_Col_Center - 1] = ARENA_GRID_POSITION_WAYPOINT;
-                }
-            }
-
+            TXTVW_WayPointValue.setText(wayPointPosition_Col_Center + "," + wayPointPosition_Row_Center);
             if (isMapMode_Auto) {
                 // set the GUI text color for the latest state
                 if (isWayPointReached) {
                     TXTVW_WayPointValue.setTextColor(ContextCompat.getColor(getContext(), R.color.color_Arena_RobotPosition));
                     TXTVW_WayPoint.setTextColor(ContextCompat.getColor(getContext(), R.color.color_Arena_RobotPosition));
                 } else {
-                    TXTVW_WayPointValue.setTextColor(ContextCompat.getColor(getContext(), R.color.color_Arena_WayPoint));
-                    TXTVW_WayPoint.setTextColor(ContextCompat.getColor(getContext(), R.color.color_Arena_WayPoint));
+                    TXTVW_WayPointValue.setTextColor(ContextCompat.getColor(getContext(), color_Arena_WayPoint));
+                    TXTVW_WayPoint.setTextColor(ContextCompat.getColor(getContext(), color_Arena_WayPoint));
                 }
             } else {
                 // set the GUI text color for each arena info in the saveState_ArenaInfo
@@ -862,66 +853,99 @@ public class Arena extends View {
                     TXTVW_WayPointValue.setTextColor(ContextCompat.getColor(getContext(), R.color.color_Arena_RobotPosition));
                     TXTVW_WayPoint.setTextColor(ContextCompat.getColor(getContext(), R.color.color_Arena_RobotPosition));
                 } else {
-                    TXTVW_WayPointValue.setTextColor(ContextCompat.getColor(getContext(), R.color.color_Arena_WayPoint));
-                    TXTVW_WayPoint.setTextColor(ContextCompat.getColor(getContext(), R.color.color_Arena_WayPoint));
+                    TXTVW_WayPointValue.setTextColor(ContextCompat.getColor(getContext(), color_Arena_WayPoint));
+                    TXTVW_WayPoint.setTextColor(ContextCompat.getColor(getContext(), color_Arena_WayPoint));
                 }
             }
+        } catch (IndexOutOfBoundsException ex_IndexOutOfBound) {
+            TXTVW_WayPointValue.setText("0,0");
+            TXTVW_WayPointValue.setTextColor(ContextCompat.getColor(getContext(), R.color.color_Arena_Default));
+            TXTVW_WayPoint.setTextColor(ContextCompat.getColor(getContext(), R.color.color_Arena_Default));
+            showToast_Short("Unable to set way point on (" + wayPointPosition_Row_Center + "," + wayPointPosition_Col_Center + ")");
+            Log.d(TAG, "drawWayPoint: " + ex_IndexOutOfBound.getMessage());
         }
 
 
-        TXTVW_WayPointValue.setText(wayPointPosition_Col_Center + "," + wayPointPosition_Row_Center);
     }
 
     private void removeWayPoint() {
         Log.d(TAG, "removeWayPoint: " + wayPointPosition_Row_Center + "," + wayPointPosition_Col_Center + ", center reference point");
-        //  remove existing way points
-        // remove each arena info in the saveState_ArenaInfo
-        for (int index = 0; index < saveStateArrayList.size(); index++) {
-            int[][] arenaInfor = saveStateArrayList.get(index).getArenaInfo();
-            for (int rowIndex = 1; rowIndex <= grid_Row; rowIndex++) {
-                for (int colIndex = 1; colIndex <= grid_Col; colIndex++) {
-                    if (arenaInfor[rowIndex - 1][colIndex - 1] == ARENA_GRID_POSITION_WAYPOINT) {
-                        arenaInfor[rowIndex - 1][colIndex - 1] = ARENA_GRID;
-                    }
+        try {
+            if (wayPointPosition_Row_Center != 0 && wayPointPosition_Row_Center != 0) {
+                int oldValue = arenaInfo[wayPointPosition_Row_Center - 1][wayPointPosition_Col_Center - 1];
+                if (oldValue != ARENA_GRID && oldValue != ARENA_GRID_WAYPOINT) {
+                    arenaInfo[wayPointPosition_Row_Center - 1][wayPointPosition_Col_Center - 1] = oldValue;
+                } else {
+                    arenaInfo[wayPointPosition_Row_Center - 1][wayPointPosition_Col_Center - 1] = ARENA_GRID;
                 }
             }
+            wayPointPosition_Row_Center = wayPointPosition_Col_Center = -1;
+            TXTVW_WayPointValue = (TextView) getRootView().findViewById(R.id.TXTVW_WayPointValue);
+            TXTVW_WayPointValue.setText(wayPointPosition_Col_Center + "," + wayPointPosition_Row_Center);
+            TXTVW_WayPointValue.setTextColor(ContextCompat.getColor(getContext(), color_Arena_WayPoint));
+            TXTVW_WayPoint = (TextView) getRootView().findViewById(R.id.TXTVW_WayPoint);
+            TXTVW_WayPoint.setTextColor(ContextCompat.getColor(getContext(), R.color.color_Arena_Default));
+        } catch (Exception ex) {
+            Log.d(TAG, ex.getMessage());
         }
-
-        wayPointPosition_Row_Center = wayPointPosition_Col_Center = 0;
-        TXTVW_WayPointValue = (TextView) getRootView().findViewById(R.id.TXTVW_WayPointValue);
-        TXTVW_WayPointValue.setText("0,0");
-        TXTVW_WayPointValue.setTextColor(ContextCompat.getColor(getContext(), R.color.color_Arena_Default));
-        TXTVW_WayPoint = (TextView) getRootView().findViewById(R.id.TXTVW_WayPoint);
-        TXTVW_WayPoint.setTextColor(ContextCompat.getColor(getContext(), R.color.color_Arena_Default));
     }
 
     private void drawWayPointReached() {
         Log.d(TAG, "drawWayPointReached: " + wayPointPosition_Row_Center + "," + wayPointPosition_Col_Center + ", center reference point");
-        // int checkWayPointArray[][];
-        if (arenaInfo[wayPointPosition_Row_Center - 1][wayPointPosition_Col_Center - 1] == ARENA_ROBOT_POSITION) {
-            arenaInfo[wayPointPosition_Row_Center - 1][wayPointPosition_Col_Center - 1] = ARENA_ROBOT_POSITION_WITH_WAYPOINT;
-        } else if (arenaInfo[wayPointPosition_Row_Center - 1][wayPointPosition_Col_Center - 1] == ARENA_ROBOT_DIRECTION) {
-            arenaInfo[wayPointPosition_Row_Center - 1][wayPointPosition_Col_Center - 1] = ARENA_ROBOT_DIRECTION_WITH_WAYPOINT;
-        } else if (arenaInfo[wayPointPosition_Row_Center - 1][wayPointPosition_Col_Center - 1] == ARENA_ROBOT_TRAVELPATH) {
-            arenaInfo[wayPointPosition_Row_Center - 1][wayPointPosition_Col_Center - 1] = ARENA_ROBOT_TRAVELPATH_WITH_WAYPOINT;
+        if (isWayPointReached) {
+            if (arenaInfo[wayPointPosition_Row_Center - 1][wayPointPosition_Col_Center - 1] == ARENA_ROBOT_POSITION) {
+                arenaInfo[wayPointPosition_Row_Center - 1][wayPointPosition_Col_Center - 1] = ARENA_ROBOT_POSITION_WITH_WAYPOINT;
+            } else if (arenaInfo[wayPointPosition_Row_Center - 1][wayPointPosition_Col_Center - 1] == ARENA_ROBOT_DIRECTION) {
+                arenaInfo[wayPointPosition_Row_Center - 1][wayPointPosition_Col_Center - 1] = ARENA_ROBOT_DIRECTION_WITH_WAYPOINT;
+            } else if (arenaInfo[wayPointPosition_Row_Center - 1][wayPointPosition_Col_Center - 1] == ARENA_ROBOT_TRAVELPATH) {
+                arenaInfo[wayPointPosition_Row_Center - 1][wayPointPosition_Col_Center - 1] = ARENA_ROBOT_TRAVELPATH_WITH_WAYPOINT;
+            }
+            showToast_Short("Way Point Reach!");
+            TXTVW_WayPointValue = (TextView) getRootView().findViewById(R.id.TXTVW_WayPointValue);
+            TXTVW_WayPointValue.setTextColor(ContextCompat.getColor(getContext(), R.color.color_Arena_RobotPosition));
+            TXTVW_WayPoint = (TextView) getRootView().findViewById(R.id.TXTVW_WayPoint);
+            TXTVW_WayPoint.setTextColor(ContextCompat.getColor(getContext(), R.color.color_Arena_RobotPosition));
         }
     }
 
     private void drawRobotPosition() {
-        Log.d(TAG, "drawRobotPosition: " + robotPosition_Row + "," + robotPosition_Col + ", top left reference point");
-        // set robot position
-        // check if robot position is within grid
+        Log.d(TAG, "drawRobotPosition: " + robotPosition_Row + "," + robotPosition_Col + ", top left reference point.");
+        // set robot position, check if robot position is within grid
         if (robotPosition_Row >= 1 && robotPosition_Row <= grid_Row && robotPosition_Col >= 1 && robotPosition_Col <= grid_Col) {
             for (int rowIndex = robotPosition_Row; rowIndex <= robotPosition_Row + 2; rowIndex++) {
+                if (rowIndex >= grid_Row)
+                    rowIndex = grid_Row;
                 for (int colIndex = robotPosition_Col; colIndex <= robotPosition_Col + 2; colIndex++) {
-                    arenaInfo[rowIndex - 1][colIndex - 1] = ARENA_ROBOT_POSITION;
+                    if (colIndex >= grid_Col)
+                        colIndex = grid_Col;
+                    int arenaInfoValue = arenaInfo[rowIndex - 1][colIndex - 1];
+                    if (arenaInfoValue == ARENA_GRID_STARTPOSITION) {
+                        Log.d(TAG, "drawRobotPosition: " + (rowIndex) + "," + (colIndex) + ": " + arenaInfoValue + " , top left reference point. ARENA_GRID_STARTPOSITION");
+                        arenaInfo[rowIndex - 1][colIndex - 1] = ARENA_ROBOT_POSITION_WITH_STARTPOSITION;
+                    } else if (arenaInfoValue == ARENA_GRID_ENDPOSITION) {
+                        Log.d(TAG, "drawRobotPosition: " + (rowIndex) + "," + (colIndex) + ": " + arenaInfoValue + " , top left reference point. ARENA_GRID_ENDPOSITION");
+                        arenaInfo[rowIndex - 1][colIndex - 1] = ARENA_ROBOT_POSITION_WITH_ENDPOSITION;
+                    } else if (arenaInfoValue == ARENA_GRID_WAYPOINT) {
+                        Log.d(TAG, "drawRobotPosition: " + (rowIndex) + "," + (colIndex) + ": " + arenaInfoValue + " , top left reference point. ARENA_GRID_WAYPOINT");
+                        arenaInfo[rowIndex - 1][colIndex - 1] = ARENA_ROBOT_POSITION_WITH_WAYPOINT;
+                    } else if (arenaInfoValue == ARENA_ROBOT_POSITION) {
+                        if (robotPosition_Row_Center == wayPointPosition_Row_Center && robotPosition_Col_Center == wayPointPosition_Col_Center) {
+                            Log.d(TAG, "drawRobotPosition: " + (rowIndex) + "," + (colIndex) + ": " + arenaInfoValue + " , top left reference point. ARENA_ROBOT_POSITION Way Point");
+                            arenaInfo[rowIndex - 1][colIndex - 1] = ARENA_ROBOT_POSITION_WITH_WAYPOINT;
+                        } else {
+                            Log.d(TAG, "drawRobotPosition: " + (rowIndex) + "," + (colIndex) + ": " + arenaInfoValue + " , top left reference point. ARENA_ROBOT_POSITION Only");
+                            arenaInfo[rowIndex - 1][colIndex - 1] = ARENA_ROBOT_POSITION;
+                        }
+                    } else {
+                        Log.d(TAG, "drawRobotPosition: " + (rowIndex) + "," + (colIndex) + ": " + arenaInfoValue + " , top left reference point. ELSE CLAUSE");
+                        arenaInfo[rowIndex - 1][colIndex - 1] = ARENA_ROBOT_POSITION;
+                    }
                 }
             }
         }
     }
 
     private void drawRobotDirection() {
-        Log.d(TAG, "drawRobotDirection: " + robotDirection);
         int robotDirection_head_row;
         int robotDirection_head_col;
         int robotDirection_body = 3;
@@ -933,46 +957,57 @@ public class Arena extends View {
             robotDirection_head_col = robotPosition_Col + 1;
             robotDirection_body = robotPosition_Row + 1;
             if (robotPosition_Row >= 1 && robotPosition_Row <= grid_Row && robotPosition_Col >= 1 && robotPosition_Col <= grid_Col) {
-                arenaInfo[robotDirection_head_row - 1][robotDirection_head_col - 1] = ARENA_ROBOT_DIRECTION;
+                Log.d(TAG, "drawRobotDirection: up");
+                checkRobotDirectionOnAnyThing(robotDirection_head_row, robotDirection_head_col); // 0 based array
             }
             isUpDown = true;
         }
         if (robotDirection == 90) { // right
+            Log.d(TAG, "drawRobotDirection: right");
             robotDirection_head_row = robotPosition_Row + 1;
             robotDirection_head_col = robotPosition_Col + 2;
             robotDirection_body = robotPosition_Col + 1;
             if (robotPosition_Row >= 1 && robotPosition_Row <= grid_Row && robotPosition_Col >= 1 && robotPosition_Col <= grid_Col) {
-                arenaInfo[robotDirection_head_row - 1][robotDirection_head_col - 1] = ARENA_ROBOT_DIRECTION;
+                checkRobotDirectionOnAnyThing(robotDirection_head_row, robotDirection_head_col); // 0 based array
             }
         }
         if (robotDirection == 180) { // down
+            Log.d(TAG, "drawRobotDirection: down");
             robotDirection_head_row = robotPosition_Row + 2;
             robotDirection_head_col = robotPosition_Col + 1;
             robotDirection_body = robotPosition_Row + 1;
             if (robotPosition_Row >= 1 && robotPosition_Row <= grid_Row && robotPosition_Col >= 1 && robotPosition_Col <= grid_Col) {
-                arenaInfo[robotDirection_head_row - 1][robotDirection_head_col - 1] = ARENA_ROBOT_DIRECTION;
+                checkRobotDirectionOnAnyThing(robotDirection_head_row, robotDirection_head_col); // 0 based array
             }
             isUpDown = true;
         }
         if (robotDirection == 270) { // left
+            Log.d(TAG, "drawRobotDirection: left");
             robotDirection_head_row = robotPosition_Row + 1;
             robotDirection_head_col = robotPosition_Col;
             robotDirection_body = robotPosition_Col + 1;
             if (robotPosition_Row >= 1 && robotPosition_Row <= grid_Row && robotPosition_Col >= 1 && robotPosition_Col <= grid_Col) {
-                arenaInfo[robotDirection_head_row - 1][robotDirection_head_col - 1] = ARENA_ROBOT_DIRECTION; // head
+                checkRobotDirectionOnAnyThing(robotDirection_head_row, robotDirection_head_col); // 0 based array
             }
         }
+
         // set robot direction body
         if (robotPosition_Row >= 1 && robotPosition_Row <= grid_Row && robotPosition_Col >= 1 && robotPosition_Col <= grid_Col) {
             if (isUpDown) {
                 for (int colIndexCount = robotPosition_Col; colIndexCount <= robotPosition_Col + 2; colIndexCount++) {
-                    if (colIndexCount != robotPosition_Col + 1)
-                        arenaInfo[robotDirection_body - 1][colIndexCount - 1] = ARENA_ROBOT_DIRECTION; // body
+                    if (colIndexCount != robotPosition_Col + 1) {
+//                        Log.d(TAG, "drawing up down body: " + (robotDirection_body - 1) + ", " + (colIndexCount - 1));
+                        checkRobotDirectionOnAnyThing(robotDirection_body, colIndexCount); // 0 based
+                    }
+                    //arenaInfo[robotDirection_body - 1][colIndexCount - 1] = ARENA_ROBOT_DIRECTION; // body
                 }
             } else {
                 for (int rowIndexCount = robotPosition_Row; rowIndexCount <= robotPosition_Row + 2; rowIndexCount++) {
-                    if (rowIndexCount != robotPosition_Row + 1)
-                        arenaInfo[rowIndexCount - 1][robotDirection_body - 1] = ARENA_ROBOT_DIRECTION; // body
+                    if (rowIndexCount != robotPosition_Row + 1) {
+//                        Log.d(TAG, "drawing left right body: " + (rowIndexCount - 1) + ", " + (robotDirection_body - 1));
+                        checkRobotDirectionOnAnyThing(rowIndexCount, robotDirection_body); // 0 based
+                    }
+                    // arenaInfo[rowIndexCount - 1][robotDirection_body - 1] = ARENA_ROBOT_DIRECTION; // body
                 }
             }
         }
@@ -980,22 +1015,199 @@ public class Arena extends View {
 
     private void drawTravelPath() {
         Log.d(TAG, "drawTravelPath");
+
         // save previous position of robot into travel info array
         for (int paintRow = robotPosition_Row; paintRow <= robotPosition_Row + 2; paintRow++) {
             for (int paintCol = robotPosition_Col; paintCol <= robotPosition_Col + 2; paintCol++) {
                 travelInfo[paintRow - 1][paintCol - 1] = ARENA_ROBOT_TRAVELPATH;
             }
         }
-        // set the travel info into arena info via checking previous path
+        // set the travel info into arena info via checking previous robot position
         for (int rowIndex = 1; rowIndex <= grid_Row; rowIndex++) {
             for (int colIndex = 1; colIndex <= grid_Col; colIndex++) {
-                if (arenaInfo[rowIndex - 1][colIndex - 1] != ARENA_ROBOT_POSITION &&
-                        arenaInfo[rowIndex - 1][colIndex - 1] != ARENA_ROBOT_DIRECTION &&
-                        travelInfo[rowIndex - 1][colIndex - 1] == ARENA_ROBOT_TRAVELPATH) {
-                    arenaInfo[rowIndex - 1][colIndex - 1] = ARENA_ROBOT_TRAVELPATH;
+                int arenaInfoValue = arenaInfo[rowIndex - 1][colIndex - 1];
+                int travelInfoValue = travelInfo[rowIndex - 1][colIndex - 1];
+                if (travelInfoValue == ARENA_ROBOT_TRAVELPATH) {
+                    if (arenaInfoValue == ARENA_GRID) {
+                        arenaInfo[rowIndex - 1][colIndex - 1] = ARENA_ROBOT_TRAVELPATH;
+                    } else if (arenaInfoValue == ARENA_GRID_WAYPOINT) {
+                        arenaInfo[rowIndex - 1][colIndex - 1] = ARENA_ROBOT_TRAVELPATH_WITH_WAYPOINT;
+                    } else if (arenaInfoValue == ARENA_GRID_STARTPOSITION) {
+                        arenaInfo[rowIndex - 1][colIndex - 1] = ARENA_ROBOT_TRAVELPATH_WITH_STARTPOSITION;
+                    } else if (arenaInfoValue == ARENA_GRID_ENDPOSITION) {
+                        arenaInfo[rowIndex - 1][colIndex - 1] = ARENA_ROBOT_TRAVELPATH_WITH_ENDPOSITION;
+                    }
                 }
             }
         }
+    }
+
+    private void drawObstacle() {
+
+
+    }
+
+    // Connected to robot
+    public void decodeAlgorithm(String content) {
+        Log.d(TAG, "decodeAlgorithm: content: " + content);
+        final MainActivity mainActivity = (MainActivity) getContext();
+        TXTVW_RobotStatusValue = (TextView) getRootView().findViewById(R.id.TXTVW_RobotStatusValue);
+        arenaInfo = new int[grid_Row][grid_Col];
+        if (content.charAt(0) == 'o') {
+            int obstacle_Col = content.charAt(2);
+            int obstacle_Row = content.charAt(4);
+            arenaInfo[obstacle_Row][obstacle_Col] = ARENA_GRID_OBSTACLE;
+        } else {
+
+            switch (content) {
+                case "i|":
+                case CMD_FORWARD:
+                    if (robotDirection == 0) { // face up, move forward
+                        Log.d(TAG, "decodeAlgorithm: cmd_forward: " + robotPosition_Row + "," + robotPosition_Col + ": facing up");
+                        if ((robotPosition_Row - 1) >= 1) {
+                            robotPosition_Row -= 1;
+                            TXTVW_RobotStatusValue.setText("Moving forward");
+                            TXTVW_RobotStatusValue.setTextColor(ContextCompat.getColor(getContext(),color_Arena_RobotPosition));
+                        } else {
+                            showToast_Short("Unable to move forward");
+                        }
+                    } else if (robotDirection == 90) { // facing right, move forward
+                        Log.d(TAG, "decodeAlgorithm: cmd_forward: " + robotPosition_Row + "," + robotPosition_Col + ": facing right");
+                        if ((robotPosition_Col + 1) <= grid_Col) {
+                            robotPosition_Col += 1;
+                            TXTVW_RobotStatusValue.setText("Moving forward");
+                            TXTVW_RobotStatusValue.setTextColor(ContextCompat.getColor(getContext(),color_Arena_RobotPosition));
+                        } else {
+                            showToast_Short("Unable to move forward");
+                        }
+                    } else if (robotDirection == 180) { // facing down, move forward
+                        Log.d(TAG, "decodeAlgorithm: cmd_forward: " + robotPosition_Row + "," + robotPosition_Col + ": facing down");
+                        if ((robotPosition_Row + 1) <= grid_Row) {
+                            robotPosition_Row += 1;
+                            TXTVW_RobotStatusValue.setText("Moving forward");
+                            TXTVW_RobotStatusValue.setTextColor(ContextCompat.getColor(getContext(),color_Arena_RobotPosition));
+                        } else {
+                            showToast_Short("Unable to move forward");
+                        }
+                    } else if (robotDirection == 270) { // facing left, move forward
+                        Log.d(TAG, "decodeAlgorithm: cmd_forward: " + robotPosition_Row + "," + robotPosition_Col + ": facing left");
+                        if ((robotPosition_Col - 1) >= 1) {
+                            robotPosition_Col -= 1;
+                            TXTVW_RobotStatusValue.setText("Moving forward");
+                            TXTVW_RobotStatusValue.setTextColor(ContextCompat.getColor(getContext(),color_Arena_RobotPosition));
+                        } else {
+                            showToast_Short("Unable to move forward");
+                        }
+                    }
+                    // set robot position
+                    arenaInfo[robotPosition_Row][robotPosition_Col] = ARENA_ROBOT_POSITION;
+                    break;
+                case "k|":
+                case CMD_REVERSE:
+                    if (robotDirection == 0) { // face up, reverse
+                        Log.d(TAG, "decodeAlgorithm: cmd_reverse: " + robotPosition_Row + "," + robotPosition_Col + ": facing up");
+                        if ((robotPosition_Row + 1) <= 18) {
+                            robotPosition_Row += 1;
+                            TXTVW_RobotStatusValue.setText("Reversing");
+                            TXTVW_RobotStatusValue.setTextColor(ContextCompat.getColor(getContext(),color_Arena_RobotPosition));
+                        } else {
+                            showToast_Short("Unable to reverse");
+                        }
+                    } else if (robotDirection == 90) { // facing right, reverse
+                        Log.d(TAG, "decodeAlgorithm: cmd_reverse: " + robotPosition_Row + "," + robotPosition_Col + ": facing right");
+                        if ((robotPosition_Col - 1) >= 1) {
+                            robotPosition_Col -= 1;
+                            TXTVW_RobotStatusValue.setText("Reversing");
+                            TXTVW_RobotStatusValue.setTextColor(ContextCompat.getColor(getContext(),color_Arena_RobotPosition));
+                        } else {
+                            showToast_Short("Unable to reverse");
+                        }
+                    } else if (robotDirection == 180) { // facing down, reverse
+                        Log.d(TAG, "decodeAlgorithm: cmd_reverse: " + robotPosition_Row + "," + robotPosition_Col + ": facing down");
+                        if ((robotPosition_Row - 1) >= 1) {
+                            robotPosition_Row -= 1;
+                            TXTVW_RobotStatusValue.setText("Reversing");
+                            TXTVW_RobotStatusValue.setTextColor(ContextCompat.getColor(getContext(),color_Arena_RobotPosition));
+                        } else {
+                            showToast_Short("Unable to reverse");
+                        }
+                    } else if (robotDirection == 270) { // facing left, reverse
+                        Log.d(TAG, "decodeAlgorithm: cmd_reverse: " + robotPosition_Row + "," + robotPosition_Col + ": facing left");
+                        if ((robotPosition_Col + 1) <= 13) {
+                            robotPosition_Col += 1;
+                            TXTVW_RobotStatusValue.setText("Reversing");
+                            TXTVW_RobotStatusValue.setTextColor(ContextCompat.getColor(getContext(),color_Arena_RobotPosition));
+                        } else {
+                            showToast_Short("Unable to reverse");
+                        }
+                    }
+                    // set robot position
+                    arenaInfo[robotPosition_Row][robotPosition_Col] = ARENA_ROBOT_POSITION;
+                    break;
+                case "j|":
+                case CMD_ROTATELEFT:// rotate left
+                    Log.d(TAG, "decodeAlgorithm: cmd_rotate left: " + robotPosition_Row + "," + robotPosition_Col);
+                    arenaInfo[robotPosition_Row][robotPosition_Col] = ARENA_ROBOT_POSITION;
+                    // set robot direction
+                    if (saveStateArrayList.size() > 0) {
+                        TXTVW_RobotStatusValue.setText("Rotating left");
+                        TXTVW_RobotStatusValue.setTextColor(ContextCompat.getColor(getContext(),color_Arena_RobotPosition));
+                        int previousDirection = saveStateArrayList.get(saveStateArrayList.size() - 1).getRobotDirection();
+                        if (previousDirection == 0) {
+                            robotDirection = 270;
+                        } else if (previousDirection == 90) {
+                            robotDirection = 0;
+                        } else if (previousDirection == 180) {
+                            robotDirection = 90;
+                        } else if (previousDirection == 270) {
+                            robotDirection = 180;
+                        }
+                    } else {
+                        Log.d(TAG, "decodeAlgorithm: cmd_rotate left: saveStateArrayList.size() = 0 ");
+                    }
+                    break;
+                case "l|":
+                case CMD_ROTATERIGHT:// rotate right
+                    Log.d(TAG, "decodeAlgorithm: cmd_rotate right: " + robotPosition_Row + "," + robotPosition_Col);
+                    arenaInfo[robotPosition_Row][robotPosition_Col] = ARENA_ROBOT_POSITION;
+                    // set robot direction
+                    if (saveStateArrayList.size() > 0) {
+                        TXTVW_RobotStatusValue.setText("Rotating right");
+                        TXTVW_RobotStatusValue.setTextColor(ContextCompat.getColor(getContext(),color_Arena_RobotPosition));
+                        int previousDirection = saveStateArrayList.get(saveStateArrayList.size() - 1).getRobotDirection();
+                        if (previousDirection == 0) {
+                            robotDirection = 90;
+                        } else if (previousDirection == 90) {
+                            robotDirection = 180;
+                        } else if (previousDirection == 180) {
+                            robotDirection = 270;
+                        } else if (previousDirection == 270) {
+                            robotDirection = 0;
+                        }
+                    } else {
+                        Log.d(TAG, "decodeAlgorithm: cmd_rotate right: saveStateArrayList.size() = 0 ");
+                    }
+                    break;
+            }
+        }
+        robotPosition_Row_Center = robotPosition_Row + 1;
+        robotPosition_Col_Center = robotPosition_Col + 1;
+        drawObstacle();
+        drawStartPosition();
+        drawEndPosition();
+        drawWayPoint();
+        drawRobotPosition();
+        drawRobotDirection();
+
+        drawTravelPath();
+        if (isWayPointReached) drawWayPointReached();
+        if (mainActivity.getGameMode() == ARENA_GAME_MODE_FASTEST) {
+            drawWayPoint();
+            if (isWayPointReached)
+                drawWayPointReached();
+        }
+        saveArenaState();   // save algorithm
+
     }
 
 

@@ -7,14 +7,17 @@ package com.example.android.mdpgrp17_androidapp;
 public class ArenaSaveState {
     private int[][] arenaInfo, travelInfo;
     private boolean isWayPointReached;
-    private int robotPosition_Row_Center, robotPosition_Col_Center;   // center of way point
+    private int robotPosition_Row_Center, robotPosition_Col_Center;// center of way point
+    private int robotDirection;
 
-    public ArenaSaveState(int[][] arenaInfo, int[][] travelInfo, boolean isWayPointReached, int robotPosition_Row_Center, int robotPosition_Col_Center) {
+    public ArenaSaveState(int[][] arenaInfo, int[][] travelInfo, boolean isWayPointReached,
+                          int robotPosition_Row_Center, int robotPosition_Col_Center, int robotDirection) {
         this.arenaInfo = arenaInfo;
         this.travelInfo = travelInfo;
         this.isWayPointReached = isWayPointReached;
         this.robotPosition_Row_Center = robotPosition_Row_Center;
         this.robotPosition_Col_Center = robotPosition_Col_Center;
+        this.robotDirection = robotDirection;
     }
 
     public int getRobotPosition_Row_Center() {
@@ -55,5 +58,13 @@ public class ArenaSaveState {
 
     public void setWayPointReached(boolean wayPointReached) {
         isWayPointReached = wayPointReached;
+    }
+
+    public int getRobotDirection() {
+        return robotDirection;
+    }
+
+    public void setRobotDirection(int robotDirection) {
+        this.robotDirection = robotDirection;
     }
 }

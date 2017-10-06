@@ -5,7 +5,7 @@ import android.util.Log;
 import static android.content.ContentValues.TAG;
 import static com.example.android.mdpgrp17_androidapp.GlobalVariables.MESSAGE_COMMAND;
 import static com.example.android.mdpgrp17_androidapp.GlobalVariables.MESSAGE_CONVERSATION;
-import static com.example.android.mdpgrp17_androidapp.GlobalVariables.MESSAGE_FROM;
+import static com.example.android.mdpgrp17_androidapp.GlobalVariables.NAME_MDPGR17;
 
 /**
  * Created by szean on 7/9/2017.
@@ -62,10 +62,14 @@ public class BluetoothMessageEntity {
     public static BluetoothMessageEntity sendCommand(String commandString) {
         Log.d(TAG,"sendCommand: ");
         BluetoothConnection mBluetoothConnection = BluetoothConnection.getmBluetoothConnection(null);
-        return new BluetoothMessageEntity(MESSAGE_FROM, mBluetoothConnection.getConnectedRemoteDevice().getName(), MESSAGE_COMMAND, commandString);
+
+        return new BluetoothMessageEntity(NAME_MDPGR17,
+                mBluetoothConnection.getConnectedRemoteDevice().getName(),
+                MESSAGE_COMMAND, commandString);
+
     }
     public static BluetoothMessageEntity sendConversation(String conversationString) {
         BluetoothConnection mBluetoothConnection = BluetoothConnection.getmBluetoothConnection(null);
-        return new BluetoothMessageEntity(MESSAGE_FROM, mBluetoothConnection.getConnectedRemoteDevice().getName(), MESSAGE_CONVERSATION, conversationString);
+        return new BluetoothMessageEntity(NAME_MDPGR17, mBluetoothConnection.getConnectedRemoteDevice().getName(), MESSAGE_CONVERSATION, conversationString);
     }
 }

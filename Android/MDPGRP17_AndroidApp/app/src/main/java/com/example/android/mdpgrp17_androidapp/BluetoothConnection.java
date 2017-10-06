@@ -21,7 +21,6 @@ import static com.example.android.mdpgrp17_androidapp.GlobalVariables.CMD_FORWAR
 import static com.example.android.mdpgrp17_androidapp.GlobalVariables.CMD_REVERSE;
 import static com.example.android.mdpgrp17_androidapp.GlobalVariables.CMD_ROTATELEFT;
 import static com.example.android.mdpgrp17_androidapp.GlobalVariables.CMD_ROTATERIGHT;
-import static com.example.android.mdpgrp17_androidapp.GlobalVariables.CMD_SENDARENAINFO;
 import static com.example.android.mdpgrp17_androidapp.GlobalVariables.MESSAGE_COMMAND;
 import static com.example.android.mdpgrp17_androidapp.GlobalVariables.MESSAGE_CONVERSATION;
 
@@ -106,11 +105,11 @@ public class BluetoothConnection {
      */
     public synchronized void startAcceptThread(boolean isSecureConnection) {
         if (isSecureConnection) {
-            mSecureAcceptThread= null;
+            mSecureAcceptThread = null;
             mSecureAcceptThread = new AcceptThread(isSecureConnection);
             mSecureAcceptThread.start();
         } else {
-            mInSecureAcceptThread= null;
+            mInSecureAcceptThread = null;
             mInSecureAcceptThread = new AcceptThread(isSecureConnection);
             mInSecureAcceptThread.start();
         }
@@ -495,22 +494,25 @@ public class BluetoothConnection {
                     String incomingMessage = new String(buffer, 0, bytes);
                     Log.d(TAG, "ConnectedThread: InputStream: " + incomingMessage);
                     BluetoothMessageEntity mBluetoothMessageEntity;
-                    if (incomingMessage.contains("GRID ")) {
+                    if (incomingMessage.contains("GRID")) {
                         // command message received
                         mBluetoothMessageEntity = new BluetoothMessageEntity(mConnectedRemoteDevice.getName(), "MDPGRP17_Android", MESSAGE_COMMAND, incomingMessage);
                         mBTCommandArrayList.add(mBluetoothMessageEntity);
                     } else {
-                        // TODO:
-                        char destination = incomingMessage.charAt(0);
-                        char source = incomingMessage.charAt(1);
-                        String content = incomingMessage.substring(2);
-
-
-                        mBluetoothMessageEntity = new BluetoothMessageEntity(mConnectedRemoteDevice.getName(), "MDPGRP17", MESSAGE_CONVERSATION, incomingMessage);
+                        // receive from algo = aci, ack, acj, acl
+                        // display at received text
+                        Log.d(TAG, "ConnectedThread: else clause");
+                        String source;
+                        if (incomingMessage.charAt(0) == 'b') {
+                            source = "b";
+                        } else if (incomingMessage.charAt(0) == 'c') {
+                            source = "c";
+                        } else {
+                            source = mConnectedRemoteDevice.getName();
+                        }
+                        mBluetoothMessageEntity = new BluetoothMessageEntity(source, "MDPGRP17_Android", MESSAGE_COMMAND, incomingMessage);
                         mBTConversationArrayList.add(mBluetoothMessageEntity);
                     }
-
-                    // mHandler.obtainMessage(GlobalVariables.MESSAGE_READ, bytes, -1, buffer).sendToTarget();
                     mHandler.obtainMessage(GlobalVariables.MESSAGE_READ, mBluetoothMessageEntity).sendToTarget();
                 } catch (IOException e) {
                     setBTConnectionState(GlobalVariables.BT_CONNECTION_STATE_LISTENING);
@@ -520,6 +522,7 @@ public class BluetoothConnection {
                     // connection lost
                     if (isUserDisconnect) {
                         // no need to reconnect to last device
+
                     } else {
                         stopAllThreads();
                         startAcceptThread(true);
@@ -545,7 +548,6 @@ public class BluetoothConnection {
                     String command = bluetoothMessageEntity.getMessageContent();
                     if (command.equals(CMD_FORWARD) || command.equals(CMD_REVERSE) || command.equals(CMD_ROTATELEFT) || command.equals(CMD_ROTATERIGHT)) {
                         mBTCommandArrayList.add(bluetoothMessageEntity);
-                        write(BluetoothMessageEntity.sendCommand(CMD_SENDARENAINFO));
                     } else {
                         // other commands such as begin exploration, fastest
                         mBTCommandArrayList.add(bluetoothMessageEntity);
@@ -571,6 +573,7 @@ public class BluetoothConnection {
         }
 
     }
+
 
 }
 

@@ -18,6 +18,12 @@
     xmlns:tools="http://schemas.android.com/tools"
     tools:context=".MainActivity">
     <item
+        android:id="@+id/action_settings_calibratesensor"
+        android:icon="@drawable/ic_gps_not_fixed_black_24dp"
+        android:title="@string/action_settings_calibratesensor"
+        app:showAsAction="ifRoom"
+        android:visible="false"/>
+    <item
         android:id="@+id/action_settings_bluetooth_reconnect"
         android:icon="@drawable/ic_autorenew_black_24dp"
         android:title="@string/action_settings_reconect"
@@ -40,19 +46,29 @@
         <menu>
             <item
                 android:id="@+id/action_settings_getarenainfo"
+                android:icon="@drawable/ic_info_outline_black_24dp"
                 android:title="Get Arena Info" />
             <item
-                android:id="@+id/action_settings_controlmode_reset"
-                android:title="Reset" />
+                android:id="@+id/action_settings_turnoffrpi"
+                android:icon="@drawable/ic_power_settings_new_black_24dp"
+                android:title="Turn off RasberryPi 3"
+                android:visible="false" />
             <item
                 android:id="@+id/action_settings_controlmode_button"
-                android:title="Button Control" />
+                android:icon="@drawable/ic_gamepad_black_24dp"
+                android:title="@string/action_settings_buttoncontrol" />
             <item
                 android:id="@+id/action_settings_controlmode_swipe"
-                android:title="Swipe Control" />
+                android:icon="@drawable/ic_fingerprint_black_24dp"
+                android:title="@string/action_settings_swipecontrol" />
             <item
                 android:id="@+id/action_settings_controlmode_tilt"
-                android:title="Tilt Control" />
+                android:icon="@drawable/ic_vibration_black_24dp"
+                android:title="@string/action_settings_tiltcontrol" />
+            <item
+                android:id="@+id/action_settings_controlmode_reset"
+                android:icon="@drawable/ic_restore_black_24dp"
+                android:title="@string/action_settings_reset" />
         </menu>
     </item>
     >

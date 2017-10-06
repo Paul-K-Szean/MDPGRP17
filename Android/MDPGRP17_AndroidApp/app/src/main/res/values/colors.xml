@@ -31,10 +31,10 @@
     <color name="color_Arena_StartPosition">#8ca961</color>
     <color name="color_Arena_EndPosition">#597637</color>
     <color name="color_Arena_WayPoint">#f7941d</color>
+    <color name="color_Arena_WayPointReached">#3c4eff</color>
     <color name="color_Arena_Grid">#99f8ff</color>
     <color name="color_Arena_RobotPosition">#009688</color>
     <color name="color_Arena_RobotDirection">#8bc34a</color>
     <color name="color_Arena_RobotTravelPath">#4997d0</color>
     <color name="color_error">#ff0000</color>
-    <color name="color_transparent">#8000000000</color>
 </resources>
