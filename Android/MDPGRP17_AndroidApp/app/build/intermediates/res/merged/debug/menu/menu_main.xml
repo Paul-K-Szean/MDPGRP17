@@ -18,7 +18,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     tools:context=".MainActivity">
     <item
-        android:id="@+id/action_settings_calibratesensor"
+        android:id="@+id/action_settings_calibraterobot"
         android:icon="@drawable/ic_gps_not_fixed_black_24dp"
         android:title="@string/action_settings_calibratesensor"
         app:showAsAction="ifRoom"

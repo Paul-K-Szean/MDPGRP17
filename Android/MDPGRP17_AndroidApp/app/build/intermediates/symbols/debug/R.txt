@@ -803,7 +803,7 @@ int id action_settings 0x7f0d00d5
 int id action_settings_bluetooth 0x7f0d00d3
 int id action_settings_bluetooth_reconnect 0x7f0d00d2
 int id action_settings_bluetooth_refresh 0x7f0d00d0
-int id action_settings_calibratesensor 0x7f0d00d1
+int id action_settings_calibraterobot 0x7f0d00d1
 int id action_settings_chat 0x7f0d00d4
 int id action_settings_controlmode_button 0x7f0d00d8
 int id action_settings_controlmode_reset 0x7f0d00db
@@ -843,8 +843,8 @@ int id design_navigation_view 0x7f0d00a4
 int id device_MACAddress 0x7f0d00be
 int id device_image 0x7f0d00bc
 int id device_name 0x7f0d00bd
-int id device_status 0x7f0d00c0
-int id device_unpair 0x7f0d00bf
+int id device_status 0x7f0d00bf
+int id device_unpair 0x7f0d00c0
 int id disableHome 0x7f0d0017
 int id drawer 0x7f0d0071
 int id edit_query 0x7f0d0064

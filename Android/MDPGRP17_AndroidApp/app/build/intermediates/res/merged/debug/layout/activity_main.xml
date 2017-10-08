@@ -38,7 +38,7 @@
             <RelativeLayout
                 android:id="@+id/RLO_ArenaGrid"
                 android:layout_width="520dp"
-                android:layout_height="660dp"
+                android:layout_height="680dp"
                 android:layout_marginBottom="6dp"
                 android:layout_marginTop="-10dp"
                 android:layout_weight="1"
@@ -46,7 +46,7 @@
 
             <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
+                android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:gravity="center_horizontal"
                 android:orientation="horizontal">
@@ -293,7 +293,7 @@
                             <Button
                                 android:id="@+id/BTN_CMD_RotateLeft"
                                 android:layout_width="match_parent"
-                                android:layout_height="match_parent"
+                                android:layout_height="wrap_content"
                                 android:layout_weight="1"
                                 android:text="Rotate Left" />
                         </LinearLayout>
@@ -309,14 +309,14 @@
                             <Button
                                 android:id="@+id/BTN_CMD_Forward"
                                 android:layout_width="match_parent"
-                                android:layout_height="match_parent"
+                                android:layout_height="wrap_content"
                                 android:layout_weight="1"
                                 android:text="Forward" />
 
                             <Button
                                 android:id="@+id/BTN_CMD_Reverse"
                                 android:layout_width="match_parent"
-                                android:layout_height="match_parent"
+                                android:layout_height="wrap_content"
                                 android:layout_weight="1"
                                 android:text="Reverse" />
 
@@ -332,7 +332,7 @@
                             <Button
                                 android:id="@+id/BTN_CMD_RotateRight"
                                 android:layout_width="match_parent"
-                                android:layout_height="match_parent"
+                                android:layout_height="wrap_content"
                                 android:layout_weight="1"
                                 android:text="Rotate Right" />
 
@@ -342,7 +342,7 @@
                 </LinearLayout>
 
                 <LinearLayout
-                    android:layout_width="180dp"
+                    android:layout_width="220dp"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center_horizontal"
                     android:gravity="center_horizontal"

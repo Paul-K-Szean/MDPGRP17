@@ -39,6 +39,7 @@ public class CountDownTimerService extends Service {
             @Override
             public void onFinish() {
                 Log.i(TAG, "onCreate: onFinish: Timer finished");
+                intent_CountDownTimerService.putExtra("countDownTimerService_finished", "countDownTimerService_finished");
                 sendBroadcast(intent_CountDownTimerService);
             }
         }.start();

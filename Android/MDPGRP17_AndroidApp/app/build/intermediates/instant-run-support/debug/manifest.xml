@@ -20,7 +20,7 @@
     android:versionName="1.0" >
 
     <uses-sdk
-        android:minSdkVersion="15"
+        android:minSdkVersion="16"
         android:targetSdkVersion="23" />
 
     <uses-permission android:name="android.permission.BLUETOOTH" />
@@ -49,8 +49,10 @@
             android:name="com.example.android.mdpgrp17_androidapp.BluetoothActivity"
             android:screenOrientation="portrait" />
         <activity
-            android:name="com.example.android.mdpgrp17_androidapp.SettingsActivity"
+            android:name="com.example.android.mdpgrp17_androidapp.ChatActivity"
             android:screenOrientation="portrait" />
+
+        <service android:name="com.example.android.mdpgrp17_androidapp.CountDownTimerService" />
 
         <provider
             android:name="com.android.tools.fd.runtime.InstantRunContentProvider"

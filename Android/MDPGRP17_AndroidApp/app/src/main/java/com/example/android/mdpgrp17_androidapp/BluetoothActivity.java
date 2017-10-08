@@ -21,6 +21,7 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CompoundButton;
+import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
@@ -32,6 +33,7 @@ import java.util.ArrayList;
 import java.util.Set;
 
 import static android.bluetooth.BluetoothAdapter.SCAN_MODE_CONNECTABLE_DISCOVERABLE;
+import static android.view.View.GONE;
 import static com.example.android.mdpgrp17_androidapp.GlobalVariables.BT_CONNECTION_STATE_CANNOTLISTEN;
 import static com.example.android.mdpgrp17_androidapp.GlobalVariables.BT_CONNECTION_STATE_CONNECTED;
 import static com.example.android.mdpgrp17_androidapp.GlobalVariables.BT_CONNECTION_STATE_CONNECTING;
@@ -43,7 +45,7 @@ import static com.example.android.mdpgrp17_androidapp.GlobalVariables.COUNTDOWNT
 import static com.example.android.mdpgrp17_androidapp.GlobalVariables.MESSAGE_READ;
 import static com.example.android.mdpgrp17_androidapp.GlobalVariables.MESSAGE_WRITE;
 import static com.example.android.mdpgrp17_androidapp.GlobalVariables.REQUESTCODE_BLUETOOTH_CONNECTABLE_DISCOVERABLE;
-import static com.example.android.mdpgrp17_androidapp.GlobalVariables.REQUESTCODE_YES;
+import static com.example.android.mdpgrp17_androidapp.R.id.device_name;
 
 public class BluetoothActivity extends AppCompatActivity implements CompoundButton.OnCheckedChangeListener, View.OnTouchListener {
     private static final String TAG = "BluetoothActivity";
@@ -74,9 +76,9 @@ public class BluetoothActivity extends AppCompatActivity implements CompoundButt
         Log.d(TAG, "onActivityResult: resultCode: " + resultCode);
         Log.d(TAG, "onActivityResult: data: " + data);
         if (requestCode == REQUESTCODE_BLUETOOTH_CONNECTABLE_DISCOVERABLE) {
-            if (resultCode == REQUESTCODE_YES) {
+            if (resultCode == BT_CONNECTION_STATE_DISCOVERABLE_DURATION) { // i have no idea why resultcode is using the duration
                 Log.d(TAG, "onActivityResult: YES");
-                stopService(new Intent(this, CountDownTimerService.class));
+                stopServiceCounting();
                 startService(new Intent(this, CountDownTimerService.class));
             } else if (resultCode == RESULT_CANCELED) {
                 Log.d(TAG, "onActivityResult: NO");
@@ -174,13 +176,12 @@ public class BluetoothActivity extends AppCompatActivity implements CompoundButt
             Log.d(TAG, "onResume: BT on");
             // BT on
             showEnabled();
-
+            //   updateGUI_ToolBar_BTConnectionState();
         } else {
             Log.d(TAG, "onResume: BT off");
             // BT off
             showDisabled();
         }
-        updateGUI_ToolBar_BTConnectionState();
         super.onResume();
     }
 
@@ -207,7 +208,7 @@ public class BluetoothActivity extends AppCompatActivity implements CompoundButt
         Log.d(TAG, "onDestroy");
         unregisterReceiver(mReceiver);
         if (mReceiver_CountDownTimer != null) {
-            stopService(new Intent(this, CountDownTimerService.class));
+            stopServiceCounting();
             unregisterReceiver(mReceiver_CountDownTimer);
         }
         super.onDestroy();
@@ -283,8 +284,8 @@ public class BluetoothActivity extends AppCompatActivity implements CompoundButt
     // Update UI - set BT toggle button to OFF
     private void showDisabled() {
         Log.d(TAG, "showDisabled");
-        RLO_BT_DeviceList.setVisibility(View.GONE);
-        RLO_BT_ThisDevice.setVisibility(View.GONE);
+        RLO_BT_DeviceList.setVisibility(GONE);
+        RLO_BT_ThisDevice.setVisibility(GONE);
         TGLBTN_BT_OnOff.setChecked(false);
 
         // update UI - hide menu refresh icon
@@ -338,20 +339,19 @@ public class BluetoothActivity extends AppCompatActivity implements CompoundButt
         if (mBTDeviceList != null) {
             // message object
             mBTDeviceAdapter = new ArrayAdapter<BluetoothDevice>(this, R.layout.item_devices,
-                    R.id.device_name, mBTDeviceList) {
+                    device_name, mBTDeviceList) {
                 @Override
                 public View getView(int position, View convertView, ViewGroup parent) {
                     View view = super.getView(position, convertView, parent);
                     final BluetoothDevice mRemoteDevice = mBTDeviceList.get(position);
-                    BluetoothDevice mConnectedDevice = mBluetoothConnection.getConnectedRemoteDevice();
+                    ImageView device_image = ((ImageView) view.findViewById(R.id.device_image));
                     TextView device_name = ((TextView) view.findViewById(R.id.device_name));
                     TextView device_MACAddress = ((TextView) view.findViewById(R.id.device_MACAddress));
                     TextView device_status = ((TextView) view.findViewById(R.id.device_status));
                     Button device_unpair = ((Button) view.findViewById(R.id.device_unpair));
-
+                    device_image.setImageResource(R.drawable.ic_devices_other_black_24dp);
                     device_name.setText(mRemoteDevice.getName());
                     device_MACAddress.setText(mRemoteDevice.getAddress());
-
 
                     if (mBTDeviceList.get(position).getBondState() == BluetoothDevice.BOND_BONDED) {
                         if (mBTCurrentState == BT_CONNECTION_STATE_CONNECTED && mRemoteDevice.equals(mBluetoothDevice_Selected)) {
@@ -365,20 +365,16 @@ public class BluetoothActivity extends AppCompatActivity implements CompoundButt
                         device_status.setText("Pairing");
                     } else if (mBTDeviceList.get(position).getBondState() == BluetoothDevice.BOND_NONE) {
                         device_status.setText("Not Paired");
-                    }
-//                    else if (mBTCurrentState == BT_CONNECTION_STATE_CONNECTED && mRemoteDevice.equals(mConnectedDevice)) {
-//                        device_status.setText("Connected");
-//                    } else if (mBTCurrentState == BT_CONNECTION_STATE_CONNECTING && mRemoteDevice.equals(mConnectedDevice)) {
-//                        device_status.setText("Connecting");
-//                    } else {
-//                        device_status.setText("Paired");
-//                    }
+                        device_unpair.setVisibility(GONE);
 
+                    }
                     device_unpair.setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View view) {
+                            Log.d(TAG, "Clicked on " + mRemoteDevice.getName() + ", bondstate: " + mRemoteDevice.getBondState() + ", removing now");
+                            mBluetoothConnection.disconnect();
                             unpairDevice(mRemoteDevice);
-                            updateGUI_ListView_BTDeviceList();  // update GUI
+                            // updateGUI_ListView_BTDeviceList();  // update GUI
                         }
                     });
                     return view;
@@ -395,17 +391,33 @@ public class BluetoothActivity extends AppCompatActivity implements CompoundButt
 
                     BluetoothDevice mRemoteDevice = mBTDeviceList.get(position);
                     Log.d(TAG, "Clicked on " + mRemoteDevice.getName() + ", bondstate: " + mRemoteDevice.getBondState());
+
+
                     if (mRemoteDevice.getBondState() == BluetoothDevice.BOND_BONDED) {
                         if (mBTCurrentState == BT_CONNECTION_STATE_CONNECTED) {
+                            Log.d(TAG, "Clicked on " + mRemoteDevice.getName() + " was connected, disconnecting now");
                             mBluetoothConnection.disconnect();
                         } else {
+                            Log.d(TAG, "Clicked on " + mRemoteDevice.getName() + " was not connected, connecting now");
                             mBluetoothConnection.startConnectThread(mRemoteDevice, true);
                             mBluetoothDevice_Selected = mRemoteDevice;
                         }
+                        // updateGUI_ListView_BTDeviceList();  // update GUI
+                    } else if (mRemoteDevice.getBondState() == BluetoothDevice.BOND_BONDING) {
+                        Log.d(TAG, "Clicked on " + mRemoteDevice.getName() + " was pairing, pairing again");
+//
+//                         mBluetoothConnection.disconnect();
+//                        mBluetoothConnection.startConnectThread(mRemoteDevice, true);
+                        pairDevice(mRemoteDevice);
+//                        unpairDevice(mRemoteDevice);
                     } else {
+                        Log.d(TAG, "Clicked on " + mRemoteDevice.getName() + " was not paired, pairing now");
+//                        mBluetoothConnection.disconnect();
+//                        mBluetoothConnection.startConnectThread(mRemoteDevice, true);
                         pairDevice(mRemoteDevice);
                     }
-                    updateGUI_ListView_BTDeviceList();  // update GUI
+
+
                 }
             });
             LTVW_BT_DeviceList.post(new Runnable() {
@@ -491,11 +503,11 @@ public class BluetoothActivity extends AppCompatActivity implements CompoundButt
                 case BluetoothDevice.ACTION_FOUND:
                     Log.d(TAG, "onReceive: ACTION_FOUND: " + mRemoteDevice.getName() + ", " + mRemoteDevice.getBondState());
                     if (mBTDeviceList.contains(mRemoteDevice)) {
-                        mBTDeviceList.remove(mRemoteDevice); // renew the paired remote device
+                        mBTDeviceList.remove(mRemoteDevice); // remmove the paired remote device
                     }
                     mBTDeviceList.add(mRemoteDevice);
                     updateGUI_ListView_BTDeviceList();  // update GUI
-                    showToast_Short("Found " + mRemoteDevice.getName());
+                    // showToast_Short("Found " + mRemoteDevice.getName());
                     break;
                 // handle bonding state of this and remote device
                 case BluetoothDevice.ACTION_BOND_STATE_CHANGED:
@@ -526,6 +538,7 @@ public class BluetoothActivity extends AppCompatActivity implements CompoundButt
                         Log.d(TAG, "currentState_ThisDevice: STATE_TURNING_OFF (" + currentState_ThisDevice + ")");
                         mBluetoothAdapter.cancelDiscovery();
                         mBluetoothConnection.stopAllThreads();
+                        stopServiceCounting();
                     } else if (currentState_ThisDevice == BluetoothAdapter.STATE_OFF) {
                         Log.d(TAG, "currentState_ThisDevice: STATE_OFF (" + currentState_ThisDevice + ")");
                         showDisabled();
@@ -579,15 +592,24 @@ public class BluetoothActivity extends AppCompatActivity implements CompoundButt
         }
     };
 
+    private void stopServiceCounting() {
+        stopService(new Intent(this, CountDownTimerService.class));
+    }
+
     private final BroadcastReceiver mReceiver_CountDownTimer = new BroadcastReceiver() {
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
             switch (action) {
                 case COUNTDOWNTIMER_SERVICE:
                     if (intent.getExtras() != null) {
+
                         String mTime = intent.getStringExtra("countDownTimerService_mTime");
                         Log.i(TAG, "mReceiver_CountDownTimer: getExtras(): mTime: " + mTime);
                         TXTVW_BT_ThisDevice_Discoverable.setText("Visible for " + mTime);
+                        String mfinish = intent.getStringExtra("countDownTimerService_finished");
+                        Log.i(TAG, "mReceiver_CountDownTimer: getExtras(): mfinish: " + mfinish);
+                        if (mfinish != null)
+                            TXTVW_BT_ThisDevice_Discoverable.setText("Not visible to other device");
                     } else {
                         Log.i(TAG, "mReceiver_CountDownTimer: getExtras(): null");
                         TXTVW_BT_ThisDevice_Discoverable.setText("Not visible to other device");
@@ -597,23 +619,20 @@ public class BluetoothActivity extends AppCompatActivity implements CompoundButt
         }
     };
 
-
-    public void pairDevice(BluetoothDevice mRemoteDevice) {
-        // Cancel discovery because it is memory intensive
+    private void pairDevice(BluetoothDevice device) {
         mBluetoothAdapter.cancelDiscovery();
         try {
-            Method method = mRemoteDevice.getClass().getMethod("createBond", (Class[]) null);
-            method.invoke(mRemoteDevice, (Object[]) null);
+            Method method = device.getClass().getMethod("createBond", (Class[]) null);
+            method.invoke(device, (Object[]) null);
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    public void unpairDevice(BluetoothDevice mRemoteDevice) {
+    private void unpairDevice(BluetoothDevice device) {
         try {
-            Method method = mRemoteDevice.getClass().getMethod("removeBond", (Class[]) null);
-            method.invoke(mRemoteDevice, (Object[]) null);
-
+            Method method = device.getClass().getMethod("removeBond", (Class[]) null);
+            method.invoke(device, (Object[]) null);
         } catch (Exception e) {
             e.printStackTrace();
         }

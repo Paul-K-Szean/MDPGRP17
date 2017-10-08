@@ -3001,7 +3001,7 @@ containing a value of this type.
         public static final int action_settings_bluetooth=0x7f0d00d3;
         public static final int action_settings_bluetooth_reconnect=0x7f0d00d2;
         public static final int action_settings_bluetooth_refresh=0x7f0d00d0;
-        public static final int action_settings_calibratesensor=0x7f0d00d1;
+        public static final int action_settings_calibraterobot=0x7f0d00d1;
         public static final int action_settings_chat=0x7f0d00d4;
         public static final int action_settings_controlmode_button=0x7f0d00d8;
         public static final int action_settings_controlmode_reset=0x7f0d00db;
@@ -3041,8 +3041,8 @@ containing a value of this type.
         public static final int device_MACAddress=0x7f0d00be;
         public static final int device_image=0x7f0d00bc;
         public static final int device_name=0x7f0d00bd;
-        public static final int device_status=0x7f0d00c0;
-        public static final int device_unpair=0x7f0d00bf;
+        public static final int device_status=0x7f0d00bf;
+        public static final int device_unpair=0x7f0d00c0;
         public static final int disableHome=0x7f0d0017;
         public static final int drawer=0x7f0d0071;
         public static final int edit_query=0x7f0d0064;

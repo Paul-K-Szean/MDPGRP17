@@ -88,7 +88,11 @@ public class ChatFragment extends Fragment implements View.OnClickListener, View
         BTN_Function02.setOnClickListener(this);
         BTN_Function03.setOnClickListener(this);
         LTVW_MessageContent.setOnTouchListener(this);
-        hideVirtualKeyboard();
+        LTVW_CommandContent.setOnTouchListener(this);
+        TXTVW_MessageLog.setOnTouchListener(this);
+        TXTVW_CommandLog.setOnTouchListener(this);
+        InputMethodManager imm = (InputMethodManager) getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+        imm.hideSoftInputFromWindow(ETTXT_MessageArea.getWindowToken(), 0);
         return rootView;
     }
 
@@ -125,27 +129,32 @@ public class ChatFragment extends Fragment implements View.OnClickListener, View
 
     @Override
     public boolean onTouch(View view, MotionEvent motionEvent) {
-        Log.d(TAG, "onTouch");
+
         int controlID = view.getId();
-        if (controlID == R.id.LTVW_MessageContent || controlID == R.id.LTVW_CommandContent ||
-                controlID == R.id.TXTVW_MessageLog || controlID == R.id.TXTVW_CommandLog) {
-            hideVirtualKeyboard();
+        if (motionEvent.getAction() == MotionEvent.ACTION_DOWN) {
+            if (controlID == R.id.LTVW_MessageContent || controlID == R.id.LTVW_CommandContent ||
+                    controlID == R.id.TXTVW_MessageLog || controlID == R.id.TXTVW_CommandLog) {
+                Log.d(TAG, "onTouch: hide virtual keyboard");
+                hideVirtualKeyboard();
+            }
         }
+
         return false;
     }
 
     public void updateGUI_MessageContent() {
         Log.d(TAG, "updateGUI_MessageContent");
         if (mBTCurrentState == GlobalVariables.BT_CONNECTION_STATE_CONNECTED) {
-            TXTVW_MessageLog.setVisibility(View.VISIBLE);
-            TXTVW_CommandLog.setVisibility(View.VISIBLE);
+            LLO_FunctionButtons.setVisibility(View.VISIBLE);
             RLO_MessageArea.setVisibility(View.VISIBLE);
             LTVW_MessageContent.setVisibility(View.VISIBLE);
             LTVW_CommandContent.setVisibility(View.VISIBLE);
-            LLO_FunctionButtons.setVisibility(View.VISIBLE);
             TXTVW_Notice.setVisibility(View.GONE);
+            TXTVW_MessageLog.setVisibility(View.VISIBLE);
+            TXTVW_CommandLog.setVisibility(View.VISIBLE);
             mBTConversationArrayList = mBluetoothConnection.getmBTConversationArrayList();
             mBTCommandArrayList = mBluetoothConnection.getmBTCommandArrayList();
+
             final LayoutInflater mInflater = (LayoutInflater) getActivity().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
             // message object
             mBTConversationArrayAdapter = new ArrayAdapter<BluetoothMessageEntity>(getContext(), R.layout.item_message,
@@ -158,13 +167,11 @@ public class ChatFragment extends Fragment implements View.OnClickListener, View
                     TextView textView_message;
                     if (bluetoothMessageEntity.getFrom().equals("MDPGRP17")) {
                         convertView = mInflater.inflate(R.layout.item_message_sender, null);
-                        textView_message = ((TextView) convertView.findViewById(R.id.textView_message));
-                        textView_message.setText(bluetoothMessageEntity.getMessageContent());
                     } else {
                         convertView = mInflater.inflate(R.layout.item_message_receiver, null);
-                        textView_message = ((TextView) convertView.findViewById(R.id.textView_message));
-                        textView_message.setText(bluetoothMessageEntity.getMessageContent());
                     }
+                    textView_message = ((TextView) convertView.findViewById(R.id.textView_message));
+                    textView_message.setText(bluetoothMessageEntity.getMessageContent());
                     return convertView;
                 }
             };

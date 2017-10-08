@@ -1,31 +1,28 @@
 <?xml version="1.0" encoding="utf-8"?>
 <instant-run
-    abi="x86"
-    api-level="25"
+    abi="armeabi-v7a,armeabi"
+    api-level="23"
     build-mode="FULL"
-    density="xhdpi"
+    density="xxxhdpi"
     format="10"
     plugin-version="2.3.3"
-    timestamp="1506059689149"
+    timestamp="1507396774732"
     token="-7194491206580271089"
     verifier="FULL_BUILD_REQUESTED" >
 
     <task
         name="javac"
-        duration="4383" />
+        duration="0" />
     <task
         name="instant-run-dex"
         duration="0" />
     <task
         name="instant-run-transform"
-        duration="393" />
+        duration="0" />
     <task
         name="verifier"
-        duration="238" />
+        duration="0" />
 
-    <artifact
-        location="C:\Users\szean\Documents\AndroidProjects\MDP\MDPGRP17_AndroidApp\app\build\intermediates\split-apk\debug\slices\slice_7.apk"
-        type="SPLIT" />
     <artifact
         location="C:\Users\szean\Documents\AndroidProjects\MDP\MDPGRP17_AndroidApp\app\build\intermediates\split-apk\debug\dep\dependencies.apk"
         type="SPLIT" />
@@ -33,10 +30,13 @@
         location="C:\Users\szean\Documents\AndroidProjects\MDP\MDPGRP17_AndroidApp\app\build\intermediates\split-apk\debug\slices\slice_2.apk"
         type="SPLIT" />
     <artifact
-        location="C:\Users\szean\Documents\AndroidProjects\MDP\MDPGRP17_AndroidApp\app\build\intermediates\split-apk\debug\slices\slice_9.apk"
+        location="C:\Users\szean\Documents\AndroidProjects\MDP\MDPGRP17_AndroidApp\app\build\intermediates\split-apk\debug\slices\slice_7.apk"
         type="SPLIT" />
     <artifact
         location="C:\Users\szean\Documents\AndroidProjects\MDP\MDPGRP17_AndroidApp\app\build\intermediates\split-apk\debug\slices\slice_8.apk"
+        type="SPLIT" />
+    <artifact
+        location="C:\Users\szean\Documents\AndroidProjects\MDP\MDPGRP17_AndroidApp\app\build\intermediates\split-apk\debug\slices\slice_9.apk"
         type="SPLIT" />
     <artifact
         location="C:\Users\szean\Documents\AndroidProjects\MDP\MDPGRP17_AndroidApp\app\build\intermediates\split-apk\debug\slices\slice_5.apk"
@@ -62,11 +62,8 @@
 
     <build
         build-mode="FULL"
-        timestamp="1506059689149"
+        timestamp="1507396774732"
         verifier="FULL_BUILD_REQUESTED" >
-        <artifact
-            location="C:\Users\szean\Documents\AndroidProjects\MDP\MDPGRP17_AndroidApp\app\build\intermediates\split-apk\debug\slices\slice_7.apk"
-            type="SPLIT" />
         <artifact
             location="C:\Users\szean\Documents\AndroidProjects\MDP\MDPGRP17_AndroidApp\app\build\intermediates\split-apk\debug\dep\dependencies.apk"
             type="SPLIT" />
@@ -74,10 +71,13 @@
             location="C:\Users\szean\Documents\AndroidProjects\MDP\MDPGRP17_AndroidApp\app\build\intermediates\split-apk\debug\slices\slice_2.apk"
             type="SPLIT" />
         <artifact
-            location="C:\Users\szean\Documents\AndroidProjects\MDP\MDPGRP17_AndroidApp\app\build\intermediates\split-apk\debug\slices\slice_9.apk"
+            location="C:\Users\szean\Documents\AndroidProjects\MDP\MDPGRP17_AndroidApp\app\build\intermediates\split-apk\debug\slices\slice_7.apk"
             type="SPLIT" />
         <artifact
             location="C:\Users\szean\Documents\AndroidProjects\MDP\MDPGRP17_AndroidApp\app\build\intermediates\split-apk\debug\slices\slice_8.apk"
+            type="SPLIT" />
+        <artifact
+            location="C:\Users\szean\Documents\AndroidProjects\MDP\MDPGRP17_AndroidApp\app\build\intermediates\split-apk\debug\slices\slice_9.apk"
             type="SPLIT" />
         <artifact
             location="C:\Users\szean\Documents\AndroidProjects\MDP\MDPGRP17_AndroidApp\app\build\intermediates\split-apk\debug\slices\slice_5.apk"

@@ -1,60 +1,79 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
+    android:layout_height="80dp"
     android:background="?android:attr/selectableItemBackground"
-    android:padding="@dimen/md_keylines">
+    android:orientation="horizontal"
+    android:padding="10dp">
 
-    <ImageView
-        android:id="@+id/device_image"
-        android:layout_width="@dimen/avator_size"
-        android:layout_height="@dimen/avator_size"
-        android:scaleType="centerCrop"
-        tools:src="@drawable/ic_devices_other_black_24dp" />
+    <LinearLayout
+        android:layout_width="90dp"
+        android:layout_height="match_parent"
+        android:layout_gravity="center"
+        android:orientation="vertical">
 
-    <TextView
-        android:id="@+id/device_name"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginLeft="@dimen/md_keylines"
-        android:layout_toRightOf="@+id/device_image"
-        android:textAppearance="?attr/textAppearanceListItem"
-        android:textSize="@dimen/article_subheading"
-        tools:text="@string/item_title" />
+        <ImageView
+            android:id="@+id/device_image"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:padding="14dp"
+            android:scaleType="centerCrop"
+            tools:src="@drawable/ic_devices_other_black_24dp" />
+    </LinearLayout>
 
-    <TextView
-        android:id="@+id/device_MACAddress"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/device_name"
-        android:layout_marginLeft="@dimen/md_keylines"
-        android:layout_toRightOf="@+id/device_image"
-        android:singleLine="true"
-        android:textAppearance="?attr/textAppearanceListItem"
-        android:textColor="@color/medium_grey"
-        android:textSize="@dimen/list_body"
-        tools:text="@string/item_desc" />
+    <LinearLayout
+        android:layout_width="300dp"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
 
-    <Button
-        android:id="@+id/device_unpair"
+        <TextView
+            android:id="@+id/device_name"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:gravity="center_vertical"
+            android:textSize="@dimen/article_subheading"
+            tools:text="@string/item_title" />
+
+
+        <TextView
+            android:id="@+id/device_MACAddress"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:gravity="center_vertical"
+            android:textColor="@color/medium_grey"
+            android:textSize="@dimen/list_body"
+            tools:text="@string/item_desc" />
+
+    </LinearLayout>
+
+    <LinearLayout
         android:layout_width="wrap_content"
-        android:layout_height="38dp"
-        android:layout_alignParentEnd="true"
-        android:layout_alignParentRight="true"
-        android:layout_alignParentTop="true"
-        android:focusable="false"
-        android:focusableInTouchMode="false"
-        android:text="Remove" />
+        android:layout_height="match_parent"
+        android:layout_gravity="center"
+        android:layout_weight="1"
+        android:orientation="horizontal">
 
-    <TextView
-        android:id="@+id/device_status"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_centerVertical="true"
-        android:layout_toLeftOf="@id/device_unpair"
-        android:text="Status" />
+        <TextView
+            android:id="@+id/device_status"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:gravity="center_vertical"
+            android:text="Status" />
 
+        <Button
+            android:id="@+id/device_unpair"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:focusable="false"
+            android:focusableInTouchMode="false"
+            android:text="Remove" />
+    </LinearLayout>
 
-</RelativeLayout>
+</LinearLayout>
 

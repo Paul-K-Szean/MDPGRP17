@@ -121,8 +121,15 @@ public class BluetoothConnection {
     public synchronized void startConnectThread(BluetoothDevice mPairedDevice, boolean secure) {
         Log.d(TAG, "startConnectThread");
         Log.d(TAG, "startConnectThread: mPairedDevice: " + mPairedDevice.getName());
+
+        if (mConnectThread != null) {
+            mConnectThread.cancel();
+            mConnectThread = null;
+        }
+
         mConnectThread = new ConnectThread(mPairedDevice, secure);
         mConnectThread.start();
+
     }
 
     /**
@@ -136,6 +143,9 @@ public class BluetoothConnection {
     public synchronized void disconnect() {
         Log.d(TAG, "disconnect");
         isUserDisconnect = true;
+        if (mConnectThread != null) {
+            mConnectThread.cancel();
+        }
         if (mConnectedThread != null) {
             mConnectedThread.cancel();
         }
@@ -242,6 +252,7 @@ public class BluetoothConnection {
     public void setConnectedRemoteDevice(BluetoothDevice bluetoothDevice) {
         this.mConnectedRemoteDevice = bluetoothDevice;
     }
+
 
     /**
      * This thread runs while listening for incoming connections. It behaves
@@ -351,6 +362,7 @@ public class BluetoothConnection {
         private BluetoothSocket mSocket;
         private BluetoothDevice mRemoteDevice;
         private boolean isConnectionSecure;
+        ArrayList<UUID> uuidArrayList;
 
         public ConnectThread(BluetoothDevice mRemoteDevice, boolean isConnectionSecure) {
             Log.d(TAG, "ConnectThread: Started");
@@ -383,6 +395,7 @@ public class BluetoothConnection {
 
         }
 
+
         public void run() { // automatically executed
             Log.i(TAG, "ConnectThread: Running");
             // Always cancel discovery because memory intensive when searching for device
@@ -391,11 +404,9 @@ public class BluetoothConnection {
                 Log.i(TAG, "ConnectThread: mSocket is null");
             } else {
                 Log.i(TAG, "ConnectThread: mSocket: " + mSocket.toString());
-
                 // Make a connection to the BluetoothSocket
                 try {
-                    // This is a blocking call and will only return on a
-                    // successful connection or an exception
+                    // This is a blocking call and will only return on a successful connection or an exception
                     Log.d(TAG, "ConnectThread: Making connection with " + mSocket.getRemoteDevice().getName());
                     mSocket.connect();
                     Log.i(TAG, "ConnectThread: mSocket: " + mSocket.toString());
@@ -419,12 +430,27 @@ public class BluetoothConnection {
                     }
                     // connection failed
                     mHandler.obtainMessage(GlobalVariables.BT_CONNECTION_STATE_CONNECTIONFAILED).sendToTarget();
-                    startAcceptThread(true);
+                    if (isConnectionSecure) {
+                        if (mSecureAcceptThread == null) {
+                            Log.d(TAG, "ConnectThread: isConnectionSecure: " + isConnectionSecure + ": starting new accept thread" + mSecureAcceptThread.mServerSocket);
+                            startAcceptThread(true);
+                        } else {
+                            Log.d(TAG, "ConnectThread: isConnectionSecure: " + isConnectionSecure + ": Accept thread already started" + mSecureAcceptThread.mServerSocket);
+                        }
+                    } else {
+                        if (mInSecureAcceptThread == null) {
+                            Log.d(TAG, "ConnectThread: isConnectionSecure: " + isConnectionSecure + ": starting new accept thread" + mInSecureAcceptThread.mServerSocket);
+                            startAcceptThread(true);
+                        } else {
+                            Log.d(TAG, "ConnectThread: isConnectionSecure: " + isConnectionSecure + ": Accept thread already started: " + mInSecureAcceptThread.mServerSocket);
+                        }
+                    }
                 }
                 // Once connected, reset ConnectThread
-                synchronized (BluetoothConnection.this) {
-                    mConnectThread = null;
-                }
+                if (mSocket.isConnected())
+                    synchronized (BluetoothConnection.this) {
+                        mConnectThread = null;
+                    }
                 Log.i(TAG, "ConnectThread: Stopped running");
             }
         }

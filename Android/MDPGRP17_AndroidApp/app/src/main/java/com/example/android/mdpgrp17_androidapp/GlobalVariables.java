@@ -31,7 +31,7 @@ public class GlobalVariables {
     public static final String CMD_BEGINFASTEST = "cas";
     public static final String CMD_SENDARENAINFO = "can";
     public static final String CMD_KILLME_RASPBERRYPI = "killme";
-    public static final String CMD_CALIBRATESENSOR = "bas"; // calibrate sensor
+    public static final String CMD_CALIBRATEROBOT = "bas"; // calibrate sensor
 
     // Bluetooth Connection State
     // 0 = disconnected, 1 = connecting, 2 = connected, 3 = disconnecting, 4 = idle, 5 = listening, 6 = state changed
@@ -46,7 +46,7 @@ public class GlobalVariables {
     public static final int BT_CONNECTION_STATE_OFF = 8;
     public static final int BT_CONNECTION_STATE_CONNECTIONLOST = 9;
     public static final int BT_CONNECTION_STATE_CONNECTIONFAILED = 10;
-    public static final int BT_CONNECTION_STATE_DISCOVERABLE_DURATION = 300; // in secs
+    public static final int BT_CONNECTION_STATE_DISCOVERABLE_DURATION = 120; // in secs, no idea why returns this as result code
 
     // Arena State
     public static final int ARENA_GRID = 0;
@@ -84,10 +84,12 @@ public class GlobalVariables {
     public static final int REQUESTCODE_YES = 300;
     public static final int REQUESTCODE_NO = 0;
     public static final int REQUESTCODE_BLUETOOTH_CONNECTABLE_DISCOVERABLE = 1;
+    public static final int REQUESTCODE_BLUETOOTH_PAIRING = 2;
 
-    public static final int TOUCHMODE_SETWAYPOINT = 0;
-    public static final int TOUCHMODE_SETROBOTPOSITION = 1;
-    public static final int TOUCHMODE_SWIPE = 2;
+    public static final int TOUCHMODE_NONE = 0;
+    public static final int TOUCHMODE_SETWAYPOINT = 1;
+    public static final int TOUCHMODE_SETROBOTPOSITION = 2;
+    public static final int TOUCHMODE_SWIPE = 3;
 
     // Services
     public static final String COUNTDOWNTIMER_SERVICE = "countDownTimerService";
