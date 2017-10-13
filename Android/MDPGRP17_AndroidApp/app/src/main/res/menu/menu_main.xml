@@ -51,8 +51,7 @@
             <item
                 android:id="@+id/action_settings_turnoffrpi"
                 android:icon="@drawable/ic_power_settings_new_black_24dp"
-                android:title="Turn off RasberryPi 3"
-                android:visible="false" />
+                android:title="Turn off RasberryPi 3"/>
             <item
                 android:id="@+id/action_settings_controlmode_button"
                 android:icon="@drawable/ic_gamepad_black_24dp"

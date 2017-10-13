@@ -15,7 +15,7 @@ import android.widget.Toast;
 
 import java.util.ArrayList;
 
-import static com.example.android.mdpgrp17_androidapp.GlobalVariables.ARENA_CONTROL_MODE_SWIPE;
+import static com.example.android.mdpgrp17_androidapp.GlobalVariables.ARENA_GAME_MODE_SWIPE;
 import static com.example.android.mdpgrp17_androidapp.GlobalVariables.ARENA_GRID;
 import static com.example.android.mdpgrp17_androidapp.GlobalVariables.ARENA_GRID_ENDPOSITION;
 import static com.example.android.mdpgrp17_androidapp.GlobalVariables.ARENA_GRID_OBSTACLE;
@@ -147,8 +147,13 @@ public class Arena extends View {
                     for (int colIndex = 1; colIndex <= grid_Col; colIndex++) {
                         if (arenaInfo[rowIndex - 1][colIndex - 1] == ARENA_ROBOT_POSITION ||
                                 arenaInfo[rowIndex - 1][colIndex - 1] == ARENA_ROBOT_POSITION_WITH_WAYPOINT ||
+                                arenaInfo[rowIndex - 1][colIndex - 1] == ARENA_ROBOT_POSITION_WITH_STARTPOSITION ||
+                                arenaInfo[rowIndex - 1][colIndex - 1] == ARENA_ROBOT_POSITION_WITH_ENDPOSITION ||
                                 arenaInfo[rowIndex - 1][colIndex - 1] == ARENA_ROBOT_DIRECTION ||
-                                arenaInfo[rowIndex - 1][colIndex - 1] == ARENA_ROBOT_DIRECTION_WITH_WAYPOINT) {
+                                arenaInfo[rowIndex - 1][colIndex - 1] == ARENA_ROBOT_DIRECTION_WITH_WAYPOINT ||
+                                arenaInfo[rowIndex - 1][colIndex - 1] == ARENA_ROBOT_DIRECTION_WITH_STARTPOSITION ||
+                                arenaInfo[rowIndex - 1][colIndex - 1] == ARENA_ROBOT_DIRECTION_WITH_ENDPOSITION
+                                ) {
                             arenaInfo[rowIndex - 1][colIndex - 1] = ARENA_GRID; // remove existing robot position
                         }
                     }
@@ -160,18 +165,18 @@ public class Arena extends View {
                 robotPosition_Row = robotPosition_Row_Center - 1;
                 robotDirection = 0;
 
-                drawRobotPosition();
-                drawRobotDirection();
-                saveArenaState();       // @onTouchEvent save new robot position
+
                 drawWayPoint();         // @onTouchEvent redraw the way point
                 drawStartPosition();    // @onTouchEvent redraw the start position
                 drawEndPosition();      // @onTouchEvent redraw the end position
-
+                drawRobotPosition();
+                drawRobotDirection();
+                saveArenaState();       // @onTouchEvent save new robot position
             }
         } else if (touchMode == TOUCHMODE_SWIPE) {
             Log.d(TAG, "onTouchEvent: TOUCHMODE_SWIPE");
             // locked, cannot touch screen, check if in swipe mode
-            if (mainActivity.getRobotControlMode() == ARENA_CONTROL_MODE_SWIPE) {
+            if (mainActivity.getGameMode() == ARENA_GAME_MODE_SWIPE) {
                 switch (touchAction) {
                     case MotionEvent.ACTION_DOWN: {
                         downX = motionEvent.getX();
@@ -1046,29 +1051,24 @@ public class Arena extends View {
         TXTVW_RobotStatusValue = (TextView) getRootView().findViewById(R.id.TXTVW_RobotStatusValue);
         arenaInfo = new int[grid_Row][grid_Col];
         char cmd_Char = content.charAt(0); // to draw obstacle since received content is not consistent due to X,Y value
-        if (cmd_Char == 'y') { // EG: y18|12
+        if (cmd_Char == 'o') { // EG: y18|12
             Log.d(TAG, "decodeAlgorithm: content.substring:" + (content.substring(1)));
-            Log.d(TAG, "decodeAlgorithm: content.split:" + (content.substring(1)).split(";"));
-            String[] obstacleArray = (content.substring(1)).split(";");
-            for (String obstacleValue : obstacleArray) {
-                Log.d(TAG, "decodeAlgorithm: obstacleValue: " + obstacleValue);
-            }
+            String[] obstacleArray = (content.substring(1)).split(",");
+            // o,3,10
             int obstacle_Col = -1, obstacle_Row = -1;
-            if (obstacleArray.length == 2) {
-                try {
-                    obstacle_Col = Integer.valueOf(obstacleArray[0]);
-                    obstacle_Row = Integer.valueOf(obstacleArray[1]);
-                    if (arenaInfo[obstacle_Row][obstacle_Col] == ARENA_GRID)
-                        arenaInfo[obstacle_Row][obstacle_Col] = ARENA_GRID_OBSTACLE;
-                } catch (Exception ex) {
-                    Log.e(TAG, "decodeAlgorithm: obstacleValue: X,Y " + obstacle_Col + "," + obstacle_Row + ": Error: " + ex.getMessage());
-                }
-            } else {
-                Log.d(TAG, "decodeAlgorithm: obstacleValue: X,Y " + obstacle_Col + "," + obstacle_Row + ": couldn't decode obstacle value");
+            try {
+                obstacle_Col = Integer.valueOf(obstacleArray[1]);
+                obstacle_Row = Integer.valueOf(obstacleArray[2]);
+                Log.d(TAG, "decodeAlgorithm: obstacleValue: X,Y " + obstacle_Col + "," + obstacle_Row);
+                // if (arenaInfo[obstacle_Row][obstacle_Col] == ARENA_GRID)
+                arenaInfo[obstacle_Row-1][obstacle_Col-1] = ARENA_GRID_OBSTACLE;
+            } catch (Exception ex) {
+                Log.e(TAG, "decodeAlgorithm: obstacleValue: X,Y " + obstacle_Col + "," + obstacle_Row + ": Error: " + ex.getMessage());
             }
         }
         switch (content) {
             case "i|":
+            case "i":
             case CMD_FORWARD:
                 if (robotDirection == 0) { // face up, move forward
                     Log.d(TAG, "decodeAlgorithm: cmd_forward: " + robotPosition_Row + "," + robotPosition_Col + ": facing up");
@@ -1111,6 +1111,7 @@ public class Arena extends View {
                 arenaInfo[robotPosition_Row][robotPosition_Col] = ARENA_ROBOT_POSITION;
                 break;
             case "k|":
+            case "k":
             case CMD_REVERSE:
                 if (robotDirection == 0) { // face up, reverse
                     Log.d(TAG, "decodeAlgorithm: cmd_reverse: " + robotPosition_Row + "," + robotPosition_Col + ": facing up");
@@ -1153,6 +1154,7 @@ public class Arena extends View {
                 arenaInfo[robotPosition_Row][robotPosition_Col] = ARENA_ROBOT_POSITION;
                 break;
             case "j|":
+            case "j":
             case CMD_ROTATELEFT:// rotate left
                 Log.d(TAG, "decodeAlgorithm: cmd_rotate left: " + robotPosition_Row + "," + robotPosition_Col);
                 arenaInfo[robotPosition_Row][robotPosition_Col] = ARENA_ROBOT_POSITION;
@@ -1175,6 +1177,7 @@ public class Arena extends View {
                 }
                 break;
             case "l|":
+            case "l":
             case CMD_ROTATERIGHT:// rotate right
                 Log.d(TAG, "decodeAlgorithm: cmd_rotate right: " + robotPosition_Row + "," + robotPosition_Col);
                 arenaInfo[robotPosition_Row][robotPosition_Col] = ARENA_ROBOT_POSITION;

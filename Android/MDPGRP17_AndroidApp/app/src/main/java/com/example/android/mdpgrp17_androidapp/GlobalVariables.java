@@ -21,17 +21,17 @@ public class GlobalVariables {
     public static final char MESSAGE_FROM_ANDROID = 'a';
     public static final char MESSAGE_FROM_ARDUINO = 'b';
     public static final char MESSAGE_FROM_ALGORITHM = 'c';
-    public static final String CMD_FORWARD = "bai"; // destination: arduino = b, source: android = a, content
-    public static final String CMD_REVERSE = "bak";
-    public static final String CMD_ROTATELEFT = "baj";
-    public static final String CMD_ROTATERIGHT = "bal";
+    public static final String CMD_FORWARD = "bai|"; // destination: arduino = b, source: android = a, content
+    public static final String CMD_REVERSE = "bak|";
+    public static final String CMD_ROTATELEFT = "baj|";
+    public static final String CMD_ROTATERIGHT = "bal|";
     public static final String CMD_STRAFELEFT = "bau";
     public static final String CMD_STRAFERIGHT = "bao";
     public static final String CMD_BEGINEXPLORE = "cae"; // destination: algo = c, source: android = a, content
     public static final String CMD_BEGINFASTEST = "cas";
     public static final String CMD_SENDARENAINFO = "can";
     public static final String CMD_KILLME_RASPBERRYPI = "killme";
-    public static final String CMD_CALIBRATEROBOT = "bas"; // calibrate sensor
+    public static final String CMD_CALIBRATEROBOT = "bay|"; // calibrate sensor
 
     // Bluetooth Connection State
     // 0 = disconnected, 1 = connecting, 2 = connected, 3 = disconnecting, 4 = idle, 5 = listening, 6 = state changed
@@ -67,13 +67,14 @@ public class GlobalVariables {
     public static final int ARENA_ROBOT_TRAVELPATH_WITH_STARTPOSITION = 15; // 11. robot travel path with start position
     public static final int ARENA_ROBOT_TRAVELPATH_WITH_ENDPOSITION = 16;   // 12. robot travel path with end position
 
-    public static final int ARENA_GAME_MODE_FASTEST = 0;
-    public static final int ARENA_GAME_MODE_EXPLORATION = 1;
-    public static final int ARENA_GAME_MODE_MANUALCONTROL = 2;
 
-    public static final int ARENA_CONTROL_MODE_BUTTON = 0;
-    public static final int ARENA_CONTROL_MODE_SWIPE = 1;
-    public static final int ARENA_CONTROL_MODE_TILT = 2;
+    public static final int ARENA_GAME_MODE_BUTTON = 0;
+    public static final int ARENA_GAME_MODE_SWIPE = 1;
+    public static final int ARENA_GAME_MODE_TILT = 2;
+    public static final int ARENA_GAME_MODE_FASTEST = 3;
+    public static final int ARENA_GAME_MODE_EXPLORATION = 4;
+
+
     public static final int SWIPE_MINIMUM_DISTANCE = 220;
     public static final int TILT_MINIMUM_UP = 3;
     public static final int TILT_MINIMUM_DOWN = -3;
@@ -93,7 +94,6 @@ public class GlobalVariables {
 
     // Services
     public static final String COUNTDOWNTIMER_SERVICE = "countDownTimerService";
-    public static final String STOPWATCH_SERVICE = "stopWatchService";
 
     // AMD Device Name
     public static final String AMDTOOLNAME = "MONSTER-PC";

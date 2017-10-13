@@ -5,13 +5,13 @@ import android.bluetooth.BluetoothDevice;
 import android.content.Context;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.Message;
 import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
@@ -24,6 +24,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import java.util.ArrayList;
+
+import static com.example.android.mdpgrp17_androidapp.GlobalVariables.BT_CONNECTION_STATE_CONNECTED;
 
 public class ChatFragment extends Fragment implements View.OnClickListener, View.OnTouchListener {
     private static final String TAG = "ChatFragment";
@@ -43,7 +45,6 @@ public class ChatFragment extends Fragment implements View.OnClickListener, View
     private ListView LTVW_MessageContent;
     private ListView LTVW_CommandContent;
     private EditText ETTXT_MessageArea;
-    private TextView TXTVW_Notice;
     private TextView TXTVW_MessageLog;
     private TextView TXTVW_CommandLog;
     private ImageButton IMGBTN_Send;
@@ -65,7 +66,6 @@ public class ChatFragment extends Fragment implements View.OnClickListener, View
         LTVW_MessageContent = (ListView) rootView.findViewById(R.id.LTVW_MessageContent);
         LTVW_CommandContent = (ListView) rootView.findViewById(R.id.LTVW_CommandContent);
         ETTXT_MessageArea = (EditText) rootView.findViewById(R.id.ETTXT_MessageArea);
-        TXTVW_Notice = (TextView) rootView.findViewById(R.id.TXTVW_Notice);
         TXTVW_MessageLog = (TextView) rootView.findViewById(R.id.TXTVW_MessageLog);
         TXTVW_CommandLog = (TextView) rootView.findViewById(R.id.TXTVW_CommandLog);
         IMGBTN_Send = (ImageButton) rootView.findViewById(R.id.IMGBTN_Send);
@@ -78,8 +78,7 @@ public class ChatFragment extends Fragment implements View.OnClickListener, View
 
         // Bluetooth Object
         mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-        mBluetoothConnection = BluetoothConnection.getmBluetoothConnection(mHandler);
-        mBluetoothConnection.setHandler(mHandler);
+        mBluetoothConnection = BluetoothConnection.getmBluetoothConnection(new Handler());
         mBTConversationArrayList = mBluetoothConnection.getmBTConversationArrayList();
         mBTCurrentState = mBluetoothConnection.getBTConnectionState();
         updateGUI_MessageContent();
@@ -91,8 +90,7 @@ public class ChatFragment extends Fragment implements View.OnClickListener, View
         LTVW_CommandContent.setOnTouchListener(this);
         TXTVW_MessageLog.setOnTouchListener(this);
         TXTVW_CommandLog.setOnTouchListener(this);
-        InputMethodManager imm = (InputMethodManager) getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
-        imm.hideSoftInputFromWindow(ETTXT_MessageArea.getWindowToken(), 0);
+        getActivity().getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
         return rootView;
     }
 
@@ -103,9 +101,13 @@ public class ChatFragment extends Fragment implements View.OnClickListener, View
         if (controlID == R.id.IMGBTN_Send) {
             Log.d(TAG, "Clicked on IMGBTN_Send");
             mBluetoothAdapter.cancelDiscovery();
-            String messageToSend = ETTXT_MessageArea.getText().toString();
-            mBluetoothConnection.write(BluetoothMessageEntity.sendConversation(messageToSend));
-            ETTXT_MessageArea.getText().clear();
+            if (mBTCurrentState == BT_CONNECTION_STATE_CONNECTED) {
+                String messageToSend = ETTXT_MessageArea.getText().toString();
+                mBluetoothConnection.write(BluetoothMessageEntity.sendConversation(messageToSend));
+                ETTXT_MessageArea.getText().clear();
+            } else {
+                showToast_Short("No device connected");
+            }
         }
         String previousText = ETTXT_MessageArea.getText().toString().trim();
 
@@ -144,14 +146,8 @@ public class ChatFragment extends Fragment implements View.OnClickListener, View
 
     public void updateGUI_MessageContent() {
         Log.d(TAG, "updateGUI_MessageContent");
-        if (mBTCurrentState == GlobalVariables.BT_CONNECTION_STATE_CONNECTED) {
-            LLO_FunctionButtons.setVisibility(View.VISIBLE);
-            RLO_MessageArea.setVisibility(View.VISIBLE);
-            LTVW_MessageContent.setVisibility(View.VISIBLE);
-            LTVW_CommandContent.setVisibility(View.VISIBLE);
-            TXTVW_Notice.setVisibility(View.GONE);
-            TXTVW_MessageLog.setVisibility(View.VISIBLE);
-            TXTVW_CommandLog.setVisibility(View.VISIBLE);
+        if (mBTCurrentState == BT_CONNECTION_STATE_CONNECTED) {
+            Log.d(TAG, "updateGUI_MessageContent: BT_CONNECTION_STATE_CONNECTED");
             mBTConversationArrayList = mBluetoothConnection.getmBTConversationArrayList();
             mBTCommandArrayList = mBluetoothConnection.getmBTCommandArrayList();
 
@@ -211,16 +207,8 @@ public class ChatFragment extends Fragment implements View.OnClickListener, View
                 }
             });
         } else {
-            TXTVW_MessageLog.setVisibility(View.INVISIBLE);
-            TXTVW_CommandLog.setVisibility(View.INVISIBLE);
-            RLO_MessageArea.setVisibility(View.INVISIBLE);
-            LTVW_MessageContent.setVisibility(View.INVISIBLE);
-            LTVW_CommandContent.setVisibility(View.INVISIBLE);
-            LLO_FunctionButtons.setVisibility(View.INVISIBLE);
-            TXTVW_Notice.setVisibility(View.VISIBLE);
+            Log.d(TAG, "updateGUI_MessageContent: mBTCurrentState: " + mBTCurrentState);
         }
-
-
     }
 
     private void showVirtualKeyboard() {
@@ -240,58 +228,5 @@ public class ChatFragment extends Fragment implements View.OnClickListener, View
     private void showToast_Short(String message) {
         Toast.makeText(getContext(), message, Toast.LENGTH_SHORT).show();
     }
-
-    private final Handler mHandler = new Handler() {
-        @Override
-        public void handleMessage(Message msg) {
-            Log.d(TAG, "mHandler: msg.what: " + msg.what);
-            Log.d(TAG, "mHandler: msg.arg1: " + msg.arg1);
-            Log.d(TAG, "mHandler: msg.arg2: " + msg.arg2);
-            Log.d(TAG, "mHandler: msg.toString(): " + msg.toString());
-            mBTCurrentState = mBluetoothConnection.getBTConnectionState();
-            if (mBTCurrentState == GlobalVariables.BT_CONNECTION_STATE_CONNECTED) {
-                RLO_MessageArea.setVisibility(View.VISIBLE);
-                LTVW_MessageContent.setVisibility(View.VISIBLE);
-                LLO_FunctionButtons.setVisibility(View.VISIBLE);
-                TXTVW_Notice.setVisibility(View.INVISIBLE);
-                switch (msg.what) {
-                    case GlobalVariables.BT_CONNECTION_STATE_CHANGE: {
-                        ChatActivity settingsActivity = (ChatActivity) getActivity();
-                        settingsActivity.updateGUI_ToolBar_BTConnectionState();
-                        updateGUI_MessageContent();
-                        break;
-                    }
-                    case GlobalVariables.BT_CONNECTION_STATE_CONNECTIONFAILED: {
-                        showToast_Short("Connection failed. Retrying... ");
-                        break;
-                    }
-                    case GlobalVariables.BT_CONNECTION_STATE_CONNECTIONLOST: {
-                        showToast_Short("Connection lost. Retrying... ");
-                        break;
-                    }
-                    case GlobalVariables.MESSAGE_READ: {
-                        if (msg.obj instanceof BluetoothMessageEntity) {
-                            BluetoothMessageEntity bluetoothMessageEntity = (BluetoothMessageEntity) msg.obj;
-                            updateGUI_MessageContent();
-                        }
-                        break;
-                    }
-                    case GlobalVariables.MESSAGE_WRITE: {
-                        if (msg.obj instanceof BluetoothMessageEntity) {
-                            updateGUI_MessageContent();
-                        }
-                        break;
-                    }
-                }
-            } else {
-                RLO_MessageArea.setVisibility(View.INVISIBLE);
-                LTVW_MessageContent.setVisibility(View.INVISIBLE);
-                LTVW_CommandContent.setVisibility(View.INVISIBLE);
-                LLO_FunctionButtons.setVisibility(View.INVISIBLE);
-                TXTVW_Notice.setVisibility(View.VISIBLE);
-            }
-        }
-    };
-
 
 }

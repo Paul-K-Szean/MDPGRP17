@@ -176,7 +176,8 @@ public class BluetoothActivity extends AppCompatActivity implements CompoundButt
             Log.d(TAG, "onResume: BT on");
             // BT on
             showEnabled();
-            //   updateGUI_ToolBar_BTConnectionState();
+            // initialise BTDevice if BT on
+            initialiseBTDeviceList();
         } else {
             Log.d(TAG, "onResume: BT off");
             // BT off
@@ -496,7 +497,7 @@ public class BluetoothActivity extends AppCompatActivity implements CompoundButt
             final int preivousConnectionState_ThisDevice = intent.getIntExtra(BluetoothAdapter.EXTRA_PREVIOUS_CONNECTION_STATE, BluetoothDevice.ERROR);
             BluetoothDevice mRemoteDevice = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE); // found remote devices
             final int scanMode_ThisDevice = intent.getIntExtra(BluetoothAdapter.EXTRA_SCAN_MODE, BluetoothAdapter.ERROR); // get scan mode
-            Set<BluetoothDevice> mPairedDevices = mBluetoothAdapter.getBondedDevices(); // list of paired devices
+
             mBTCurrentState = mBluetoothConnection.getBTConnectionState();
             switch (action) {
                 // found a remote device
@@ -547,10 +548,7 @@ public class BluetoothActivity extends AppCompatActivity implements CompoundButt
                 // handle BT discovery state
                 case BluetoothAdapter.ACTION_DISCOVERY_STARTED:
                     Log.d(TAG, "onReceive: ACTION_DISCOVERY_STARTED");
-                    mBTDeviceList = new ArrayList<BluetoothDevice>();   // always create new list
-                    for (BluetoothDevice pairedDevice : mPairedDevices) {
-                        mBTDeviceList.add(pairedDevice);    // show paired devices
-                    }
+                    initialiseBTDeviceList();
                     TXTVW_Device.setText("Devices (Discovering)");
                     updateGUI_ListView_BTDeviceList();
                     break;
@@ -591,6 +589,13 @@ public class BluetoothActivity extends AppCompatActivity implements CompoundButt
 
         }
     };
+    private void initialiseBTDeviceList(){
+        Set<BluetoothDevice> mPairedDevices = mBluetoothAdapter.getBondedDevices(); // list of paired devices
+        mBTDeviceList = new ArrayList<BluetoothDevice>();   // always create new list
+        for (BluetoothDevice pairedDevice : mPairedDevices) {
+            mBTDeviceList.add(pairedDevice);    // show paired devices
+        }
+    }
 
     private void stopServiceCounting() {
         stopService(new Intent(this, CountDownTimerService.class));

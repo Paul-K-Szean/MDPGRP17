@@ -86,6 +86,10 @@ public class BluetoothConnection {
         return mBTConversationArrayList;
     }
 
+    public void setmBTConversationArrayList(ArrayList<BluetoothMessageEntity> mBTConversationArrayList) {
+        this.mBTConversationArrayList = mBTConversationArrayList;
+    }
+
     public ArrayList<BluetoothMessageEntity> getmBTCommandArrayList() {
         if (mBTCommandArrayList == null) {
             Log.d(TAG, "getmBTCommandArrayList: mBTCommandArrayList was null, created new mBTCommandArrayList");
@@ -525,19 +529,24 @@ public class BluetoothConnection {
                         mBluetoothMessageEntity = new BluetoothMessageEntity(mConnectedRemoteDevice.getName(), "MDPGRP17_Android", MESSAGE_COMMAND, incomingMessage);
                         mBTCommandArrayList.add(mBluetoothMessageEntity);
                     } else {
-                        // receive from algo = aci, ack, acj, acl
-                        // display at received text
-                        Log.d(TAG, "ConnectedThread: else clause");
+                        // receive from algo = aci, ack, acj, acl display at received text
                         String source;
-                        if (incomingMessage.charAt(0) == 'b') {
+                        if (incomingMessage.charAt(0) == 'b') { // from arduino, type = command
                             source = "b";
-                        } else if (incomingMessage.charAt(0) == 'c') {
+                            Log.d(TAG, "ConnectedThread: else clause: source: " + source);
+                            mBluetoothMessageEntity = new BluetoothMessageEntity(source, "MDPGRP17_Android", MESSAGE_COMMAND, incomingMessage);
+                            mBTCommandArrayList.add(mBluetoothMessageEntity);
+                        } else if (incomingMessage.charAt(0) == 'c') { // from algorithm, type = command
                             source = "c";
+                            Log.d(TAG, "ConnectedThread: else clause: source: " + source);
+                            mBluetoothMessageEntity = new BluetoothMessageEntity(source, "MDPGRP17_Android", MESSAGE_COMMAND, incomingMessage);
+                            mBTCommandArrayList.add(mBluetoothMessageEntity);
                         } else {
                             source = mConnectedRemoteDevice.getName();
+                            Log.d(TAG, "ConnectedThread: else clause: source: " + source);
+                            mBluetoothMessageEntity = new BluetoothMessageEntity(source, "MDPGRP17_Android", MESSAGE_CONVERSATION, incomingMessage);
+                            mBTConversationArrayList.add(mBluetoothMessageEntity);
                         }
-                        mBluetoothMessageEntity = new BluetoothMessageEntity(source, "MDPGRP17_Android", MESSAGE_COMMAND, incomingMessage);
-                        mBTConversationArrayList.add(mBluetoothMessageEntity);
                     }
                     mHandler.obtainMessage(GlobalVariables.MESSAGE_READ, mBluetoothMessageEntity).sendToTarget();
                 } catch (IOException e) {
@@ -546,15 +555,16 @@ public class BluetoothConnection {
                     Log.e(TAG, "ConnectedThread: Write: mmInStream.read(buffer); failed. " + e.getMessage());
 
                     // connection lost
-                    if (isUserDisconnect) {
-                        // no need to reconnect to last device
-
-                    } else {
-                        stopAllThreads();
-                        startAcceptThread(true);
-                        mHandler.obtainMessage(GlobalVariables.BT_CONNECTION_STATE_CONNECTIONLOST).sendToTarget();
-                        // startConnectThread(mConnectedRemoteDevice, true);
-                    }
+                    mHandler.obtainMessage(GlobalVariables.BT_CONNECTION_STATE_CONNECTIONLOST).sendToTarget();
+//                    if (isUserDisconnect) {
+//                        // no need to reconnect to last device
+//
+//                    } else {
+//                        stopAllThreads();
+//                        startAcceptThread(true);
+//
+//
+//                    }
 
                     break;
                 }

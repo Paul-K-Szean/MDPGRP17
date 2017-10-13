@@ -39,7 +39,7 @@
                 android:id="@+id/RLO_ArenaGrid"
                 android:layout_width="520dp"
                 android:layout_height="680dp"
-                android:layout_marginBottom="6dp"
+                android:layout_marginBottom="4dp"
                 android:layout_marginTop="-10dp"
                 android:layout_weight="1"
                 android:padding="0dp"></RelativeLayout>
@@ -66,7 +66,7 @@
                         android:layout_weight="1"
                         android:gravity="center"
                         android:text="Robot"
-                        android:textSize="20sp"
+                        android:textSize="16dp"
                         android:textStyle="bold" />
 
                     <TextView
@@ -77,7 +77,7 @@
                         android:layout_weight="1"
                         android:gravity="center"
                         android:text="None"
-                        android:textSize="16sp" />
+                        android:textSize="16dp" />
 
                 </LinearLayout>
 
@@ -95,7 +95,8 @@
                         android:layout_weight="1"
                         android:checked="false"
                         android:textOff="Start Fastest"
-                        android:textOn="Stop Fastest" />
+                        android:textOn="Stop Fastest"
+                        android:textSize="12dp" />
 
                     <Chronometer
                         android:id="@+id/CHRNOMTR_Fastest"
@@ -104,7 +105,7 @@
                         android:layout_weight="1"
                         android:gravity="center"
                         android:textColor="@color/color_Arena_Default"
-                        android:textSize="20sp" />
+                        android:textSize="16dp" />
 
                 </LinearLayout>
 
@@ -123,7 +124,8 @@
                         android:layout_weight="1"
                         android:checked="false"
                         android:textOff="Start Explore"
-                        android:textOn="Stop Explore" />
+                        android:textOn="Stop Explore"
+                        android:textSize="12dp" />
 
 
                     <Chronometer
@@ -133,7 +135,7 @@
                         android:layout_weight="1"
                         android:gravity="center"
                         android:textColor="@color/color_Arena_Default"
-                        android:textSize="20sp" />
+                        android:textSize="16dp" />
                 </LinearLayout>
 
                 <LinearLayout
@@ -150,7 +152,7 @@
                         android:layout_weight="1"
                         android:gravity="center"
                         android:text="Way Point"
-                        android:textSize="20sp"
+                        android:textSize="16dp"
                         android:textStyle="bold" />
 
                     <TextView
@@ -160,7 +162,7 @@
                         android:layout_weight="1"
                         android:gravity="center"
                         android:text="0,0"
-                        android:textSize="20sp" />
+                        android:textSize="16dp" />
 
                 </LinearLayout>
 
@@ -177,7 +179,7 @@
                         android:layout_weight="1"
                         android:gravity="center"
                         android:text="Map Mode"
-                        android:textSize="20sp"
+                        android:textSize="16dp"
                         android:textStyle="bold" />
 
                     <TextView
@@ -187,7 +189,7 @@
                         android:layout_weight="1"
                         android:gravity="center"
                         android:text="Auto"
-                        android:textSize="20sp" />
+                        android:textSize="16dp" />
 
                 </LinearLayout>
 
@@ -203,10 +205,10 @@
                 android:paddingRight="@dimen/list_body">
 
                 <LinearLayout
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_gravity="center"
                     android:layout_weight="1"
-                    android:gravity="center"
                     android:orientation="vertical">
 
                     <TextView
@@ -225,41 +227,39 @@
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
                         android:layout_gravity="center"
-                        android:layout_weight="1"
                         android:orientation="horizontal"
                         android:visibility="gone">
 
                         <LinearLayout
                             android:layout_width="wrap_content"
-                            android:layout_height="match_parent"
+                            android:layout_height="wrap_content"
                             android:layout_gravity="center"
                             android:layout_weight="1"
                             android:orientation="vertical">
 
                             <TextView
                                 android:id="@+id/TXTVW_SensorValues"
-                                android:layout_width="match_parent"
+                                android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:layout_weight="1"
-                                android:gravity="center"
+                                android:layout_gravity="center"
+
                                 android:text="SensorValues"
-                                android:textSize="18dp" />
+                                android:textSize="16dp" />
 
                             <TextView
                                 android:id="@+id/TXTVW_CalibratedValues"
-                                android:layout_width="match_parent"
+                                android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:layout_weight="1"
-                                android:gravity="center"
+                                android:layout_gravity="center"
                                 android:text="CalibratedValues"
-                                android:textSize="18dp" />
+                                android:textSize="16dp" />
                         </LinearLayout>
 
                         <ToggleButton
                             android:id="@+id/TGLBTN_CalibrateTilt"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_weight="1"
+                            android:layout_gravity="center_vertical"
                             android:checked="false"
                             android:textOff="Calibrate"
                             android:textOn="Calibrating" />
@@ -268,7 +268,7 @@
                             android:id="@+id/TGLBTN_StartTiltMode"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_weight="1"
+                            android:layout_gravity="center_vertical"
                             android:checked="false"
                             android:textOff="Stop"
                             android:textOn="Start" />
@@ -290,12 +290,13 @@
                             android:orientation="vertical"
                             app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
-                            <Button
-                                android:id="@+id/BTN_CMD_RotateLeft"
+                            <ImageButton
+                                android:id="@+id/IMGBTN_RotateLeft"
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:layout_weight="1"
-                                android:text="Rotate Left" />
+                                app:srcCompat="@drawable/ic_undo_black_24dp" />
+
                         </LinearLayout>
 
                         <LinearLayout
@@ -306,19 +307,19 @@
                             android:orientation="vertical"
                             app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
-                            <Button
-                                android:id="@+id/BTN_CMD_Forward"
+                            <ImageButton
+                                android:id="@+id/IMGBTN_Forward"
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:layout_weight="1"
-                                android:text="Forward" />
+                                app:srcCompat="@drawable/ic_arrow_upward_black_24dp" />
 
-                            <Button
-                                android:id="@+id/BTN_CMD_Reverse"
+                            <ImageButton
+                                android:id="@+id/IMGBTN_Reverse"
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:layout_weight="1"
-                                android:text="Reverse" />
+                                app:srcCompat="@drawable/ic_arrow_downward_black_24dp" />
 
                         </LinearLayout>
 
@@ -329,12 +330,12 @@
                             android:layout_weight="1"
                             android:orientation="vertical">
 
-                            <Button
-                                android:id="@+id/BTN_CMD_RotateRight"
+                            <ImageButton
+                                android:id="@+id/IMGBTN_RotateRight"
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:layout_weight="1"
-                                android:text="Rotate Right" />
+                                app:srcCompat="@drawable/ic_redo_black_24dp" />
 
                         </LinearLayout>
                     </LinearLayout>

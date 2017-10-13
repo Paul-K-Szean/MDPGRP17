@@ -26,6 +26,7 @@ import java.util.List;
 
 import static com.example.android.mdpgrp17_androidapp.GlobalVariables.BT_CONNECTION_STATE_CANNOTLISTEN;
 import static com.example.android.mdpgrp17_androidapp.GlobalVariables.BT_CONNECTION_STATE_CONNECTED;
+import static com.example.android.mdpgrp17_androidapp.GlobalVariables.BT_CONNECTION_STATE_CONNECTING;
 import static com.example.android.mdpgrp17_androidapp.GlobalVariables.BT_CONNECTION_STATE_IDLE;
 import static com.example.android.mdpgrp17_androidapp.GlobalVariables.BT_CONNECTION_STATE_LISTENING;
 
@@ -41,6 +42,7 @@ public class ChatActivity extends AppCompatActivity {
     private ConfigFile configFile;
 
     private ViewPager viewPager;
+    private Adapter adapter;
 
     // Add Fragments to Tabs
     private void setupViewPager(ViewPager viewPager) {
@@ -71,15 +73,16 @@ public class ChatActivity extends AppCompatActivity {
             return mFragmentList.size();
         }
 
+        @Override
+        public CharSequence getPageTitle(int position) {
+            return mFragmentTitleList.get(position);
+        }
+
         public void addFragment(Fragment fragment, String title) {
             mFragmentList.add(fragment);
             mFragmentTitleList.add(title);
         }
 
-        @Override
-        public CharSequence getPageTitle(int position) {
-            return mFragmentTitleList.get(position);
-        }
     }
 
     @Override
@@ -98,32 +101,33 @@ public class ChatActivity extends AppCompatActivity {
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
-        //noinspection SimplifiableIfStatement
+
         if (id == R.id.action_settings_bluetooth) {
-            Log.d(TAG, "Clicked On action_settings_bluetooth");
+            Log.d(TAG, "onOptionsItemSelected: action_settings_bluetooth");
             Intent intent_bluetooth = new Intent(this, BluetoothActivity.class);
             startActivity(intent_bluetooth);
         } else if (id == R.id.action_settings_bluetooth_reconnect) {
-            Log.d(TAG, "Clicked On action_settings_bluetooth_reconnect: mBTCurrentState: " + mBTCurrentState);
+            Log.d(TAG, "onOptionsItemSelected: action_settings_bluetooth_reconnect: mBTCurrentState: " + mBTCurrentState);
             if (mBTCurrentState == BT_CONNECTION_STATE_IDLE) {
-                Log.d(TAG, "onClick: action_settings_bluetooth_reconnect: BT_CONNECTION_STATE_IDLE");
+                Log.d(TAG, "onOptionsItemSelected: action_settings_bluetooth_reconnect: BT_CONNECTION_STATE_IDLE");
                 mBluetoothConnection.startAcceptThread(true);
             } else if (mBTCurrentState == BT_CONNECTION_STATE_CONNECTED) {
-                Log.d(TAG, "onClick: action_settings_bluetooth_reconnect: BT_CONNECTION_STATE_CONNECTED");
+                Log.d(TAG, "onOptionsItemSelected: action_settings_bluetooth_reconnect: BT_CONNECTION_STATE_CONNECTED");
                 mBluetoothConnection.disconnect();
             } else if (mBTCurrentState == BT_CONNECTION_STATE_LISTENING) {
-                Log.d(TAG, "onClick: action_settings_bluetooth_reconnect: BT_CONNECTION_STATE_LISTENING");
+                Log.d(TAG, "onOptionsItemSelected: action_settings_bluetooth_reconnect: BT_CONNECTION_STATE_LISTENING");
                 BluetoothDevice lastConnectedDevice = mBluetoothConnection.getConnectedRemoteDevice();
+                showToast_Short("Connecting");
                 if (lastConnectedDevice != null) {
                     mBluetoothConnection.startConnectThread(lastConnectedDevice, true);
                 } else {
-                    Log.d(TAG, "onOptionsItemSelected: BT_CONNECTION_STATE_LISTENING: lastConnectedDevice is null retry 1");
+                    Log.d(TAG, "onOptionsItemSelected: action_settings_bluetooth_reconnect: BT_CONNECTION_STATE_LISTENING: lastConnectedDevice");
                     try {
                         lastConnectedDevice = mBluetoothAdapter.getRemoteDevice(configFileHandler.getConfigFile().getBluetoothConfig().getLastConnectedDevice_MACAddress());
                         if (lastConnectedDevice != null) {
                             mBluetoothConnection.startConnectThread(lastConnectedDevice, true);
                         } else {
-                            Log.d(TAG, "onOptionsItemSelected: BT_CONNECTION_STATE_LISTENING: lastConnectedDevice is null retry 2");
+                            Log.d(TAG, "onOptionsItemSelected: action_settings_bluetooth_reconnect: BT_CONNECTION_STATE_LISTENING: lastConnectedDevice is null retry 2");
                             showToast_Short("You have not connected to any device yet");
                             Log.d(TAG, "onOptionsItemSelected: You have not connected to any device yet");
                         }
@@ -133,11 +137,18 @@ public class ChatActivity extends AppCompatActivity {
                     }
                 }
             } else if (mBTCurrentState == BT_CONNECTION_STATE_CANNOTLISTEN) {
-                Log.d(TAG, "onClick: action_settings_bluetooth_reconnect: BT_CONNECTION_STATE_CANNOTLISTEN");
+                Log.d(TAG, "onOptionsItemSelected: action_settings_bluetooth_reconnect: BT_CONNECTION_STATE_CANNOTLISTEN");
                 showToast_Short("Please restart bluetooth");
+            } else if (mBTCurrentState == BT_CONNECTION_STATE_CONNECTING) {
+                Log.d(TAG, "onClick: action_settings_bluetooth_reconnect: BT_CONNECTION_STATE_CONNECTING");
+                showToast_Short("Connecting");
             } else {
-                Log.d(TAG, "onClick: action_settings_bluetooth_reconnect: " + mBTCurrentState);
+                Log.d(TAG, "onOptionsItemSelected: action_settings_bluetooth_reconnect: " + mBTCurrentState);
             }
+        }
+
+        if (id == R.id.action_settings) {
+
         }
         return super.onOptionsItemSelected(item);
     }
@@ -147,6 +158,7 @@ public class ChatActivity extends AppCompatActivity {
         Log.d(TAG, "onPrepareOptionsMenu");
         menu.getItem(2).setVisible(false);
         menu.getItem(3).setVisible(false);
+        menu.getItem(4).setVisible(false);
         return super.onPrepareOptionsMenu(menu);
     }
 
@@ -297,6 +309,7 @@ public class ChatActivity extends AppCompatActivity {
                 break;
             case GlobalVariables.BT_CONNECTION_STATE_CONNECTING:
                 Log.d(TAG, "updateGUI_ToolBar_BTConnectionState: BT connection state: BT_CONNECTION_STATE_CONNECTING");
+                getSupportActionBar().setSubtitle("Connecting to last device");
                 break;
             case BT_CONNECTION_STATE_CONNECTED:
                 Log.d(TAG, "updateGUI_ToolBar_BTConnectionState: BT connection state: BT_CONNECTION_STATE_CONNECTED");
@@ -350,6 +363,14 @@ public class ChatActivity extends AppCompatActivity {
                 case GlobalVariables.MESSAGE_READ: {
                     if (msg.obj instanceof BluetoothMessageEntity) {
                         showToast_Short("Msg received: " + ((BluetoothMessageEntity) msg.obj).getMessageContent());
+                        Fragment page = getSupportFragmentManager().findFragmentByTag("android:switcher:" + R.id.viewpager + ":" + viewPager.getCurrentItem());
+
+                        if (page != null) {
+                            ((ChatFragment) page).updateGUI_MessageContent();
+                        } else {
+                            showToast_Short("MESSAGE_READ: page was null");
+                        }
+
                     } else {
                         byte[] read = (byte[]) msg.obj;
                         String incomingMessage = new String(read, 0, msg.arg1);  // byte[]; offset; byteCount
@@ -376,6 +397,7 @@ public class ChatActivity extends AppCompatActivity {
     // Create a BroadcastReceiver to capture bluetooth activities
     private final BroadcastReceiver mReceiver = new BroadcastReceiver() {
         public void onReceive(Context context, Intent intent) {
+            Log.d(TAG, "onReceive");
             String action = intent.getAction();
             // ON/OFF STATES
             final int currentState_ThisDevice = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.ERROR);
@@ -392,16 +414,50 @@ public class ChatActivity extends AppCompatActivity {
             switch (action) {
                 // handle BT connection state
                 case BluetoothDevice.ACTION_ACL_CONNECTED:
-                    Log.d(TAG, "onReceive: ACTION_ACL_CONNECTED");
+                    Log.d(TAG, "onReceive: ACTION_ACL_CONNECTED: " + mRemoteDevice.getName() + " (" + mRemoteDevice.getBondState() + ")");
+                    // mBluetoothConnection.startConnectThread(mRemoteDevice, true);
                     break;
                 case BluetoothDevice.ACTION_ACL_DISCONNECTED:
-                    Log.d(TAG, "onReceive: ACTION_ACL_DISCONNECTED");
+                    Log.d(TAG, "onReceive: ACTION_ACL_DISCONNECTED: " + mRemoteDevice.getName() + " (" + mRemoteDevice.getBondState() + ")");
                     break;
                 case BluetoothDevice.ACTION_ACL_DISCONNECT_REQUESTED:
-                    Log.d(TAG, "onReceive: ACTION_ACL_DISCONNECT_REQUESTED");
+                    Log.d(TAG, "onReceive: ACTION_ACL_DISCONNECT_REQUESTED " + mRemoteDevice.getName());
+                    break;
+                case BluetoothDevice.ACTION_PAIRING_REQUEST:
+                    Log.d(TAG, "onReceive: ACTION_PAIRING_REQUEST");
+                    break;
+                // BT ON/OFF
+                case BluetoothAdapter.ACTION_STATE_CHANGED:
+                    // 10 = OFF, 11 = TURNING ON, 12 = ON, 13 = TURNING OFF
+                    if (currentState_ThisDevice == BluetoothAdapter.STATE_ON) {
+                        Log.d(TAG, "currentState_ThisDevice: STATE_ON (" + currentState_ThisDevice + ")");
+                    } else if (currentState_ThisDevice == BluetoothAdapter.STATE_TURNING_ON) {
+                        Log.d(TAG, "currentState_ThisDevice: STATE_TURNING_ON (" + currentState_ThisDevice + ")");
+                    } else if (currentState_ThisDevice == BluetoothAdapter.STATE_TURNING_OFF) {
+                        Log.d(TAG, "currentState_ThisDevice: STATE_TURNING_OFF (" + currentState_ThisDevice + ")");
+                    } else if (currentState_ThisDevice == BluetoothAdapter.STATE_OFF) {
+                        Log.d(TAG, "currentState_ThisDevice: STATE_OFF (" + currentState_ThisDevice + ")");
+                    }
+                    break;
+                case BluetoothAdapter.ACTION_CONNECTION_STATE_CHANGED:
+                    Log.d(TAG, "onReceive: ACTION_CONNECTION_STATE_CHANGED");
+                    // 0 = disconnected, 1 = connecting ON, 2 = connected, 3 = disconnecting
+                    if (currentConnectionState_ThisDevice == BluetoothAdapter.STATE_DISCONNECTED) {
+                        Log.d(TAG, "onReceive: currentConnectionState_ThisDevice: STATE_DISCONNECTED (" + currentConnectionState_ThisDevice + "), " + mRemoteDevice.getName());
+                    } else if (currentConnectionState_ThisDevice == BluetoothAdapter.STATE_CONNECTING) {
+                        Log.d(TAG, "onReceive: currentConnectionState_ThisDevice: STATE_CONNECTING (" + currentConnectionState_ThisDevice + "), " + mRemoteDevice.getName());
+                    } else if (currentConnectionState_ThisDevice == BluetoothAdapter.STATE_CONNECTED) {
+                        Log.d(TAG, "onReceive: currentConnectionState_ThisDevice: STATE_CONNECTED (" + currentConnectionState_ThisDevice + "), " + mRemoteDevice.getName());
+                    } else if (currentConnectionState_ThisDevice == BluetoothAdapter.STATE_DISCONNECTING) {
+                        Log.d(TAG, "onReceive: currentConnectionState_ThisDevice: STATE_DISCONNECTING (" + currentConnectionState_ThisDevice + "), " + mRemoteDevice.getName());
+                    } else {
+                        Log.d(TAG, "onReceive: currentConnectionState_ThisDevice: action: (" + action.toString() + ")");
+                    }
+
+                    updateGUI_ToolBar_BTConnectionState();
+                    updateGUI_MenuIcon();
                     break;
             }
         }
     };
-
 }

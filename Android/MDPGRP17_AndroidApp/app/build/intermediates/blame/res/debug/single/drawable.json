@@ -8,6 +8,10 @@
         "source": "C:\\Users\\szean\\.android\\build-cache\\96e68b64afd7f5be0802c8789468c73bec68fb5c\\output\\res\\drawable\\design_fab_background.xml"
     },
     {
+        "merged": "C:\\Users\\szean\\Documents\\AndroidProjects\\MDP\\MDPGRP17_AndroidApp\\app\\build\\intermediates\\res\\merged\\debug\\drawable\\ic_arrow_downward_black_24dp.xml",
+        "source": "C:\\Users\\szean\\Documents\\AndroidProjects\\MDP\\MDPGRP17_AndroidApp\\app\\src\\main\\res\\drawable\\ic_arrow_downward_black_24dp.xml"
+    },
+    {
         "merged": "C:\\Users\\szean\\Documents\\AndroidProjects\\MDP\\MDPGRP17_AndroidApp\\app\\build\\intermediates\\res\\merged\\debug\\drawable\\border_none.xml",
         "source": "C:\\Users\\szean\\Documents\\AndroidProjects\\MDP\\MDPGRP17_AndroidApp\\app\\src\\main\\res\\drawable\\border_none.xml"
     },
@@ -24,12 +28,20 @@
         "source": "C:\\Users\\szean\\.android\\build-cache\\8eaeee0584d658b9d5f6798c1b5e64283ee8c1bb\\output\\res\\drawable\\abc_seekbar_thumb_material.xml"
     },
     {
+        "merged": "C:\\Users\\szean\\Documents\\AndroidProjects\\MDP\\MDPGRP17_AndroidApp\\app\\build\\intermediates\\res\\merged\\debug\\drawable\\ic_redo_black_24dp.xml",
+        "source": "C:\\Users\\szean\\Documents\\AndroidProjects\\MDP\\MDPGRP17_AndroidApp\\app\\src\\main\\res\\drawable\\ic_redo_black_24dp.xml"
+    },
+    {
         "merged": "C:\\Users\\szean\\Documents\\AndroidProjects\\MDP\\MDPGRP17_AndroidApp\\app\\build\\intermediates\\res\\merged\\debug\\drawable\\ic_menu.xml",
         "source": "C:\\Users\\szean\\Documents\\AndroidProjects\\MDP\\MDPGRP17_AndroidApp\\app\\src\\main\\res\\drawable\\ic_menu.xml"
     },
     {
         "merged": "C:\\Users\\szean\\Documents\\AndroidProjects\\MDP\\MDPGRP17_AndroidApp\\app\\build\\intermediates\\res\\merged\\debug\\drawable\\abc_item_background_holo_light.xml",
         "source": "C:\\Users\\szean\\.android\\build-cache\\8eaeee0584d658b9d5f6798c1b5e64283ee8c1bb\\output\\res\\drawable\\abc_item_background_holo_light.xml"
+    },
+    {
+        "merged": "C:\\Users\\szean\\Documents\\AndroidProjects\\MDP\\MDPGRP17_AndroidApp\\app\\build\\intermediates\\res\\merged\\debug\\drawable\\ic_undo_black_24dp.xml",
+        "source": "C:\\Users\\szean\\Documents\\AndroidProjects\\MDP\\MDPGRP17_AndroidApp\\app\\src\\main\\res\\drawable\\ic_undo_black_24dp.xml"
     },
     {
         "merged": "C:\\Users\\szean\\Documents\\AndroidProjects\\MDP\\MDPGRP17_AndroidApp\\app\\build\\intermediates\\res\\merged\\debug\\drawable\\abc_textfield_search_material.xml",
@@ -176,6 +188,10 @@
         "source": "C:\\Users\\szean\\.android\\build-cache\\8eaeee0584d658b9d5f6798c1b5e64283ee8c1bb\\output\\res\\drawable\\abc_dialog_material_background_dark.xml"
     },
     {
+        "merged": "C:\\Users\\szean\\Documents\\AndroidProjects\\MDP\\MDPGRP17_AndroidApp\\app\\build\\intermediates\\res\\merged\\debug\\drawable\\ic_arrow_upward_black_24dp.xml",
+        "source": "C:\\Users\\szean\\Documents\\AndroidProjects\\MDP\\MDPGRP17_AndroidApp\\app\\src\\main\\res\\drawable\\ic_arrow_upward_black_24dp.xml"
+    },
+    {
         "merged": "C:\\Users\\szean\\Documents\\AndroidProjects\\MDP\\MDPGRP17_AndroidApp\\app\\build\\intermediates\\res\\merged\\debug\\drawable\\ic_autorenew_black_24dp.xml",
         "source": "C:\\Users\\szean\\Documents\\AndroidProjects\\MDP\\MDPGRP17_AndroidApp\\app\\src\\main\\res\\drawable\\ic_autorenew_black_24dp.xml"
     },
@@ -210,6 +226,10 @@
     {
         "merged": "C:\\Users\\szean\\Documents\\AndroidProjects\\MDP\\MDPGRP17_AndroidApp\\app\\build\\intermediates\\res\\merged\\debug\\drawable\\ic_done_black_24dp.xml",
         "source": "C:\\Users\\szean\\Documents\\AndroidProjects\\MDP\\MDPGRP17_AndroidApp\\app\\src\\main\\res\\drawable\\ic_done_black_24dp.xml"
+    },
+    {
+        "merged": "C:\\Users\\szean\\Documents\\AndroidProjects\\MDP\\MDPGRP17_AndroidApp\\app\\build\\intermediates\\res\\merged\\debug\\drawable\\ic_file_upload_black_24dp.xml",
+        "source": "C:\\Users\\szean\\Documents\\AndroidProjects\\MDP\\MDPGRP17_AndroidApp\\app\\src\\main\\res\\drawable\\ic_file_upload_black_24dp.xml"
     },
     {
         "merged": "C:\\Users\\szean\\Documents\\AndroidProjects\\MDP\\MDPGRP17_AndroidApp\\app\\build\\intermediates\\res\\merged\\debug\\drawable\\ic_gamepad_black_24dp.xml",
