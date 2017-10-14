@@ -52,20 +52,23 @@ public class GlobalVariables {
     public static final int ARENA_GRID = 0;
     public static final int ARENA_GRID_OBSTACLE = 1;
     public static final int ARENA_GRID_STARTPOSITION = 2;                   // start position
-    public static final int ARENA_GRID_ENDPOSITION = 3;                     // end position
-    public static final int ARENA_GRID_WAYPOINT = 4;                        // way point
-    public static final int ARENA_ROBOT_POSITION = 5;                       // 1. robot position
-    public static final int ARENA_ROBOT_POSITION_WITH_WAYPOINT = 6;         // 2. robot position with way point
-    public static final int ARENA_ROBOT_POSITION_WITH_STARTPOSITION = 7;    // 3. robot position with start position
-    public static final int ARENA_ROBOT_POSITION_WITH_ENDPOSITION = 8;      // 4. robot position with end position
-    public static final int ARENA_ROBOT_DIRECTION = 9;                      // 5. robot direction
-    public static final int ARENA_ROBOT_DIRECTION_WITH_WAYPOINT = 10;       // 6. robot direction with way point
-    public static final int ARENA_ROBOT_DIRECTION_WITH_STARTPOSITION = 11;  // 7. robot position with start position
-    public static final int ARENA_ROBOT_DIRECTION_WITH_ENDPOSITION = 12;    // 8. robot position with end position
-    public static final int ARENA_ROBOT_TRAVELPATH = 13;                    // 9. robot travel path
-    public static final int ARENA_ROBOT_TRAVELPATH_WITH_WAYPOINT = 14;      // 10. robot travel path with way point
-    public static final int ARENA_ROBOT_TRAVELPATH_WITH_STARTPOSITION = 15; // 11. robot travel path with start position
-    public static final int ARENA_ROBOT_TRAVELPATH_WITH_ENDPOSITION = 16;   // 12. robot travel path with end position
+    public static final int ARENA_GRID_STARTPOSITION_UNDISCOVERED = 3;      // start position un-discover
+    public static final int ARENA_GRID_ENDPOSITION = 4;                     // end position
+    public static final int ARENA_GRID_ENDPOSITION_UNDISCOVERED = 5;        // end position un-discover
+    public static final int ARENA_GRID_WAYPOINT = 6;                        // way point
+    public static final int ARENA_ROBOT_POSITION = 7;                       // 1. robot position
+    public static final int ARENA_ROBOT_POSITION_WITH_WAYPOINT = 8;         // 2. robot position with way point
+    public static final int ARENA_ROBOT_POSITION_WITH_STARTPOSITION = 9;    // 3. robot position with start position
+    public static final int ARENA_ROBOT_POSITION_WITH_ENDPOSITION = 10;     // 4. robot position with end position
+    public static final int ARENA_ROBOT_DIRECTION = 11;                     // 5. robot direction
+    public static final int ARENA_ROBOT_DIRECTION_WITH_WAYPOINT = 12;       // 6. robot direction with way point
+    public static final int ARENA_ROBOT_DIRECTION_WITH_STARTPOSITION = 13;  // 7. robot position with start position
+    public static final int ARENA_ROBOT_DIRECTION_WITH_ENDPOSITION = 14;    // 8. robot position with end position
+    public static final int ARENA_ROBOT_TRAVELPATH = 15;                    // 9. robot travel path
+    public static final int ARENA_ROBOT_TRAVELPATH_WITH_WAYPOINT = 16;      // 10. robot travel path with way point
+    public static final int ARENA_ROBOT_TRAVELPATH_WITH_STARTPOSITION = 17; // 11. robot travel path with start position
+    public static final int ARENA_ROBOT_TRAVELPATH_WITH_ENDPOSITION = 18;   // 12. robot travel path with end position
+    public static final int ARENA_ROBOT_EXPLOREDPATH = 19;                  // 13. robot travel path with end position
 
 
     public static final int ARENA_GAME_MODE_BUTTON = 0;

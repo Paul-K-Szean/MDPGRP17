@@ -92,10 +92,10 @@ import static com.example.android.mdpgrp17_androidapp.GlobalVariables.TOUCHMODE_
 import static com.example.android.mdpgrp17_androidapp.GlobalVariables.TOUCHMODE_SETROBOTPOSITION;
 import static com.example.android.mdpgrp17_androidapp.GlobalVariables.TOUCHMODE_SETWAYPOINT;
 import static com.example.android.mdpgrp17_androidapp.GlobalVariables.TOUCHMODE_SWIPE;
-import static com.example.android.mdpgrp17_androidapp.R.color.color_Arena_Default;
 import static com.example.android.mdpgrp17_androidapp.R.color.color_Arena_RobotPosition;
 import static com.example.android.mdpgrp17_androidapp.R.color.color_ControlMode_Swipe;
 import static com.example.android.mdpgrp17_androidapp.R.color.color_ControlMode_Tilt;
+import static com.example.android.mdpgrp17_androidapp.R.color.color_System_Default;
 
 
 /**
@@ -141,7 +141,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private int mBTCurrentState;
     // Arena objects
     private Arena arena;
-    private boolean isWayPointLocked, isTiltModeStarted = false;
+    private boolean isWayPointLocked = false, isTiltModeStarted = false;
     private int gameMode = ARENA_GAME_MODE_BUTTON, touchMode = TOUCHMODE_SETWAYPOINT;
     // Config objects
     private ConfigFileHandler configFileHandler;
@@ -479,7 +479,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 }
             } else if (controlID == R.id.LLO_WayPoint) {
                 Log.d(TAG, "onTouch: LLO_WayPoint: isWayPointLocked: " + isWayPointLocked + ": " + arena.getWayPointPosition_Col_Center() + "," + arena.getWayPointPosition_Row_Center());
-                arena.setTouchMode(TOUCHMODE_SETWAYPOINT);
                 if (isWayPointLocked) {
                     if (TGLBTN_StartFastest.isChecked() || TGLBTN_StartExploration.isChecked()) {
                         // unable to go into unlock mode because fastest path is running
@@ -490,21 +489,30 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         LLO_WayPoint.setBackgroundResource(R.drawable.border_unlocked);
                     }
                 } else {
-                    // go to locked mode
                     LLO_Robot.setBackgroundResource(R.drawable.border_none);
-                    LLO_WayPoint.setBackgroundResource(R.drawable.border_unlocked);
-                    if (arena.getWayPointPosition_Row_Center() != 0 && arena.getWayPointPosition_Col_Center() != 0) {
-                        if (mBTCurrentState == BT_CONNECTION_STATE_CONNECTED) {
-                            arena.setTouchMode(TOUCHMODE_NONE); //
-                            LLO_WayPoint.setBackgroundResource(R.drawable.border_locked);
-                            isWayPointLocked = true;
+                    if (arena.getTouchMode() == TOUCHMODE_SETROBOTPOSITION) {
+                        // go to unlock mode
+                        arena.setTouchMode(TOUCHMODE_SETWAYPOINT);
+                        isWayPointLocked = false;
+                        LLO_WayPoint.setBackgroundResource(R.drawable.border_unlocked);
+
+                    } else {
+                        // go to locked mode
+                        arena.setTouchMode(TOUCHMODE_SETWAYPOINT);
+                        LLO_WayPoint.setBackgroundResource(R.drawable.border_unlocked);
+                        if (arena.getWayPointPosition_Row_Center() > 0 && arena.getWayPointPosition_Col_Center() > 0) {
+                            if (mBTCurrentState == BT_CONNECTION_STATE_CONNECTED) {
+                                arena.setTouchMode(TOUCHMODE_NONE);
+                                LLO_WayPoint.setBackgroundResource(R.drawable.border_locked);
+                                isWayPointLocked = true;
+                            } else {
+                                isWayPointLocked = false;
+                                showToast_Long("No device connected! Re-lock way point to send again");
+                            }
                         } else {
                             isWayPointLocked = false;
-                            showToast_Long("Unable to send way point! Re-lock way point to send again");
+                            showToast_Short("Please select a way point first");
                         }
-                    } else {
-                        isWayPointLocked = false;
-                        showToast_Short("Please select a way point first");
                     }
                 }
             }
@@ -1033,12 +1041,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 public void run() {
                     //Do something after 100ms
                     TXTVW_RobotStatusValue.setText("idling");
-                    TXTVW_RobotStatusValue.setTextColor(ContextCompat.getColor(getBaseContext(), color_Arena_Default));
+                    TXTVW_RobotStatusValue.setTextColor(ContextCompat.getColor(getBaseContext(), color_System_Default));
                 }
-            }, 500);
+            }, 1500);
         } else {
             TXTVW_RobotStatusValue.setText("idling");
-            TXTVW_RobotStatusValue.setTextColor(ContextCompat.getColor(this, color_Arena_Default));
+            TXTVW_RobotStatusValue.setTextColor(ContextCompat.getColor(this, color_System_Default));
         }
     }
 
@@ -1094,8 +1102,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                                 updateGUI_ArenaRobotStatus(true); // @mHandler CASE: MESSAGE_READ: MESSAGE_FROM_ALGORITHM
                             } else if (source == MESSAGE_FROM_ARDUINO) {
                                 updateGUI_ArenaRobotStatus(true); // @mHandler  CASE: MESSAGE_READ: MESSAGE_FROM_ARDUINO
-                            } else
-                            {
+                            } else {
                             }
                         } else {
                             showToast_Short("Message received!");
