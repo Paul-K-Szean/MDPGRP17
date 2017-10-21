@@ -37,15 +37,16 @@
 
             <RelativeLayout
                 android:id="@+id/RLO_ArenaGrid"
-                android:layout_width="520dp"
-                android:layout_height="680dp"
+                android:layout_width="500dp"
+                android:layout_height="660dp"
                 android:layout_marginTop="-10dp"
                 android:layout_weight="1"
                 android:padding="0dp"></RelativeLayout>
 
             <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_marginTop="-20dp"
                 android:layout_weight="1"
                 android:gravity="center_horizontal"
                 android:orientation="horizontal"
@@ -57,7 +58,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
-                    android:background="@drawable/border_none"
+                    android:background="@drawable/border_dotted"
                     android:orientation="vertical">
 
                     <TextView
@@ -91,24 +92,12 @@
                     android:background="@drawable/border_none"
                     android:orientation="vertical">
 
-                    <ToggleButton
-                        android:id="@+id/TGLBTN_StartFastest"
+                    <Button
+                        android:id="@+id/BTN_STARTFASTEST"
                         android:layout_width="match_parent"
-                        android:layout_height="match_parent"
+                        android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:checked="false"
-                        android:textOff="Start Fastest"
-                        android:textOn="Stop Fastest"
-                        android:textSize="12dp" />
-
-                    <Chronometer
-                        android:id="@+id/CHRNOMTR_Fastest"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:layout_weight="1"
-                        android:gravity="center"
-                        android:textColor="@color/color_System_Default"
-                        android:textSize="14dp" />
+                        android:text="Start Fastest" />
 
                 </LinearLayout>
 
@@ -121,26 +110,14 @@
                     android:orientation="vertical">
 
 
-                    <ToggleButton
-                        android:id="@+id/TGLBTN_StartExploration"
+                    <Button
+                        android:id="@+id/BTN_STARTEXPLORATION"
                         android:layout_width="match_parent"
-                        android:layout_height="match_parent"
+                        android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:checked="false"
-                        android:textOff="Start Explore"
-                        android:textOn="Stop Explore"
-                        android:textSize="12dp" />
+                        android:text="Start Exploration" />
 
 
-                    <Chronometer
-                        android:id="@+id/CHRNOMTR_Exploration"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:layout_weight="1"
-                        android:gravity="center"
-                        android:textColor="@color/color_System_Default"
-
-                        android:textSize="14dp" />
                 </LinearLayout>
 
                 <LinearLayout
@@ -204,11 +181,12 @@
 
             <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="120dp"
                 android:layout_weight="1"
                 android:gravity="center"
                 android:orientation="horizontal"
                 android:paddingLeft="@dimen/list_body"
+
                 android:paddingRight="@dimen/list_body">
 
                 <LinearLayout
@@ -221,12 +199,21 @@
                     <TextView
                         android:id="@+id/TXTVW_ControlMode"
                         android:layout_width="match_parent"
-                        android:layout_height="match_parent"
+                        android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:gravity="center"
                         android:text="Fastest"
                         android:textSize="20sp"
                         android:textStyle="bold"
+                        android:visibility="gone" />
+
+                    <TextView
+                        android:id="@+id/TXTVW_MDFString"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:gravity="center"
+                        android:textSize="16sp"
                         android:visibility="gone" />
 
                     <LinearLayout
@@ -238,10 +225,10 @@
                         android:visibility="gone">
 
                         <LinearLayout
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_gravity="center"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
                             android:layout_weight="1"
+                            android:gravity="center"
                             android:orientation="vertical">
 
                             <TextView
@@ -249,7 +236,6 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:layout_gravity="center"
-
                                 android:text="SensorValues"
                                 android:textSize="16dp" />
 
@@ -285,7 +271,7 @@
                     <LinearLayout
                         android:id="@+id/LLO_ButtonControl"
                         android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
+                        android:layout_height="match_parent"
                         android:gravity="center_horizontal"
                         android:orientation="horizontal">
 

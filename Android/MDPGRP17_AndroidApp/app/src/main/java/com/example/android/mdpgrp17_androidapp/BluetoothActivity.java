@@ -1,6 +1,7 @@
 package com.example.android.mdpgrp17_androidapp;
 
 import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothClass;
 import android.bluetooth.BluetoothDevice;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -257,12 +258,6 @@ public class BluetoothActivity extends AppCompatActivity implements CompoundButt
         Toast.makeText(getApplicationContext(), message, Toast.LENGTH_SHORT).show();
     }
 
-    // Turn on BT
-    // Check if current device is discoverable by other device
-    // Start discoverability no matter the outcome of the user
-    // Update UI - show menu refresh icon
-    // Update UI - show BT devices layout
-    // Update UI - set BT toggle button to ON
     private void showEnabled() {
         Log.d(TAG, "showEnabled");
         RLO_BT_DeviceList.setVisibility(View.VISIBLE);
@@ -279,10 +274,6 @@ public class BluetoothActivity extends AppCompatActivity implements CompoundButt
         TXTVW_BT_ThisDevice.setText(mBluetoothAdapter.getName());
     }
 
-    // Turn off BT
-    // Update UI - hide menu refresh icon
-    // Update UI - hide BT devices layout
-    // Update UI - set BT toggle button to OFF
     private void showDisabled() {
         Log.d(TAG, "showDisabled");
         RLO_BT_DeviceList.setVisibility(GONE);
@@ -350,9 +341,38 @@ public class BluetoothActivity extends AppCompatActivity implements CompoundButt
                     TextView device_MACAddress = ((TextView) view.findViewById(R.id.device_MACAddress));
                     TextView device_status = ((TextView) view.findViewById(R.id.device_status));
                     Button device_unpair = ((Button) view.findViewById(R.id.device_unpair));
-                    device_image.setImageResource(R.drawable.ic_devices_other_black_24dp);
-                    device_name.setText(mRemoteDevice.getName());
+
+                    device_name.setText(mRemoteDevice.getName() +
+                            "(" + mRemoteDevice.getBluetoothClass().getMajorDeviceClass() +
+                            " - " + mRemoteDevice.getBluetoothClass().getDeviceClass() + ")");
                     device_MACAddress.setText(mRemoteDevice.getAddress());
+
+                    switch (mRemoteDevice.getBluetoothClass().getMajorDeviceClass()) {
+                        case BluetoothClass.Device.Major.AUDIO_VIDEO:
+                            device_image.setImageResource(R.drawable.ic_music_video_black_24dp);
+                            break;
+                        case BluetoothClass.Device.Major.PHONE:
+                            if (mRemoteDevice.getBluetoothClass().getDeviceClass() == BluetoothClass.Device.PHONE_SMART) {
+                                device_image.setImageResource(R.drawable.ic_smartphone_black_24dp);
+                            } else if (mRemoteDevice.getBluetoothClass().getDeviceClass() == BluetoothClass.Device.PHONE_CELLULAR) {
+                                device_image.setImageResource(R.drawable.ic_phone_black_24dp);
+                            }
+                            break;
+                        case BluetoothClass.Device.Major.COMPUTER:
+                            if (mRemoteDevice.getBluetoothClass().getDeviceClass() == BluetoothClass.Device.COMPUTER_LAPTOP) {
+                                device_image.setImageResource(R.drawable.ic_laptop_black_24dp);
+                            } else if (mRemoteDevice.getBluetoothClass().getDeviceClass() == BluetoothClass.Device.COMPUTER_DESKTOP) {
+                                device_image.setImageResource(R.drawable.ic_desktop_windows_black_24dp);
+                            }
+                            break;
+                        case BluetoothClass.Device.Major.WEARABLE:
+                            break;
+                        case BluetoothClass.Device.Major.HEALTH:
+                            break;
+                        case BluetoothClass.Device.Major.UNCATEGORIZED:
+                            device_image.setImageResource(R.drawable.ic_devices_other_black_24dp);
+                            break;
+                    }
 
                     if (mBTDeviceList.get(position).getBondState() == BluetoothDevice.BOND_BONDED) {
                         if (mBTCurrentState == BT_CONNECTION_STATE_CONNECTED && mRemoteDevice.equals(mBluetoothDevice_Selected)) {
@@ -364,10 +384,10 @@ public class BluetoothActivity extends AppCompatActivity implements CompoundButt
                         }
                     } else if (mBTDeviceList.get(position).getBondState() == BluetoothDevice.BOND_BONDING) {
                         device_status.setText("Pairing");
-                    } else if (mBTDeviceList.get(position).getBondState() == BluetoothDevice.BOND_NONE) {
+                    } else if (mBTDeviceList.get(position).
+                            getBondState() == BluetoothDevice.BOND_NONE) {
                         device_status.setText("Not Paired");
                         device_unpair.setVisibility(GONE);
-
                     }
                     device_unpair.setOnClickListener(new View.OnClickListener() {
                         @Override
@@ -393,7 +413,6 @@ public class BluetoothActivity extends AppCompatActivity implements CompoundButt
                     BluetoothDevice mRemoteDevice = mBTDeviceList.get(position);
                     Log.d(TAG, "Clicked on " + mRemoteDevice.getName() + ", bondstate: " + mRemoteDevice.getBondState());
 
-
                     if (mRemoteDevice.getBondState() == BluetoothDevice.BOND_BONDED) {
                         if (mBTCurrentState == BT_CONNECTION_STATE_CONNECTED) {
                             Log.d(TAG, "Clicked on " + mRemoteDevice.getName() + " was connected, disconnecting now");
@@ -406,15 +425,10 @@ public class BluetoothActivity extends AppCompatActivity implements CompoundButt
                         // updateGUI_ListView_BTDeviceList();  // update GUI
                     } else if (mRemoteDevice.getBondState() == BluetoothDevice.BOND_BONDING) {
                         Log.d(TAG, "Clicked on " + mRemoteDevice.getName() + " was pairing, pairing again");
-//
-//                         mBluetoothConnection.disconnect();
-//                        mBluetoothConnection.startConnectThread(mRemoteDevice, true);
+
                         pairDevice(mRemoteDevice);
-//                        unpairDevice(mRemoteDevice);
                     } else {
                         Log.d(TAG, "Clicked on " + mRemoteDevice.getName() + " was not paired, pairing now");
-//                        mBluetoothConnection.disconnect();
-//                        mBluetoothConnection.startConnectThread(mRemoteDevice, true);
                         pairDevice(mRemoteDevice);
                     }
 
@@ -426,7 +440,9 @@ public class BluetoothActivity extends AppCompatActivity implements CompoundButt
                     LTVW_BT_DeviceList.setSelection(LTVW_BT_DeviceList.getCount() - 1);
                 }
             });
-        } else {
+        } else
+
+        {
             Log.e(TAG, "updateGUI_ListView_BTDeviceList: mBTDeviceList was null");
         }
 
@@ -589,7 +605,8 @@ public class BluetoothActivity extends AppCompatActivity implements CompoundButt
 
         }
     };
-    private void initialiseBTDeviceList(){
+
+    private void initialiseBTDeviceList() {
         Set<BluetoothDevice> mPairedDevices = mBluetoothAdapter.getBondedDevices(); // list of paired devices
         mBTDeviceList = new ArrayList<BluetoothDevice>();   // always create new list
         for (BluetoothDevice pairedDevice : mPairedDevices) {

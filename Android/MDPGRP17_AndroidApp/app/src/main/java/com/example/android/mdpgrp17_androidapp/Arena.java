@@ -56,6 +56,8 @@ public class Arena extends View {
     private static final String TAG = "Arena";
     // GUI objects
     private RelativeLayout RLO_ArenaGrid;
+    private TextView TXTVW_ControlMode;
+    private TextView TXTVW_MDFString;
     private TextView TXTVW_RobotStatusValue;
     private TextView TXTVW_WayPointValue;
     private TextView TXTVW_WayPoint;
@@ -72,7 +74,7 @@ public class Arena extends View {
     private boolean isRobotAtStartPosition = false, isRobotAtEndPosition = false;
     private int touchMode;
     private int[] arenaInfoString = new int[300];   // to store arena info
-    private int[][] arenaInfo = new int[20][15], travelInfo = new int[20][15], displayInfo = new int[20][15], exploredPathInfo, obstacleInfo;
+    private int[][] arenaInfo = new int[20][15], travelInfo = new int[20][15], displayInfo = new int[20][15], exploredPathInfo, obstacleInfo = new int[20][15];
     private Boolean isMapMode_Auto = true; // always auto update map
     private int saveStateIndex_Pause, saveStateIndex_InArray, saveStateIndex_WayPointWasSetAt;   // negative to ensure default value, use to transverse the array of the saved state
     private ArrayList<ArenaSaveState> saveStateArrayList;
@@ -113,7 +115,6 @@ public class Arena extends View {
             removeWayPoint();
         }
         exploredPathInfo = new int[20][15]; // cannot always renew explored array. so initialize once
-        obstacleInfo = new int[20][15]; // cannot always renew obstacle array. so initialize once
     }
 
     @Override
@@ -130,6 +131,7 @@ public class Arena extends View {
                     Log.d(TAG, "onTouchEvent: TOUCHMODE_SETWAYPOINT: way point was not locked");
                     int touched_Col = (int) (motionEvent.getX() / grid_Size);
                     int touched_Row = (int) (motionEvent.getY() / grid_Size);
+
                     if (touched_Row == wayPointPosition_Row_Center && touched_Col == wayPointPosition_Col_Center) {
                         wayPointPosition_Col_Center = touched_Col;
                         wayPointPosition_Row_Center = touched_Row;
@@ -537,7 +539,7 @@ public class Arena extends View {
         ArenaSaveState arenaSaveState = new ArenaSaveState(saveState_Temp_ArenaInfo, saveState_Temp_TravelInfo,
                 isWayPointReached, robotPosition_Row_Center, robotPosition_Col_Center, robotDirection);
         saveStateArrayList.add(arenaSaveState);
-        printArenaInfo();
+//        printArenaInfo();
     }
 
     private void showToast_Short(String message) {
@@ -748,6 +750,7 @@ public class Arena extends View {
 
     }
 
+    // Getters and Setters
     public Boolean getMapMode() {
         return isMapMode_Auto;
     }
@@ -780,7 +783,6 @@ public class Arena extends View {
         return saveStateArrayList;
     }
 
-    // Getters and Setters
     public void setSaveStateArrayList(ArrayList<ArenaSaveState> saveStateArrayList) {
         this.saveStateArrayList = saveStateArrayList;
     }
@@ -831,6 +833,40 @@ public class Arena extends View {
         this.robotDirection = robotDirection;
     }
 
+    private void setObstacle(String content) {
+        Log.d(TAG, "setObstacle: " + content);
+        String[] contentArray = content.replace("EXPLORED,", "").split(",");     // raw string
+        int[][] contentArrayAlgo = new int[15][20];     // convert into algo array
+        int[][] contentArrayAndroid = new int[20][15];  // convert into android array
+        obstacleInfo = new int[20][15];
+        int rowIndex, colIndex;
+        int index = 0;
+        Log.d(TAG, "setObstacle: Converting into algo array");
+        for (rowIndex = 0; rowIndex < grid_Col; rowIndex++) {
+            for (colIndex = 0; colIndex < grid_Row; colIndex++, index++) {
+                contentArrayAlgo[rowIndex][colIndex] = Integer.parseInt(contentArray[index]);
+                contentArrayAndroid[colIndex][rowIndex] = contentArrayAlgo[rowIndex][colIndex];
+            }
+        }
+        Log.d(TAG, "setObstacle: Converting into android array");
+        int temp[];
+        for (int rowIndex1 = 0; rowIndex1 < 10; rowIndex1++) {  // swap rows
+            temp = contentArrayAndroid[contentArrayAndroid.length - rowIndex1 - 1];    // first item row value
+            contentArrayAndroid[contentArrayAndroid.length - rowIndex1 - 1] = contentArrayAndroid[rowIndex1];
+            contentArrayAndroid[rowIndex1] = temp;
+        }
+        Log.d(TAG, "setObstacle: Setting obstacle");
+        for (int rowIndex2 = 1; rowIndex2 <= grid_Row; rowIndex2++) {
+            for (int colIndex2 = 1; colIndex2 <= grid_Col; colIndex2++) {
+                int resultInfoValue = Integer.valueOf(contentArrayAndroid[rowIndex2 - 1][colIndex2 - 1]);
+                if (resultInfoValue == 2) {
+                    Log.d(TAG, "setObstacle: obstacle found at " + colIndex2 + ", " + rowIndex2);
+                    obstacleInfo[rowIndex2 - 1][colIndex2 - 1] = ARENA_GRID_OBSTACLE;
+                }
+            }
+        }
+    }
+
     // Draw Methods
     private void drawStartPosition() {
         Log.d(TAG, "drawStartPosition");
@@ -877,10 +913,12 @@ public class Arena extends View {
                     saveStateIndex_WayPointWasSetAt = saveStateArrayList.size() - 1;
                     Log.d(TAG, "drawWayPoint: saveStateIndex_WayPointWasSetAt: " + saveStateIndex_WayPointWasSetAt);
                 }
+
+                int displayRow = 21 - wayPointPosition_Row_Center;
+                TXTVW_WayPointValue.setText((wayPointPosition_Col_Center - 1) + "," + (displayRow - 1));
             }
 
 
-            TXTVW_WayPointValue.setText(wayPointPosition_Col_Center + "," + wayPointPosition_Row_Center);
             if (isMapMode_Auto) {
                 // set the GUI text color for the latest state
                 if (isWayPointReached) {
@@ -1040,18 +1078,14 @@ public class Arena extends View {
             if (isUpDown) {
                 for (int colIndexCount = robotPosition_Col; colIndexCount <= robotPosition_Col + 2; colIndexCount++) {
                     if (colIndexCount != robotPosition_Col + 1) {
-//                        Log.d(TAG, "drawing up down body: " + (robotDirection_body - 1) + ", " + (colIndexCount - 1));
                         checkRobotDirectionOnAnyThing(robotDirection_body, colIndexCount); // 0 based
                     }
-                    //arenaInfo[robotDirection_body - 1][colIndexCount - 1] = ARENA_ROBOT_DIRECTION; // body
                 }
             } else {
                 for (int rowIndexCount = robotPosition_Row; rowIndexCount <= robotPosition_Row + 2; rowIndexCount++) {
                     if (rowIndexCount != robotPosition_Row + 1) {
-//                        Log.d(TAG, "drawing left right body: " + (rowIndexCount - 1) + ", " + (robotDirection_body - 1));
                         checkRobotDirectionOnAnyThing(rowIndexCount, robotDirection_body); // 0 based
                     }
-                    // arenaInfo[rowIndexCount - 1][robotDirection_body - 1] = ARENA_ROBOT_DIRECTION; // body
                 }
             }
         }
@@ -1109,7 +1143,7 @@ public class Arena extends View {
                 int arenaInfoValue = arenaInfo[rowIndex - 1][colIndex - 1];
                 int obstacleInfoValue = obstacleInfo[rowIndex - 1][colIndex - 1];
                 if (obstacleInfoValue == ARENA_GRID_OBSTACLE) {
-                    if (arenaInfoValue == ARENA_GRID) {
+                    if (arenaInfoValue == ARENA_ROBOT_EXPLOREDPATH) {
                         arenaInfo[rowIndex - 1][colIndex - 1] = ARENA_GRID_OBSTACLE;
                     }
                 }
@@ -1118,10 +1152,11 @@ public class Arena extends View {
     }
 
     private void drawExploredPath() {
+        Log.d(TAG, "drawExploredPath");
 
         int exploredPath_Row = -1, exploredPath_Col = -1;
         if (robotDirection == 0) { // facing up
-            Log.d(TAG, "drawExploredPath: facing up");
+            Log.d(TAG, "drawExploredPath:  facing up");
             // draw left/middle/right sensor facing front(s1, s2, s4) explored 3 grids ahead
             exploredPath_Row = robotPosition_Row - 3 < 1 ? 1 : robotPosition_Row - 3; // prevent index out of bound
             for (int rowIndex = exploredPath_Row; rowIndex <= exploredPath_Row + 2; rowIndex++) {
@@ -1141,7 +1176,7 @@ public class Arena extends View {
                 arenaInfo[robotPosition_Row][colIndex - 1] = ARENA_ROBOT_EXPLOREDPATH;
             }
         } else if (robotDirection == 90) { // facing right
-            Log.d(TAG, "drawExploredPath: facing right");
+            Log.d(TAG, "drawExploredPath:  facing right");
             // draw left/middle/right sensor facing right (s1, s2, s4) explored 3 grids ahead
             exploredPath_Col = robotPosition_Col + 3 > 13 ? 13 : robotPosition_Col + 3; // prevent index out of bound
             for (int rowIndex = robotPosition_Row; rowIndex <= robotPosition_Row + 2; rowIndex++) {
@@ -1160,7 +1195,7 @@ public class Arena extends View {
                 arenaInfo[rowIndex - 1][robotPosition_Col] = ARENA_ROBOT_EXPLOREDPATH;
             }
         } else if (robotDirection == 180) { // facing down
-            Log.d(TAG, "drawExploredPath: facing down");
+            Log.d(TAG, "drawExploredPath:  facing down");
             // draw left/middle/right sensor facing down (s1, s2, s4) explored 3 grids ahead
             exploredPath_Row = robotPosition_Row + 3 > 18 ? 18 : robotPosition_Row + 3; // prevent index out of bound
             for (int rowIndex = exploredPath_Row; rowIndex <= exploredPath_Row + 2; rowIndex++) {
@@ -1171,7 +1206,7 @@ public class Arena extends View {
             // draw sensor (s5) explored 5 grids (long range)
             exploredPath_Col = robotPosition_Col + 3;
             for (int colIndex = exploredPath_Col; colIndex <= exploredPath_Col + 4; colIndex++) {
-                if (colIndex <= grid_Col) // prevent index out of bound
+                if (colIndex < grid_Col) // prevent index out of bound
                     arenaInfo[robotPosition_Row + 1][colIndex - 1] = ARENA_ROBOT_EXPLOREDPATH;
             }
             // draw sensor (s3) explored 3 grids
@@ -1180,7 +1215,7 @@ public class Arena extends View {
                 arenaInfo[robotPosition_Row][colIndex - 1] = ARENA_ROBOT_EXPLOREDPATH;
             }
         } else if (robotDirection == 270) { // facing left
-            Log.d(TAG, "drawExploredPath: facing left");
+            Log.d(TAG, "drawExploredPath:  facing left");
             // draw left/middle/right sensor facing left (s1, s2, s4) explored 3 grids ahead
             exploredPath_Col = robotPosition_Col - 3 < 1 ? 1 : robotPosition_Col - 3;
             for (int rowIndex = robotPosition_Row; rowIndex <= robotPosition_Row + 2; rowIndex++) {
@@ -1220,32 +1255,28 @@ public class Arena extends View {
                 }
             }
         }
-
     }
 
-    // Connected to robot
+    // Decode method - connected to robot
     public void decodeAlgorithm(String content) {
         Log.d(TAG, "decodeAlgorithm: content: " + content);
-        // final MainActivity mainActivity = (MainActivity) getContext();
+        TXTVW_ControlMode = (TextView) getRootView().findViewById(R.id.TXTVW_ControlMode);
+        TXTVW_MDFString = (TextView) getRootView().findViewById(R.id.TXTVW_MDFString);
         TXTVW_RobotStatusValue = (TextView) getRootView().findViewById(R.id.TXTVW_RobotStatusValue);
         arenaInfo = new int[grid_Row][grid_Col];
-        char cmd_Char = content.charAt(0); // to draw obstacle since received content is not consistent due to X,Y value
-        if (cmd_Char == 'o') { // EG: y18|12
-            Log.d(TAG, "decodeAlgorithm: content.substring:" + (content.substring(1)));
-            String[] obstacleArray = (content.substring(1)).split(",");
-            // o,3,10
-            int obstacle_Col = -1, obstacle_Row = -1;
-            try {
-                obstacle_Col = Integer.valueOf(obstacleArray[1]);
-                obstacle_Row = Integer.valueOf(obstacleArray[2]);
-                Log.d(TAG, "decodeAlgorithm: obstacleValue: X,Y " + obstacle_Col + "," + obstacle_Row);
-                // if (arenaInfo[obstacle_Row][obstacle_Col] == ARENA_GRID)
-                arenaInfo[obstacle_Row - 1][obstacle_Col - 1] = ARENA_GRID_OBSTACLE;
-            } catch (Exception ex) {
-                Log.e(TAG, "decodeAlgorithm: obstacleValue: X,Y " + obstacle_Col + "," + obstacle_Row + ": Error: " + ex.getMessage());
-            }
+        if (content.charAt(0) == 'm') {
+            // display mdf string
+            TXTVW_MDFString.setText(content.substring(1));
+            TXTVW_MDFString.setVisibility(VISIBLE);
+            TXTVW_ControlMode.setText("Eploration Complete");
         }
         switch (content) {
+            case "q|":
+            case "q":
+                // stop exploration
+//                final MainActivity mainActivity = (MainActivity) getContext();
+//                mainActivity.updateGUI_GameMode(ARENA_GAME_MODE_BUTTON);
+                break;
             case "i|":
             case "i":
             case CMD_FORWARD:
@@ -1379,10 +1410,14 @@ public class Arena extends View {
                 }
                 break;
         }
+        // set the robot center position
         robotPosition_Row_Center = robotPosition_Row + 1;
         robotPosition_Col_Center = robotPosition_Col + 1;
 
         drawExploredPath();
+        if (content.contains("EXPLORED")) {
+            setObstacle(content);
+        }
         drawObstacle();
         drawStartPosition();
         drawEndPosition();
@@ -1392,7 +1427,7 @@ public class Arena extends View {
         drawTravelPath();
         drawWayPointReached();
 
-        saveArenaState();   // save algorithm
+        saveArenaState();   // save state for algorithm
 
     }
 
@@ -1448,5 +1483,6 @@ public class Arena extends View {
         }
         saveArenaState(); // save get arena info
     }
+
 
 }
