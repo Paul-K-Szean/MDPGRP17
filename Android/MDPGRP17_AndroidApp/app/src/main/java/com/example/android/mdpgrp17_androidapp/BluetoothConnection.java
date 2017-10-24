@@ -436,15 +436,15 @@ public class BluetoothConnection {
                     mHandler.obtainMessage(GlobalVariables.BT_CONNECTION_STATE_CONNECTIONFAILED).sendToTarget();
                     if (isConnectionSecure) {
                         if (mSecureAcceptThread == null) {
-                            Log.d(TAG, "ConnectThread: isConnectionSecure: " + isConnectionSecure + ": starting new accept thread" + mSecureAcceptThread.mServerSocket);
                             startAcceptThread(true);
+                            Log.d(TAG, "ConnectThread: isConnectionSecure: " + isConnectionSecure + ": starting new accept thread" + mSecureAcceptThread.mServerSocket);
                         } else {
                             Log.d(TAG, "ConnectThread: isConnectionSecure: " + isConnectionSecure + ": Accept thread already started" + mSecureAcceptThread.mServerSocket);
                         }
                     } else {
                         if (mInSecureAcceptThread == null) {
-                            Log.d(TAG, "ConnectThread: isConnectionSecure: " + isConnectionSecure + ": starting new accept thread" + mInSecureAcceptThread.mServerSocket);
                             startAcceptThread(true);
+                            Log.d(TAG, "ConnectThread: isConnectionSecure: " + isConnectionSecure + ": starting new accept thread" + mInSecureAcceptThread.mServerSocket);
                         } else {
                             Log.d(TAG, "ConnectThread: isConnectionSecure: " + isConnectionSecure + ": Accept thread already started: " + mInSecureAcceptThread.mServerSocket);
                         }

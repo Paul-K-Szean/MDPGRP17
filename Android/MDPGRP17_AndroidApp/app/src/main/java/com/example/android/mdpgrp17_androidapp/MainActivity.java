@@ -285,8 +285,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     mBluetoothConnection.write(BluetoothMessageEntity.sendCommand(CMD_CALIBRATEROBOT));
                     showToast_Short("Calibrating robot");
                 } else {
-                    showToast_Short("Unable to calibrate robot. Please connect to robot: " +
-                            mBluetoothConnection.getConnectedRemoteDevice().getName());
+                    showToast_Short("Unable to calibrate robot. Please connect to robot Rpi");
                 }
             } else {
                 showToast_Short("No device connected");
@@ -853,6 +852,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 LLO_ButtonControl.setVisibility(GONE);
                 TXTVW_ControlMode.setText("Fastest path mode");
                 TXTVW_ControlMode.setVisibility(VISIBLE);
+                TXTVW_MDFString.setVisibility(VISIBLE);
                 if (mBTCurrentState == BT_CONNECTION_STATE_CONNECTED) {
                     String wayPointString = TXTVW_WayPointValue.getText().toString();
                     String wayPointArray[] = wayPointString.split(",");

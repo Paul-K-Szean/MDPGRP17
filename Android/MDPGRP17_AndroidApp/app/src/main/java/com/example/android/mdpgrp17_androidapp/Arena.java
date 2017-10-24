@@ -359,6 +359,11 @@ public class Arena extends View {
                     drawCell(rowIndex, colIndex, grid_Size, R.color.color_Arena_RobotExploredPath, canvas);
                 }
 
+                paint.setColor(Color.BLACK);
+                paint.setTextSize(12);
+                canvas.drawText((colIndex - 1) + "," + (21 - rowIndex - 1),
+                        (colIndex * grid_Size - grid_Size / 2) + 6,
+                        ((rowIndex * grid_Size - grid_Size / 2) + 24), paint);
             }
         }
     }
@@ -377,6 +382,9 @@ public class Arena extends View {
         paint.setStyle(Paint.Style.STROKE);
         canvas.drawRect(new RectF(X, Y, _X, _Y), paint);
 
+//        paint.setColor(Color.BLACK);
+//        paint.setTextSize(12);
+//        canvas.drawText((col - 1) + "," + (21 - row - 1), X + 6, (Y + 24), paint);
     }
 
     // Draw Cell With Border
@@ -471,11 +479,12 @@ public class Arena extends View {
         // set start position
         drawStartPosition();
         // set end position
-        drawEndPosition();
-        drawWayPoint();     // @setupNakedGrid
-        drawRobotPosition();
-        drawRobotDirection();
-        saveArenaState();   // @setupNakedGrid save initial setup
+        drawEndPosition();      // @setupNakedGrid
+        drawWayPoint();         // @setupNakedGrid
+        drawRobotPosition();    // @setupNakedGrid
+        drawRobotDirection();   // @setupNakedGrid
+        drawTravelPath();       // @setupNakedGrid
+        saveArenaState();       // @setupNakedGrid save initial setup
     }
 
     // Debug - not used
@@ -678,15 +687,17 @@ public class Arena extends View {
             robotPosition_Col_Center = saveStateArrayList.get(saveStateArrayList.size() - 1).getRobotPosition_Col_Center();
             for (int rowIndex = robotPosition_Row; rowIndex <= robotPosition_Row + 2; rowIndex++) {
                 for (int colIndex = robotPosition_Col; colIndex <= robotPosition_Col + 2; colIndex++) {
-                    int checkWayPointValue = checkWayPointArray[rowIndex - 1][colIndex - 1];
-                    // Log.d(TAG, "checkWayPointReached: checkWayPointValue: " + checkWayPointValue);
-                    if (checkWayPointValue == ARENA_GRID_WAYPOINT ||
-                            checkWayPointValue == ARENA_ROBOT_DIRECTION_WITH_WAYPOINT ||
-                            checkWayPointValue == ARENA_ROBOT_POSITION_WITH_WAYPOINT) {
-                        Log.d(TAG, "checkWayPointReached: Way Point Reached");
-                        isWayPointReached = true;
-                        // showToast_Short("Way Point Reach!");
-                        break;
+                    if (rowIndex <= grid_Row && colIndex <= grid_Col) {
+                        int checkWayPointValue = checkWayPointArray[rowIndex - 1][colIndex - 1];
+                        // Log.d(TAG, "checkWayPointReached: checkWayPointValue: " + checkWayPointValue);
+                        if (checkWayPointValue == ARENA_GRID_WAYPOINT ||
+                                checkWayPointValue == ARENA_ROBOT_DIRECTION_WITH_WAYPOINT ||
+                                checkWayPointValue == ARENA_ROBOT_POSITION_WITH_WAYPOINT) {
+                            Log.d(TAG, "checkWayPointReached: Way Point Reached");
+                            isWayPointReached = true;
+                            // showToast_Short("Way Point Reach!");
+                            break;
+                        }
                     }
                 }
             }
@@ -728,26 +739,28 @@ public class Arena extends View {
     }
 
     private void checkRobotDirectionOnAnyThing(int robotDirection_Row, int robotDirection_Col) {
-        robotDirection_Row = robotDirection_Row - 1;
-        robotDirection_Col = robotDirection_Col - 1;
-        int arenaInfoValue = arenaInfo[robotDirection_Row][robotDirection_Col];
-        // Log.d(TAG, "drawRobotDirection: checkRobotDirectionOnAnyThing: " + arenaInfo[robotDirection_Row][robotDirection_Col]);
-        // to draw border on start/end position, redraw way point
-        if (arenaInfoValue == ARENA_ROBOT_POSITION_WITH_STARTPOSITION) {
+        robotDirection_Row -= 1; // 0 based
+        robotDirection_Col -= 1; // 0 based
+        if (robotDirection_Row >= 0 &&
+                robotDirection_Row < grid_Row &&
+                robotDirection_Col >= 0 &&
+                robotDirection_Col < grid_Col) {
+            int arenaInfoValue = arenaInfo[robotDirection_Row][robotDirection_Col];
+            // to draw border on start/end position, redraw way point
+            if (arenaInfoValue == ARENA_ROBOT_POSITION_WITH_STARTPOSITION) {
 //            Log.d(TAG, "drawRobotDirection: checkRobotDirectionOnAnyThing: " + robotPosition_Row + "," + robotPosition_Col + ": at ARENA_GRID_STARTPOSITION");
-            arenaInfo[robotDirection_Row][robotDirection_Col] = ARENA_ROBOT_DIRECTION_WITH_STARTPOSITION;
-        } else if (arenaInfoValue == ARENA_ROBOT_POSITION_WITH_ENDPOSITION) {
+                arenaInfo[robotDirection_Row][robotDirection_Col] = ARENA_ROBOT_DIRECTION_WITH_STARTPOSITION;
+            } else if (arenaInfoValue == ARENA_ROBOT_POSITION_WITH_ENDPOSITION) {
 //            Log.d(TAG, "drawRobotDirection: checkRobotDirectionOnAnyThing: " + robotPosition_Row + "," + robotPosition_Col + ": at ARENA_GRID_ENDPOSITION");
-            arenaInfo[robotDirection_Row][robotDirection_Col] = ARENA_ROBOT_DIRECTION_WITH_ENDPOSITION;
-        } else if (arenaInfoValue == ARENA_ROBOT_POSITION_WITH_WAYPOINT) {
+                arenaInfo[robotDirection_Row][robotDirection_Col] = ARENA_ROBOT_DIRECTION_WITH_ENDPOSITION;
+            } else if (arenaInfoValue == ARENA_ROBOT_POSITION_WITH_WAYPOINT) {
 //            Log.d(TAG, "drawRobotDirection: checkRobotDirectionOnAnyThing: " + robotPosition_Row + "," + robotPosition_Col + ": at ARENA_ROBOT_POSITION_WITH_WAYPOINT");
-            arenaInfo[robotDirection_Row][robotDirection_Col] = ARENA_ROBOT_DIRECTION_WITH_WAYPOINT;
-        } else if (arenaInfoValue == ARENA_ROBOT_POSITION) {
+                arenaInfo[robotDirection_Row][robotDirection_Col] = ARENA_ROBOT_DIRECTION_WITH_WAYPOINT;
+            } else if (arenaInfoValue == ARENA_ROBOT_POSITION) {
 //            Log.d(TAG, "drawRobotDirection: checkRobotDirectionOnAnyThing: " + robotPosition_Row + "," + robotPosition_Col + ": at ARENA_ROBOT_POSITION");
-            arenaInfo[robotDirection_Row][robotDirection_Col] = ARENA_ROBOT_DIRECTION;
+                arenaInfo[robotDirection_Row][robotDirection_Col] = ARENA_ROBOT_DIRECTION;
+            }
         }
-
-
     }
 
     // Getters and Setters
@@ -995,34 +1008,33 @@ public class Arena extends View {
         // set robot position, check if robot position is within grid
         if (robotPosition_Row >= 1 && robotPosition_Row <= grid_Row && robotPosition_Col >= 1 && robotPosition_Col <= grid_Col) {
             for (int rowIndex = robotPosition_Row; rowIndex <= robotPosition_Row + 2; rowIndex++) {
-                if (rowIndex >= grid_Row)
-                    rowIndex = grid_Row;
-                for (int colIndex = robotPosition_Col; colIndex <= robotPosition_Col + 2; colIndex++) {
-                    if (colIndex >= grid_Col)
-                        colIndex = grid_Col;
-                    int arenaInfoValue = arenaInfo[rowIndex - 1][colIndex - 1];
-                    if (arenaInfoValue == ARENA_GRID_STARTPOSITION) {
-                        Log.d(TAG, "drawRobotPosition: Y,X: " + (rowIndex) + "," + (colIndex) + ": " + arenaInfoValue + " , top left reference point. ARENA_GRID_STARTPOSITION");
-                        arenaInfo[rowIndex - 1][colIndex - 1] = ARENA_ROBOT_POSITION_WITH_STARTPOSITION;
-                    } else if (arenaInfoValue == ARENA_GRID_ENDPOSITION) {
-                        Log.d(TAG, "drawRobotPosition: Y,X: " + (rowIndex) + "," + (colIndex) + ": " + arenaInfoValue + " , top left reference point. ARENA_GRID_ENDPOSITION");
-                        arenaInfo[rowIndex - 1][colIndex - 1] = ARENA_ROBOT_POSITION_WITH_ENDPOSITION;
-                    } else if (arenaInfoValue == ARENA_GRID_WAYPOINT) {
-                        Log.d(TAG, "drawRobotPosition: Y,X: " + (rowIndex) + "," + (colIndex) + ": " + arenaInfoValue + " , top left reference point. ARENA_GRID_WAYPOINT");
-                        arenaInfo[rowIndex - 1][colIndex - 1] = ARENA_ROBOT_POSITION_WITH_WAYPOINT;
-                    } else if (arenaInfoValue == ARENA_ROBOT_POSITION) {
-                        if (robotPosition_Row_Center == wayPointPosition_Row_Center && robotPosition_Col_Center == wayPointPosition_Col_Center) {
-                            Log.d(TAG, "drawRobotPosition: Y,X: " + (rowIndex) + "," + (colIndex) + ": " + arenaInfoValue + " , top left reference point. ARENA_ROBOT_POSITION Way Point");
-                            arenaInfo[rowIndex - 1][colIndex - 1] = ARENA_ROBOT_POSITION_WITH_WAYPOINT;
-                        } else {
-                            Log.d(TAG, "drawRobotPosition: Y,X: " + (rowIndex) + "," + (colIndex) + ": " + arenaInfoValue + " , top left reference point. ARENA_ROBOT_POSITION Only");
-                            arenaInfo[rowIndex - 1][colIndex - 1] = ARENA_ROBOT_POSITION;
+                if (rowIndex <= grid_Row)
+                    for (int colIndex = robotPosition_Col; colIndex <= robotPosition_Col + 2; colIndex++) {
+                        if (colIndex <= grid_Col) {
+                            int arenaInfoValue = arenaInfo[rowIndex - 1][colIndex - 1];
+                            if (arenaInfoValue == ARENA_GRID_STARTPOSITION) {
+                                //Log.d(TAG, "drawRobotPosition: Y,X: " + (rowIndex) + "," + (colIndex) + ": " + arenaInfoValue + " , top left reference point. ARENA_GRID_STARTPOSITION");
+                                arenaInfo[rowIndex - 1][colIndex - 1] = ARENA_ROBOT_POSITION_WITH_STARTPOSITION;
+                            } else if (arenaInfoValue == ARENA_GRID_ENDPOSITION) {
+                                //Log.d(TAG, "drawRobotPosition: Y,X: " + (rowIndex) + "," + (colIndex) + ": " + arenaInfoValue + " , top left reference point. ARENA_GRID_ENDPOSITION");
+                                arenaInfo[rowIndex - 1][colIndex - 1] = ARENA_ROBOT_POSITION_WITH_ENDPOSITION;
+                            } else if (arenaInfoValue == ARENA_GRID_WAYPOINT) {
+                                //Log.d(TAG, "drawRobotPosition: Y,X: " + (rowIndex) + "," + (colIndex) + ": " + arenaInfoValue + " , top left reference point. ARENA_GRID_WAYPOINT");
+                                arenaInfo[rowIndex - 1][colIndex - 1] = ARENA_ROBOT_POSITION_WITH_WAYPOINT;
+                            } else if (arenaInfoValue == ARENA_ROBOT_POSITION) {
+                                if (robotPosition_Row_Center == wayPointPosition_Row_Center && robotPosition_Col_Center == wayPointPosition_Col_Center) {
+                                    //Log.d(TAG, "drawRobotPosition: Y,X: " + (rowIndex) + "," + (colIndex) + ": " + arenaInfoValue + " , top left reference point. ARENA_ROBOT_POSITION Way Point");
+                                    arenaInfo[rowIndex - 1][colIndex - 1] = ARENA_ROBOT_POSITION_WITH_WAYPOINT;
+                                } else {
+                                    //Log.d(TAG, "drawRobotPosition: Y,X: " + (rowIndex) + "," + (colIndex) + ": " + arenaInfoValue + " , top left reference point. ARENA_ROBOT_POSITION Only");
+                                    arenaInfo[rowIndex - 1][colIndex - 1] = ARENA_ROBOT_POSITION;
+                                }
+                            } else {
+                                //Log.d(TAG, "drawRobotPosition: Y,X: " + (rowIndex) + "," + (colIndex) + ": " + arenaInfoValue + " , top left reference point. ELSE CLAUSE");
+                                arenaInfo[rowIndex - 1][colIndex - 1] = ARENA_ROBOT_POSITION;
+                            }
                         }
-                    } else {
-                        Log.d(TAG, "drawRobotPosition: Y,X: " + (rowIndex) + "," + (colIndex) + ": " + arenaInfoValue + " , top left reference point. ELSE CLAUSE");
-                        arenaInfo[rowIndex - 1][colIndex - 1] = ARENA_ROBOT_POSITION;
                     }
-                }
             }
         }
     }
@@ -1040,7 +1052,7 @@ public class Arena extends View {
             robotDirection_body = robotPosition_Row + 1;
             if (robotPosition_Row >= 1 && robotPosition_Row <= grid_Row && robotPosition_Col >= 1 && robotPosition_Col <= grid_Col) {
                 Log.d(TAG, "drawRobotDirection: up");
-                checkRobotDirectionOnAnyThing(robotDirection_head_row, robotDirection_head_col); // 0 based array
+                checkRobotDirectionOnAnyThing(robotDirection_head_row, robotDirection_head_col); // 1 based array
             }
             isUpDown = true;
         }
@@ -1050,7 +1062,7 @@ public class Arena extends View {
             robotDirection_head_col = robotPosition_Col + 2;
             robotDirection_body = robotPosition_Col + 1;
             if (robotPosition_Row >= 1 && robotPosition_Row <= grid_Row && robotPosition_Col >= 1 && robotPosition_Col <= grid_Col) {
-                checkRobotDirectionOnAnyThing(robotDirection_head_row, robotDirection_head_col); // 0 based array
+                checkRobotDirectionOnAnyThing(robotDirection_head_row, robotDirection_head_col); // 1 based array
             }
         }
         if (robotDirection == 180) { // down
@@ -1059,7 +1071,7 @@ public class Arena extends View {
             robotDirection_head_col = robotPosition_Col + 1;
             robotDirection_body = robotPosition_Row + 1;
             if (robotPosition_Row >= 1 && robotPosition_Row <= grid_Row && robotPosition_Col >= 1 && robotPosition_Col <= grid_Col) {
-                checkRobotDirectionOnAnyThing(robotDirection_head_row, robotDirection_head_col); // 0 based array
+                checkRobotDirectionOnAnyThing(robotDirection_head_row, robotDirection_head_col); // 1 based array
             }
             isUpDown = true;
         }
@@ -1069,7 +1081,7 @@ public class Arena extends View {
             robotDirection_head_col = robotPosition_Col;
             robotDirection_body = robotPosition_Col + 1;
             if (robotPosition_Row >= 1 && robotPosition_Row <= grid_Row && robotPosition_Col >= 1 && robotPosition_Col <= grid_Col) {
-                checkRobotDirectionOnAnyThing(robotDirection_head_row, robotDirection_head_col); // 0 based array
+                checkRobotDirectionOnAnyThing(robotDirection_head_row, robotDirection_head_col); // 1 based array
             }
         }
 
@@ -1078,13 +1090,13 @@ public class Arena extends View {
             if (isUpDown) {
                 for (int colIndexCount = robotPosition_Col; colIndexCount <= robotPosition_Col + 2; colIndexCount++) {
                     if (colIndexCount != robotPosition_Col + 1) {
-                        checkRobotDirectionOnAnyThing(robotDirection_body, colIndexCount); // 0 based
+                        checkRobotDirectionOnAnyThing(robotDirection_body, colIndexCount); // 1 based
                     }
                 }
             } else {
                 for (int rowIndexCount = robotPosition_Row; rowIndexCount <= robotPosition_Row + 2; rowIndexCount++) {
                     if (rowIndexCount != robotPosition_Row + 1) {
-                        checkRobotDirectionOnAnyThing(rowIndexCount, robotDirection_body); // 0 based
+                        checkRobotDirectionOnAnyThing(rowIndexCount, robotDirection_body); // 1 based
                     }
                 }
             }
@@ -1097,7 +1109,8 @@ public class Arena extends View {
         // save previous position of robot into travel info array
         for (int paintRow = robotPosition_Row; paintRow <= robotPosition_Row + 2; paintRow++) {
             for (int paintCol = robotPosition_Col; paintCol <= robotPosition_Col + 2; paintCol++) {
-                travelInfo[paintRow - 1][paintCol - 1] = ARENA_ROBOT_TRAVELPATH;
+                if (paintRow <= grid_Row && paintCol <= grid_Col)
+                    travelInfo[paintRow - 1][paintCol - 1] = ARENA_ROBOT_TRAVELPATH;
             }
         }
         // set the travel info into arena info via checking previous robot position
@@ -1153,88 +1166,135 @@ public class Arena extends View {
 
     private void drawExploredPath() {
         Log.d(TAG, "drawExploredPath");
-
         int exploredPath_Row = -1, exploredPath_Col = -1;
-        if (robotDirection == 0) { // facing up
-            Log.d(TAG, "drawExploredPath:  facing up");
-            // draw left/middle/right sensor facing front(s1, s2, s4) explored 3 grids ahead
-            exploredPath_Row = robotPosition_Row - 3 < 1 ? 1 : robotPosition_Row - 3; // prevent index out of bound
-            for (int rowIndex = exploredPath_Row; rowIndex <= exploredPath_Row + 2; rowIndex++) {
+
+        // facing up
+        if (robotDirection == 0) {
+            Log.d(TAG, "drawExploredPath: facing up");
+            // draw front sensors
+            exploredPath_Row = robotPosition_Row - 3;
+            for (int rowIndex = exploredPath_Row; rowIndex <= robotPosition_Row - 1; rowIndex++) {
+                // prevent index out of bound
+                if (rowIndex > grid_Row) rowIndex = grid_Row;
+                if (rowIndex < 1) rowIndex = 1;
                 for (int colIndex = robotPosition_Col; colIndex <= robotPosition_Col + 2; colIndex++) {
+                    // prevent index out of bound
+                    if (colIndex > grid_Col) colIndex = grid_Col;
+                    if (colIndex < 1) colIndex = 1;
                     arenaInfo[rowIndex - 1][colIndex - 1] = ARENA_ROBOT_EXPLOREDPATH;
                 }
             }
-            // draw sensor (s5) explored 5 grids (long range)
+            // draw left sensor (long range)
             exploredPath_Col = robotPosition_Col - 5;
-            for (int colIndex = exploredPath_Col; colIndex <= exploredPath_Col + 5; colIndex++) {
-                if (colIndex > 0) // prevent index out of bound
-                    arenaInfo[robotPosition_Row - 1][colIndex - 1] = ARENA_ROBOT_EXPLOREDPATH;
+            for (int colIndex = exploredPath_Col; colIndex <= robotPosition_Col - 1; colIndex++) {
+                // prevent index out of bound
+                if (colIndex > grid_Col) colIndex = grid_Col;
+                if (colIndex < 1) colIndex = 1;
+                arenaInfo[robotPosition_Row - 1][colIndex - 1] = ARENA_ROBOT_EXPLOREDPATH;
             }
-            // draw sensor (s3) explored 3 grids
-            exploredPath_Col = robotPosition_Col + 3 > 13 ? 13 : robotPosition_Col + 3; // prevent index out of bound
-            for (int colIndex = exploredPath_Col; colIndex <= exploredPath_Col + 2; colIndex++) {
-                arenaInfo[robotPosition_Row][colIndex - 1] = ARENA_ROBOT_EXPLOREDPATH;
+            // draw right sensor (short range)
+            exploredPath_Col = robotPosition_Col + 5;
+            for (int colIndex = exploredPath_Col; colIndex >= robotPosition_Col + 3; colIndex--) {
+                // prevent index out of bound
+                if (colIndex > grid_Col) colIndex = grid_Col;
+                if (colIndex < 1) colIndex = 1;
+                arenaInfo[robotPosition_Row - 1][colIndex - 1] = ARENA_ROBOT_EXPLOREDPATH;
             }
-        } else if (robotDirection == 90) { // facing right
-            Log.d(TAG, "drawExploredPath:  facing right");
-            // draw left/middle/right sensor facing right (s1, s2, s4) explored 3 grids ahead
-            exploredPath_Col = robotPosition_Col + 3 > 13 ? 13 : robotPosition_Col + 3; // prevent index out of bound
-            for (int rowIndex = robotPosition_Row; rowIndex <= robotPosition_Row + 2; rowIndex++) {
-                for (int colIndex = exploredPath_Col; colIndex <= exploredPath_Col + 2; colIndex++) {
-                    arenaInfo[rowIndex - 1][colIndex - 1] = ARENA_ROBOT_EXPLOREDPATH;
-                }
-            }
-            // draw sensor (s5) explored 5 grids (long range)
-            exploredPath_Row = robotPosition_Row - 5 < 1 ? 1 : robotPosition_Row - 5; // prevent index out of bound
-            for (int rowIndex = exploredPath_Row; rowIndex <= exploredPath_Row + 5; rowIndex++) {
-                arenaInfo[rowIndex - 1][robotPosition_Col + 1] = ARENA_ROBOT_EXPLOREDPATH;
-            }
-            // draw sensor (s3) explored 3 grids
-            exploredPath_Row = robotPosition_Row + 3 > 18 ? 18 : robotPosition_Row + 3; // prevent index out of bound
-            for (int rowIndex = exploredPath_Row; rowIndex <= exploredPath_Row + 2; rowIndex++) {
-                arenaInfo[rowIndex - 1][robotPosition_Col] = ARENA_ROBOT_EXPLOREDPATH;
-            }
-        } else if (robotDirection == 180) { // facing down
-            Log.d(TAG, "drawExploredPath:  facing down");
-            // draw left/middle/right sensor facing down (s1, s2, s4) explored 3 grids ahead
-            exploredPath_Row = robotPosition_Row + 3 > 18 ? 18 : robotPosition_Row + 3; // prevent index out of bound
-            for (int rowIndex = exploredPath_Row; rowIndex <= exploredPath_Row + 2; rowIndex++) {
+
+        }
+        // facing down
+        if (robotDirection == 180) {
+            Log.d(TAG, "drawExploredPath: facing down");
+            exploredPath_Row = robotPosition_Row + 5;
+            for (int rowIndex = exploredPath_Row; rowIndex >= robotPosition_Row + 3; rowIndex--) {
+                // prevent index out of bound
+                if (rowIndex > grid_Row) rowIndex = grid_Row;
+                if (rowIndex < 1) rowIndex = 1;
                 for (int colIndex = robotPosition_Col; colIndex <= robotPosition_Col + 2; colIndex++) {
+                    // prevent index out of bound
+                    if (colIndex > grid_Col) colIndex = grid_Col;
+                    if (colIndex < 1) colIndex = 1;
                     arenaInfo[rowIndex - 1][colIndex - 1] = ARENA_ROBOT_EXPLOREDPATH;
                 }
             }
-            // draw sensor (s5) explored 5 grids (long range)
-            exploredPath_Col = robotPosition_Col + 3;
-            for (int colIndex = exploredPath_Col; colIndex <= exploredPath_Col + 4; colIndex++) {
-                if (colIndex < grid_Col) // prevent index out of bound
-                    arenaInfo[robotPosition_Row + 1][colIndex - 1] = ARENA_ROBOT_EXPLOREDPATH;
+            // draw left sensor (long range)
+            exploredPath_Col = robotPosition_Col + 7;
+            for (int colIndex = exploredPath_Col; colIndex >= robotPosition_Col + 3; colIndex--) {
+                // prevent index out of bound
+                if (colIndex > grid_Col) colIndex = grid_Col;
+                if (colIndex < 1) colIndex = 1;
+                int rowIndex = robotPosition_Row + 1;
+                if (rowIndex >= grid_Row) rowIndex = grid_Row - 1;
+                arenaInfo[rowIndex][colIndex - 1] = ARENA_ROBOT_EXPLOREDPATH;
             }
-            // draw sensor (s3) explored 3 grids
-            exploredPath_Col = robotPosition_Col - 3 < 1 ? 1 : robotPosition_Col - 3; // prevent index out of bound
-            for (int colIndex = exploredPath_Col; colIndex <= exploredPath_Col + 2; colIndex++) {
-                arenaInfo[robotPosition_Row][colIndex - 1] = ARENA_ROBOT_EXPLOREDPATH;
-            }
-        } else if (robotDirection == 270) { // facing left
-            Log.d(TAG, "drawExploredPath:  facing left");
-            // draw left/middle/right sensor facing left (s1, s2, s4) explored 3 grids ahead
-            exploredPath_Col = robotPosition_Col - 3 < 1 ? 1 : robotPosition_Col - 3;
-            for (int rowIndex = robotPosition_Row; rowIndex <= robotPosition_Row + 2; rowIndex++) {
-                for (int colIndex = exploredPath_Col; colIndex <= exploredPath_Col + 2; colIndex++) {
-                    arenaInfo[rowIndex - 1][colIndex - 1] = ARENA_ROBOT_EXPLOREDPATH;
-                }
-            }
-            // draw sensor (s5) explored 5 grids (long range)
-            exploredPath_Row = robotPosition_Row + 3;
-            for (int rowIndex = exploredPath_Row; rowIndex <= exploredPath_Row + 4; rowIndex++) {
-                if (rowIndex <= grid_Row)// prevent index out of bound
-                    arenaInfo[rowIndex - 1][robotPosition_Col - 1] = ARENA_ROBOT_EXPLOREDPATH;
-            }
-            // draw sensor (s3) explored 3 grids
-            exploredPath_Row = robotPosition_Row - 3 < 1 ? 1 : robotPosition_Row - 3; // prevent index out of bound
-            for (int rowIndex = exploredPath_Row; rowIndex <= exploredPath_Row + 2; rowIndex++) {
-                arenaInfo[rowIndex - 1][robotPosition_Col] = ARENA_ROBOT_EXPLOREDPATH;
+            // draw right sensor (short range)
+            exploredPath_Col = robotPosition_Col - 3;
+            for (int colIndex = exploredPath_Col; colIndex <= robotPosition_Col - 1; colIndex++) {
+                // prevent index out of bound
+                if (colIndex > grid_Col) colIndex = grid_Col;
+                if (colIndex < 1) colIndex = 1;
+                int rowIndex = robotPosition_Row + 1;
+                if (rowIndex >= grid_Row) rowIndex = grid_Row - 1;
+                arenaInfo[rowIndex][colIndex - 1] = ARENA_ROBOT_EXPLOREDPATH;
             }
         }
+
+        // facing left
+        if (robotDirection == 270) {
+            Log.d(TAG, "drawExploredPath: facing left");
+            // draw front sensors
+            exploredPath_Col = robotPosition_Col - 3;
+            for (int rowIndex = robotPosition_Row; rowIndex <= robotPosition_Row + 2; rowIndex++) {
+                for (int colIndex = exploredPath_Col; colIndex <= robotPosition_Col + 2; colIndex++) {
+                    // prevent index out of bound
+                    if (colIndex > grid_Col) colIndex = grid_Col;
+                    if (colIndex < 1) colIndex = 1;
+                    arenaInfo[rowIndex - 1][colIndex - 1] = ARENA_ROBOT_EXPLOREDPATH;
+                }
+            }
+            // draw left sensor (long range)
+            exploredPath_Row = robotPosition_Row + 7;
+            for (int rowIndex = exploredPath_Row; rowIndex >= robotPosition_Row + 3; rowIndex--) {
+                // prevent index out of bound
+                if (rowIndex > grid_Row) rowIndex = grid_Row;
+                arenaInfo[rowIndex - 1][robotPosition_Col - 1] = ARENA_ROBOT_EXPLOREDPATH;
+            }
+            // draw right sensor (short range)
+            exploredPath_Row = robotPosition_Row - 3;
+            for (int rowIndex = exploredPath_Row; rowIndex <= robotPosition_Row - 1; rowIndex++) {
+                // prevent index out of bound
+                if (rowIndex < 1) rowIndex = 1;
+                arenaInfo[rowIndex - 1][robotPosition_Col - 1] = ARENA_ROBOT_EXPLOREDPATH;
+            }
+        }
+        // facing right
+        if (robotDirection == 90) {
+            Log.d(TAG, "drawExploredPath: facing right");
+            exploredPath_Col = robotPosition_Col + 5;
+            for (int rowIndex = robotPosition_Row; rowIndex <= robotPosition_Row + 2; rowIndex++) {
+                for (int colIndex = exploredPath_Col; colIndex >= robotPosition_Col + 3; colIndex--) {
+                    // prevent index out of bound
+                    if (colIndex > grid_Col) colIndex = grid_Col;
+                    if (colIndex < 1) colIndex = 1;
+                    arenaInfo[rowIndex - 1][colIndex - 1] = ARENA_ROBOT_EXPLOREDPATH;
+                }
+            }
+            // draw left sensor (long range)
+            exploredPath_Row = robotPosition_Row - 5;
+            for (int rowIndex = exploredPath_Row; rowIndex <= robotPosition_Row - 1; rowIndex++) {
+                // prevent index out of bound
+                if (rowIndex < 1) rowIndex = 1;
+                arenaInfo[rowIndex - 1][robotPosition_Col + 1] = ARENA_ROBOT_EXPLOREDPATH;
+            }
+            // draw right sensor (short range)
+            exploredPath_Row = robotPosition_Row + 5;
+            for (int rowIndex = exploredPath_Row; rowIndex >= robotPosition_Row + 3; rowIndex--) {
+                // prevent index out of bound
+                if (rowIndex > grid_Row) rowIndex = grid_Row;
+                arenaInfo[rowIndex - 1][robotPosition_Col + 1] = ARENA_ROBOT_EXPLOREDPATH;
+            }
+        }
+
 
         // save explored path into exploredPathInfo array
         for (int rowIndex = 1; rowIndex <= grid_Row; rowIndex++) {
@@ -1273,9 +1333,8 @@ public class Arena extends View {
         switch (content) {
             case "q|":
             case "q":
-                // stop exploration
-//                final MainActivity mainActivity = (MainActivity) getContext();
-//                mainActivity.updateGUI_GameMode(ARENA_GAME_MODE_BUTTON);
+                // exploration stopped
+                TXTVW_ControlMode.setText("Eploration Complete");
                 break;
             case "i|":
             case "i":
@@ -1291,7 +1350,7 @@ public class Arena extends View {
                     }
                 } else if (robotDirection == 90) { // facing right, move forward
                     Log.d(TAG, "decodeAlgorithm: cmd_forward: " + robotPosition_Row + "," + robotPosition_Col + ": facing right");
-                    if ((robotPosition_Col + 1) <= grid_Col) {
+                    if ((robotPosition_Col + 1) <= grid_Col - 2) {
                         robotPosition_Col += 1;
                         TXTVW_RobotStatusValue.setText("Moving forward");
                         TXTVW_RobotStatusValue.setTextColor(ContextCompat.getColor(getContext(), color_Arena_RobotPosition));
@@ -1300,7 +1359,7 @@ public class Arena extends View {
                     }
                 } else if (robotDirection == 180) { // facing down, move forward
                     Log.d(TAG, "decodeAlgorithm: cmd_forward: " + robotPosition_Row + "," + robotPosition_Col + ": facing down");
-                    if ((robotPosition_Row + 1) <= grid_Row) {
+                    if ((robotPosition_Row + 1) <= grid_Row - 2) {
                         robotPosition_Row += 1;
                         TXTVW_RobotStatusValue.setText("Moving forward");
                         TXTVW_RobotStatusValue.setTextColor(ContextCompat.getColor(getContext(), color_Arena_RobotPosition));
