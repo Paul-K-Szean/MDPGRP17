@@ -12,8 +12,6 @@ import static com.example.android.mdpgrp17_androidapp.GlobalVariables.NAME_MDPGR
  */
 
 public class BluetoothMessageEntity {
-
-
     String from;
     String to;
     int messageType;
@@ -68,6 +66,7 @@ public class BluetoothMessageEntity {
                 MESSAGE_COMMAND, commandString);
 
     }
+
     public static BluetoothMessageEntity sendConversation(String conversationString) {
         BluetoothConnection mBluetoothConnection = BluetoothConnection.getmBluetoothConnection(null);
         return new BluetoothMessageEntity(NAME_MDPGR17, mBluetoothConnection.getConnectedRemoteDevice().getName(), MESSAGE_CONVERSATION, conversationString);

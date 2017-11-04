@@ -168,7 +168,5 @@ public class ConfigFileHandler {
 
         return configFile;
     }
-
-
 }
 

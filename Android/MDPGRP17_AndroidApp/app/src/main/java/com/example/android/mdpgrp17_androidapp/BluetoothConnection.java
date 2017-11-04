@@ -99,6 +99,18 @@ public class BluetoothConnection {
         return mBTCommandArrayList;
     }
 
+    public BluetoothDevice getConnectedRemoteDevice() {
+        if (mConnectedRemoteDevice != null)
+            return mConnectedRemoteDevice;
+        else {
+            return null;
+        }
+    }
+
+    public void setConnectedRemoteDevice(BluetoothDevice bluetoothDevice) {
+        this.mConnectedRemoteDevice = bluetoothDevice;
+    }
+
     public void setmBTCommandArrayList(ArrayList<BluetoothMessageEntity> mBTCommandArrayList) {
         this.mBTCommandArrayList = mBTCommandArrayList;
     }
@@ -244,19 +256,6 @@ public class BluetoothConnection {
         // if(newState==BT_CONNECTION_STATE_CONNECTED)
 
     }
-
-    public BluetoothDevice getConnectedRemoteDevice() {
-        if (mConnectedRemoteDevice != null)
-            return mConnectedRemoteDevice;
-        else {
-            return null;
-        }
-    }
-
-    public void setConnectedRemoteDevice(BluetoothDevice bluetoothDevice) {
-        this.mConnectedRemoteDevice = bluetoothDevice;
-    }
-
 
     /**
      * This thread runs while listening for incoming connections. It behaves

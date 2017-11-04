@@ -244,7 +244,6 @@ public class BluetoothActivity extends AppCompatActivity implements CompoundButt
     public boolean onTouch(View view, MotionEvent motionEvent) {
         int controlID = view.getId();
         if (controlID == R.id.RLO_BT_ThisDevice) {
-
             // enable discoverable by other device
             Log.d(TAG, "onTouch: RLO_BT_ThisDevice: enable discoverable");
             Intent intent_Discoverable = new Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE);
@@ -660,14 +659,6 @@ public class BluetoothActivity extends AppCompatActivity implements CompoundButt
         }
     }
 
-    // Getter and Setter
-    public BluetoothDevice getmBluetoothDevice_Selected() {
-        return mBluetoothDevice_Selected;
-    }
-
-    public void setmBluetoothDevice_Selected(BluetoothDevice mBluetoothDevice_Selected) {
-        this.mBluetoothDevice_Selected = mBluetoothDevice_Selected;
-    }
 
 
 }

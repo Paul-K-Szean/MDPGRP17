@@ -381,10 +381,12 @@ public class Arena extends View {
         paint.setColor(Color.WHITE);
         paint.setStyle(Paint.Style.STROKE);
         canvas.drawRect(new RectF(X, Y, _X, _Y), paint);
-
-//        paint.setColor(Color.BLACK);
-//        paint.setTextSize(12);
-//        canvas.drawText((col - 1) + "," + (21 - row - 1), X + 6, (Y + 24), paint);
+        // draw coordinate
+        paint.setColor(Color.BLACK);
+        paint.setTextSize(12);
+        canvas.drawText((col - 1) + "," + (21 - row - 1),
+                (col * grid_Size - grid_Size / 2) + 6,
+                ((row * grid_Size - grid_Size / 2) + 24), paint);
     }
 
     // Draw Cell With Border
@@ -533,18 +535,21 @@ public class Arena extends View {
 
     public void saveArenaState() {
         Log.d(TAG, "********************************SAVE ARENA STATE********************************");
+        // save current arena info
         int[][] saveState_Temp_ArenaInfo = new int[grid_Row][grid_Col];  // temp variable to save the state
         for (int rowIndex = 1; rowIndex <= grid_Row; rowIndex++) {
             for (int colIndex = 1; colIndex <= grid_Col; colIndex++) {
                 saveState_Temp_ArenaInfo[rowIndex - 1][colIndex - 1] = arenaInfo[rowIndex - 1][colIndex - 1];
             }
         }
+        // save current travel info
         int[][] saveState_Temp_TravelInfo = new int[grid_Row][grid_Col];  // temp variable to save the state
         for (int rowIndex = 1; rowIndex <= grid_Row; rowIndex++) {
             for (int colIndex = 1; colIndex <= grid_Col; colIndex++) {
                 saveState_Temp_TravelInfo[rowIndex - 1][colIndex - 1] = travelInfo[rowIndex - 1][colIndex - 1];
             }
         }
+        // add into the history ArrayList
         ArenaSaveState arenaSaveState = new ArenaSaveState(saveState_Temp_ArenaInfo, saveState_Temp_TravelInfo,
                 isWayPointReached, robotPosition_Row_Center, robotPosition_Col_Center, robotDirection);
         saveStateArrayList.add(arenaSaveState);

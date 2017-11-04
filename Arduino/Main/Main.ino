@@ -1,8 +1,40 @@
+//Libraries Included
 #include <EnableInterrupt.h>
 #include "DualVNH5019MotorShield.h"
 
-#define LeftTargetSpeed 300 //Speed used on Left Motor
-#define RightTargetSpeed 300 //Speed used on Right Motor
+#define LeftFast 323 //Speed used for exploration.
+#define LeftFaster 340 //Unused speed for fastest path.
+#define RightFast 350 //Representation of speed but unused.
+#define LeftTargetSpeed 335 //Speed used for fastest path.
+#define RightFastest 400 //Speed used for fastest path.
+
+//Delay per moving action
+#define MOVE_DELAY 0 //Delay per move on exploration.
+#define MOVE_DELAYII 100 //Delay per move on fastest path (except rotations which still uses original).
+
+#define PER_CM 50 //Ticks required to move 1 cm.
+#define PER_CM_II 45
+#define PER_DEG 13.75 //Ticks required to move 1 degree or so.
+#define PER_DEG_II 15
+
+//Wall Constants
+#define WALL_GAP 16.78
+#define WALL_GAPII 16.73
+#define WALL_STICK 5
+#define WALL_LIMIT 26.3
+#define DEG_DIFF 0.23
+#define DEG_DIFF_II 0.41
+#define Threshold 0.2
+
+//Spare constants to be used if needed for calibration.
+//#define WALL_GAPIII 17.08
+//#define WALL_GAPIV 17.25
+//#define WALL_GAPV 17.66 //to be re-measured if to be used.
+//#define WALL_GAPVI 17.9 //to be re-measured if to be used.
+//#define WALL_STICKII 5 //to delete if useless.
+//#define WALL_STICKIII 5 //to delete if useless.
+//#define WALL_LIMITII 21.12
+//#define WALL_LIMITIII 21.59
 
 //Encoder
 volatile long ticksl = 0; //Count on left motor
@@ -11,36 +43,47 @@ volatile long change = 0; //Difference between left and right motor
 
 //Sensor Pins
 int sensorPin1 = A4; //Front Left Sensor
-int sensorPin2 = A3; //Left Sensor
+int sensorPin2 = A3; //Center Sensor
 int sensorPin3 = A5; //Right Sensor
 int sensorPin4 = A1; //Front Right Sensor
-int sensorPin5 = A0; //Center Sensor
+int sensorPin5 = A0; //Left Sensor
 
 //Initialize Motor
 DualVNH5019MotorShield md;
 
 //Motor Variables
-int target=0;
+int target = 0; //General target to reach for rotation ticks.
+int rightCount = 0; //Keeps track of number of consecutive wall or obstacle on right.
+int leftCount = 0; //Keeps track of number of consecutive wall or obstacle on left.
 
 //Sensor Variables
 float mean_sensor1, mean_sensor2, mean_sensor3; //Average voltage readings
 float mean_sensor4, mean_sensor5;
-int dist_sensor1, dist_sensor2, dist_sensor3; //Distance in terms of grids
-int dist_sensor4, dist_sensor5; 
+float dist_sensor1, dist_sensor2, dist_sensor3; //Spare floating point distances.
+float dist_sensor4, dist_sensor5;
+int grid1, grid2, grid3, grid4, grid5; //Number of grids in front of robot for each sensor.
 
 //Calibration Variables
-float d1, d2=100, d3, d4, d5; //Separate for individual calculation
-float ex_dist=100; //Previous distance 
+float d1, d2, d3, d4, d5; //Separate for individual calculation
+float medd1[31], medd2[31], medd3[31], medd4[31], medd5[31]; //Array to store all sensor analog reads.
+float diff1, diff2; //Difference between reading of sensor 1 and sensor 4, can be used for other general purposes.
+float cal_target = 0; //Target to be calculated for calibration of distance.
+float cal_target_angle = 0; //Target to be calculated for calibration of angle.
 
-//Count Error Variables
-int countrightrot = 0;  //Add Offset when rotating right
-int countleftrot = 0;   //Add Offset when rotating left
-
-//Test Flag
-bool flag = true; //Spare flag, used when necessary
+//Test Variables
+bool flag = true;  //Spare flag, used when necessary.
+bool done = false; //Spare flag II, used when necessary.
+int moveCount = 0; //Keeps track of number of forward and reverses done such that if after 3 times, robot will auto calibrate.
 
 //Incoming command
-String command_String; //Command received from Algorith/Android team
+char command;
+String fixedSend = "cb"; //Used to determine the destination which is algorithm for sending the sensor values.
+
+//Grid Target Array used for Fastest Path. Each element represents the number of 'ticks'  the robot should reach before stopping at the specified grid.
+int gridTarget[20] = {530, 1100, 1690, 2290, 2910, 3510, 4130, 4730, 5350, 5930, 6530, 7140, 7740, 8380, 9020, 9660, 10300, 10940, 11580, 12220};
+int noGrids; //Represents number of grids decoded and to be used to extract from above array.
+int targets; //Stores the extracted 'ticks' from array.
+int counti = 1; //Keeps track of current position of index on fastest path string received from algorithm.
 
 //Main program
 void setup() {
@@ -51,202 +94,507 @@ void setup() {
 }
 
 void loop() {
-  // Clear outgoing buffer
-  Serial.flush();
-  if (Serial.available()) {
-    command_String = Serial.readString(); //'a' is Android and 'c' is Algorithm
-    if (command_String.charAt(0) == 'a' || command_String.charAt(0) == 'c') { 
-      switch (command_String.charAt(1)) {
-        //Forward
-        case 'I': case 'i':
-          forward(540);
-          read_sensors();
-          break;
-        //Left
-        case 'J': case 'j':
-          rotate_left(90);
-          read_sensors();
-          break;
-        //Right
-        case 'L': case 'l':
-          rotate_right(90);
-          read_sensors();
-          break;
-        //Reverse
-        case 'K': case 'k':
-          reverse(540);
-          read_sensors();
-          break;
-        //Read Sensor Data in terms of Grid
-        case 'S': case 's':
-          read_sensors();
-          break;
-        //45 degree left turn
-        case 'U': case 'u':
-          rotate_left(45);
-          break;
-        //45 degree right turn
-        case 'O': case 'o':
-          rotate_right(45);
-          break;
-        //Calibrate Angle/Distance
-        case 'M': case 'm': case'N': case 'n':
-          //for(int g=0;g<4;g++){
-            calibrate();
-          //}
-          read_sensors();
-          break;
-        //In case of error in command sent
-        default:
-          md.setBrakes(400, -400);
-          break;
+  char ch;
+  char commandBuffer[50];
+  int i = 0;
+  while (1) {
+    if (Serial.available()) {
+      ch = Serial.read();
+      commandBuffer[i] = ch;
+      i++;
+      if (ch == '|') {
+        i = 1;
+        break;
       }
     }
-    //Clear incoming buffer
-    unsigned long now = millis ();
-    while (millis () - now < 100)
-      Serial.read();
   }
+  command = commandBuffer[0];
+  switch (command) {
+    //Forward
+    case 'i':
+      forward_fast(532);
+      moveCount++;
+      break;
+    //Left
+    case 'j':
+      rotate_left_fast(90);
+      break;
+    //Right
+    case 'l':
+      rotate_right_fast(90);
+      break;
+    //Reverse
+    case 'k':
+      reverse_fast(525);
+      moveCount++;
+      break;
+    //Read Sensor Data in terms of Grid and also finding distance.
+    case 's':
+      distance_print();
+      break;
+    //Once robot completes exploration and is at start point, stop sending sensor values and calibrate to left wall.
+    case 'q':
+      delay(6000);
+      rotate_left_fast(180); //Quicker rotation than doing it twice.
+      check_calibration();
+      rotate_right_fast(90);
+      check_calibration();
+      rotate_right_fast(90);
+      flag = false;
+      break;
+    //Initial calibration at start point commanded by Nexus.
+    case 'y':
+      rotate_left_fast(180);
+      check_calibration();
+      rotate_right_fast(90);
+      check_calibration();
+      rotate_right_fast(90);
+      break;
+    //Test case for testing calibration code.
+    case '1':
+      check_calibration();
+      break;
+    //Initiate fastest path decode.
+    case 'm':
+      path_fastest(commandBuffer);
+      break;
+    //In case of error in command sent, robot will brake.
+    default:
+      md.setBrakes(400, -400);
+  }
+  //Stops sending sensor values once exploration completes.
+  if (flag == true) {
+    read_sensors();
+  }
+  memset(commandBuffer, 0, sizeof(commandBuffer)); //Empty memory buffer to prevent error in receiving next command.
+  Serial.flush(); //Flush outgoing buffer to prevent potential sending error in the sensor values.
 }
 
-//Motor Actions
-void forward(int target) {
+//Fastest Path function
+//Read string given by algorithm and determine what actions to take.
+//For example, if given string is mi1jli14jli10, it means to move forward by 1 grid, turn right, turn left, forward by 14 grids and so on.
+void path_fastest(char commandBuffer[]) {
+  moveCount = 0;
+  while (commandBuffer[counti] != '|') {
+    targets = 0;
+    while (1) {
+      if (moveCount == 4) {
+        rotate_left_fast(2);
+        moveCount = 0;
+      }
+      if (commandBuffer[counti] == 'i' || commandBuffer[counti] == 'I') {
+        counti++;
+        if (commandBuffer[counti] == '1') {
+          counti++;
+          if (isdigit(commandBuffer[counti])) {
+            noGrids = commandBuffer[counti] - 38;
+            targets = gridTarget[noGrids - 1];
+            ticksl = 0;
+            ticksr = 0;
+            long leftPos, rightPos;
+            md.setSpeeds(LeftFaster, -RightFast);
+            while (1) {
+              leftPos = ticksl;
+              rightPos = ticksr;
+              if (rightPos >= targets) {  //Target to reach before stopping
+                md.setBrakes(400, -400); //Optimal braking speed
+                break;
+              }
+              else {
+                change = ticksl - ticksr; //Ticks L > Ticks R
+                md.setM1Speed(RightFastest - change * 46.9); //Increasing right speed to match left speed.
+              }
+            }
+            delay(MOVE_DELAYII);
+            break;
+          }
+          else {
+            counti--;
+            noGrids = commandBuffer[counti] - 48;
+            targets = gridTarget[noGrids - 1];
+            ticksl = 0;
+            ticksr = 0;
+            long leftPos, rightPos;
+            md.setSpeeds(LeftFaster, -RightFast);
+            while (1) {
+              leftPos = ticksl;
+              rightPos = ticksr;
+              if (rightPos >= targets) {  //Target to reach before stopping
+                md.setBrakes(400, -400); //Optimal braking speed
+                break;
+              }
+              else {
+                change = ticksl - ticksr; //Ticks L > Ticks R
+                md.setM1Speed(RightFastest - change * 46.9); //Increasing right speed to match left speed.
+              }
+            }
+            delay(MOVE_DELAYII);
+            break;
+          }
+        }
+        else if (commandBuffer[counti] == '2') {
+          counti++;
+          if (isdigit(commandBuffer[counti])) {
+            noGrids = commandBuffer[counti] - 28;
+            targets = gridTarget[noGrids - 1];
+            ticksl = 0;
+            ticksr = 0;
+            long leftPos, rightPos;
+            md.setSpeeds(LeftFaster, -RightFast);
+            while (1) {
+              leftPos = ticksl;
+              rightPos = ticksr;
+              if (rightPos >= targets) {  //Target to reach before stopping
+                md.setBrakes(400, -400); //Optimal braking speed
+                break;
+              }
+              else {
+                change = ticksl - ticksr; //Ticks L > Ticks R
+                md.setM1Speed(RightFastest - change * 46.9); //Increasing right speed to match left speed.
+              }
+            }
+            delay(MOVE_DELAYII);
+            break;
+          }
+          else {
+            counti--;
+            noGrids = commandBuffer[counti] - 48;
+            targets = gridTarget[noGrids - 1];
+            ticksl = 0;
+            ticksr = 0;
+            long leftPos, rightPos;
+            md.setSpeeds(LeftFaster, -RightFast);
+            while (1) {
+              leftPos = ticksl;
+              rightPos = ticksr;
+              if (rightPos >= targets) {  //Target to reach before stopping
+                md.setBrakes(400, -400); //Optimal braking speed
+                break;
+              }
+              else {
+                change = ticksl - ticksr; //Ticks L > Ticks R
+                md.setM1Speed(RightFastest - change * 46.9); //Increasing right speed to match left speed.
+              }
+            }
+            delay(MOVE_DELAY);
+            break;
+          }
+        }
+        else {
+          noGrids = commandBuffer[counti] - 48;
+          targets = gridTarget[noGrids - 1];
+          ticksl = 0;
+          ticksr = 0;
+          long leftPos, rightPos;
+          md.setSpeeds(LeftFaster, -RightFast);
+          while (1) {
+            leftPos = ticksl;
+            rightPos = ticksr;
+            if (rightPos >= targets) {  //Target to reach before stopping
+              md.setBrakes(400, -400); //Optimal braking speed
+              break;
+            }
+            else {
+              change = ticksl - ticksr; //Ticks L > Ticks R
+              md.setM1Speed(RightFastest - change * 46.9); //Increasing right speed to match left speed.
+            }
+          }
+          delay(MOVE_DELAY);
+          break;
+        }
+      }
+      else if (commandBuffer[counti] == 'j' || commandBuffer[counti] == 'J') {
+        rotate_left_fast(90);
+        break;
+      }
+      else if (commandBuffer[counti] == 'l' || commandBuffer[counti] == 'L') {
+        rotate_right_fast(90);
+        break;
+      }
+      else {
+        break;
+      }
+    }
+    counti++;
+    moveCount++;
+  }
+  md.setBrakes(400, -400);
+  flag = false;
+  counti = 1;
+}
+
+//Shifts robot front by 1 grid.
+void forward_fast(int targus) {
   ticksl = 0;
   ticksr = 0;
   long leftPos, rightPos;
-  md.setSpeeds(LeftTargetSpeed, -RightTargetSpeed);
+  md.setSpeeds(LeftFast, -RightFast);
+  while (1) {
+    leftPos = ticksl;
+    rightPos = ticksr;
+    if (rightPos >= targus) {  //Target to reach before stopping
+      md.setBrakes(400, -400); //Optimal braking speed
+      break;
+    }
+    else {
+      change = ticksr - ticksl; //Ticks L > Ticks R
+      md.setM2Speed(-(LeftFast - change * 47)); //Increasing right speed to match left speed.
+    }
+  }
+  delay(MOVE_DELAY);
+}
+
+//Shifts robot backwards by 1 grid.
+void reverse_fast(int targus) {
+  ticksl = 0;
+  ticksr = 0;
+  long leftPos, rightPos;
+  md.setSpeeds(-LeftFast, RightFast);
+  while (1) {
+    leftPos = ticksl;
+    rightPos = ticksr;
+    if (rightPos >= targus) {
+      md.setBrakes(400, -400);
+      break;
+    }
+    else {
+      change = ticksr - ticksl;
+      md.setM2Speed((LeftFast - change * 47));
+    }
+  }
+  delay(MOVE_DELAY);
+}
+
+//Rotates robot to the right depending on the 'degree' given.
+//45 degrees used to correct encoder error, 90 degrees for standard rotation to the right.
+// 1 'degree' used to calibrate angle.
+void rotate_right_fast(int reference) {
+  ticksl = 0;
+  ticksr = 0;
+  long leftPos, rightPos;
+  //Used to fix errorneous turning.
+  if (reference == 45) {
+    target = 280;
+  }
+  //Regular 90 degree turn to the right.
+  else if (reference == 90) {
+    target = 730;
+  }
+  //Calibration turning.
+  else if (reference == 1) {
+    target = cal_target_angle;
+  }
+  md.setSpeeds(LeftFaster, RightFast);
   while (1) {
     leftPos = ticksl;
     rightPos = ticksr;
     if (rightPos >= target) {
       md.setBrakes(400, -400);
-      delay(50);
-      md.setBrakes(0, 0);
       break;
     }
     else {
       change = ticksr - ticksl;
-      md.setM2Speed(-(LeftTargetSpeed - change * 30));
+      md.setM2Speed((LeftFaster - change * 47));
     }
   }
-  delay(50);
+  if (rightPos > target) {
+    rotate_right_fast(45);
+  }
+  delay(MOVE_DELAY);
 }
 
-void reverse(int target) {
+//Rotates robot to the left depending on the 'degree' given.
+//45 degrees used to correct encoder error, 90 degrees for standard rotation to the left.
+// 1 'degree' used to calibrate angle and 2 'degree' used to calibrate if after 7 move or forward there is no calibration.
+void rotate_left_fast(int reference) {
   ticksl = 0;
   ticksr = 0;
   long leftPos, rightPos;
-  md.setSpeeds(-LeftTargetSpeed, RightTargetSpeed);
+  //Used to fix errorneous turning.
+  if (reference == 45) {
+    target = 280;
+  }
+  //Regular 90 degree turn to the left.
+  else if (reference == 90) {
+    target = 730;
+  }
+  //Calibration turn.
+  else if (reference == 1) {
+    target = cal_target_angle;
+  }
+  //Slight turn every 3 move if no calibration was done.
+  else if (reference == 2) {
+    target = 5;
+  }
+  //Initial calibration turning for quicker effect.
+  else if(reference == 180){
+    target = 1500;
+  }
+  md.setSpeeds(-LeftFaster, -RightFast);
   while (1) {
     leftPos = ticksl;
     rightPos = ticksr;
     if (rightPos >= target) {
       md.setBrakes(400, -400);
-      delay(50);
-      md.setBrakes(0, 0);
       break;
     }
     else {
       change = ticksr - ticksl;
-      md.setM2Speed((LeftTargetSpeed - change * 30));
+      md.setM2Speed(-(LeftFaster - change * 47));
     }
   }
-  delay(50);
-}
-
-void rotate_right(int degree) {
-  ticksl = 0;
-  ticksr = 0;
-  long leftPos, rightPos;
-  if(degree == 45){
-    target = 360;
+  if (rightPos > target) {
+    rotate_left_fast(45);
   }
-  else if (degree == 90){
-    target = 720 + 8 * countrightrot;
-  }
-  md.setSpeeds(LeftTargetSpeed, RightTargetSpeed);
-  while (1) {
-    leftPos = ticksl;
-    rightPos = ticksr;
-    if (rightPos >= target) {
-      md.setBrakes(400, -400);
-      delay(50);
-      md.setBrakes(0, 0);
-      break;
-    }
-    else {
-      change = ticksr - ticksl;
-      md.setM2Speed((LeftTargetSpeed - change * 30));
-    }
-  }
-  countrightrot++;
-  if (countrightrot == 4) {
-    countrightrot = 0;
-  }
-  delay(50);
-}
-
-void rotate_left(int degree) {
-  ticksl = 0;
-  ticksr = 0;
-  long leftPos, rightPos;
-  if(degree == 45){
-    target = 360;
-  }
-  else if (degree == 90){
-    target = 730 + 3 * countleftrot;
-  }
-  md.setSpeeds(-LeftTargetSpeed, -RightTargetSpeed);
-  while (1) {
-    leftPos = ticksl;
-    rightPos = ticksr;
-    if (rightPos >= target) {
-      md.setBrakes(400, -400);
-      delay(50);
-      md.setBrakes(0, 0);
-      break;
-    }
-    else {
-      change = ticksr - ticksl;
-      md.setM2Speed(-(LeftTargetSpeed - change * 30));
-    }
-  }
-  countleftrot++;
-  if (countleftrot == 4) {
-    countleftrot = 0;
-  }
-  delay(50);
+  delay(MOVE_DELAY);
 }
 
 //Sensors
 void read_sensors() {
-  String outputSensor = "cb";
-  for (int s = 0; s < 30; s++) {
-    mean_sensor1 += (float)analogRead(sensorPin1);
-    mean_sensor2 += (float)analogRead(sensorPin2);
-    mean_sensor3 += (float)analogRead(sensorPin3);
-    mean_sensor4 += (float)analogRead(sensorPin4);
-    mean_sensor5 += (float)analogRead(sensorPin5);
+  String outputSensor;
+  //Measure sensor values to see if can calibrate.
+  for (int s = 0; s < 31; s++) {
+    medd5[s] = (float)analogRead(sensorPin5);
+    medd1[s] = (float)analogRead(sensorPin1);
+    medd4[s] = (float)analogRead(sensorPin4);
+    medd2[s] = (float)analogRead(sensorPin2);
+    medd3[s] = (float)analogRead(sensorPin3);
   }
-  //Find Median Values
-  mean_sensor1 /= 6144;
-  mean_sensor2 /= 6144;
-  mean_sensor3 /= 6144;
-  mean_sensor4 /= 6144;
-  mean_sensor5 /= 6144;
-  dist_sensor1 = distance_1(mean_sensor1);
-  dist_sensor2 = distance_2(mean_sensor2);
-  dist_sensor3 = distance_3(mean_sensor3);
-  dist_sensor4 = distance_4(mean_sensor4);
-  dist_sensor5 = distance_5(mean_sensor5);
+  mean_sensor5 = find_median(medd5);
+  mean_sensor5 /= 204.8;
+  mean_sensor1 = find_median(medd1);
+  mean_sensor1 /= 204.8;
+  mean_sensor4 = find_median(medd4);
+  mean_sensor4 /= 204.8;
+  mean_sensor2 = find_median(medd2);
+  mean_sensor2 /= 204.8;
+  mean_sensor3 = find_median(medd3);
+  mean_sensor3 /= 204.8;
+  grid1 = grid_ret1(mean_sensor1);
+  grid2 = grid_ret2(mean_sensor2);
+  grid3 = grid_ret3(mean_sensor3);
+  grid4 = grid_ret4(mean_sensor4);
+  grid5 = grid_ret5(mean_sensor5);
+  //If detected obstacle or wall on right.
+  if (grid3 == 1) {
+    rightCount++;
+  }
+  //Reset if next is not.
+  else {
+    rightCount = 0;
+  }
+  //If detected obstacle or wall on left.
+  if (grid5 == 1) {
+    leftCount++;
+  }
+  //Reset if next is not.
+  else {
+    leftCount = 0;
+  }
+  //If 3 blocks on left, right and center in front of robot.
+  if (grid1 == 1 && grid2 == 1 && grid4 == 1) {
+    check_calibration();
+    rightCount = 0;
+    leftCount = 0;
+    moveCount = 0;
+  }
+  //If 3 consecutive detected chance to calibrate on the right.
+  else if (rightCount == 3) {
+    rotate_right_fast(90);
+    for (int s = 0; s < 31; s++) {
+      medd1[s] = (float)analogRead(sensorPin1);
+      medd4[s] = (float)analogRead(sensorPin4);
+      medd2[s] = (float)analogRead(sensorPin2);
+    }
+    mean_sensor1 = find_median(medd1);
+    mean_sensor1 /= 204.8;
+    mean_sensor4 = find_median(medd4);
+    mean_sensor4 /= 204.8;
+    mean_sensor2 = find_median(medd2);
+    mean_sensor2 /= 204.8;
+    grid1 = grid_ret1(mean_sensor1);
+    grid2 = grid_ret2(mean_sensor2);
+    grid4 = grid_ret4(mean_sensor4);
+    if ((grid1 == 1 && grid2 == 1 && grid4 == 1)) {
+      check_calibration();
+    }
+    rotate_left_fast(90);
+    rightCount = 0;
+    leftCount = 0;
+    moveCount = 0;
+  }
+  //If 3 consecutive detected chance to calibrate on the left (unlikely to occur since right hug).
+  else if (leftCount == 3) {
+    rotate_left_fast(90);
+    for (int s = 0; s < 31; s++) {
+      medd1[s] = (float)analogRead(sensorPin1);
+      medd4[s] = (float)analogRead(sensorPin4);
+      medd2[s] = (float)analogRead(sensorPin2);
+    }
+    mean_sensor1 = find_median(medd1);
+    mean_sensor1 /= 204.8;
+    mean_sensor4 = find_median(medd4);
+    mean_sensor4 /= 204.8;
+    mean_sensor2 = find_median(medd2);
+    mean_sensor2 /= 204.8;
+    grid1 = grid_ret1(mean_sensor1);
+    grid2 = grid_ret2(mean_sensor2);
+    grid4 = grid_ret4(mean_sensor4);
+    if ((grid1 == 1 && grid2 == 1 && grid4 == 1)) {
+      check_calibration();
+    }
+    rotate_right_fast(90);
+    rightCount = 0;
+    leftCount = 0;
+    moveCount = 0;
+  }
+  //If single block in center in front of robot.
+  //else if(grid1 != 1 && grid2 == 1 && grid4 != 1){
+    //calibrate_dist();
+  //}
+  //If left and right has block and/or wall.
+  //else if(grid3 == 1 && grid5 == 1){
+    //calibrate_angle_II();
+    //rightCount = 0;
+    //leftCount = 0;
+    //moveCount = 0;
+  //}
+  //If no calibration has occurred after 7 total forward or reverse.
+  else if (moveCount == 3) {
+    rotate_left_fast(2);
+    moveCount = 0;
+  }
+  //Re-measure sensor values to output.
+  for (int s = 0; s < 31; s++) {
+    medd5[s] = (float)analogRead(sensorPin5);
+    medd1[s] = (float)analogRead(sensorPin1);
+    medd4[s] = (float)analogRead(sensorPin4);
+    medd2[s] = (float)analogRead(sensorPin2);
+    medd3[s] = (float)analogRead(sensorPin3);
+  }
+  mean_sensor5 = find_median(medd5);
+  mean_sensor5 /= 204.8;
+  mean_sensor1 = find_median(medd1);
+  mean_sensor1 /= 204.8;
+  mean_sensor4 = find_median(medd4);
+  mean_sensor4 /= 204.8;
+  mean_sensor2 = find_median(medd2);
+  mean_sensor2 /= 204.8;
+  mean_sensor3 = find_median(medd3);
+  mean_sensor3 /= 204.8;
+  grid1 = grid_ret1(mean_sensor1);
+  grid2 = grid_ret2(mean_sensor2);
+  grid3 = grid_ret3(mean_sensor3);
+  grid4 = grid_ret4(mean_sensor4);
+  grid5 = grid_ret5(mean_sensor5);
   //Prepare Output to RPi -> Algorithm Team
-  outputSensor += String((int)((dist_sensor1 / 10) + 0.5));
-  outputSensor += String((int)((dist_sensor5 / 10) + 0.5));
-  outputSensor += String((int)((dist_sensor3 / 10) + 0.5));
-  outputSensor += String((int)((dist_sensor4 / 10) + 0.5));
-  outputSensor += String((int)((dist_sensor2 / 10) + 0.5));
-  outputSensor += "\n";
-  Serial.print(outputSensor);
+  outputSensor += String(grid1);
+  outputSensor += String(grid5);
+  outputSensor += String(grid3);
+  outputSensor += String(grid4);
+  outputSensor += String(grid2);
+  Serial.print((fixedSend + outputSensor + "\n"));
+  md.setBrakes(400, -400);
 }
 
 //Encoder Calculation
@@ -270,153 +618,308 @@ void falling1() {
   ticksr++;
 }
 
+//Grid Returner 1
+int grid_ret1(float mean1) {
+  if (mean1 >= 1.5 && mean1 <= 3.4) {
+    return 1;
+  }
+  else if (mean1 >= 0.95 && mean1 < 1.5) {
+    return 2;
+  }
+  else if (mean1 >= 0.72 && mean1 < 0.95) {
+    return 3;
+  }
+  else {
+    return 0;
+  }
+}
+
+//Grid Returner 2
+int grid_ret2(float mean2) {
+  if (mean2 >= 1.6 && mean2 <= 3.4) {
+    return 1;
+  }
+  else if (mean2 >= 1.04 && mean2 < 1.6) {
+    return 2;
+  }
+  else if (mean2 >= 0.81 && mean2 < 1.04) {
+    return 3;
+  }
+  else {
+    return 0;
+  }
+}
+
+//Grid Returner 3
+int grid_ret3(float mean3) {
+  if (mean3 >= 1.57 && mean3 < 3.5) {
+    return 1;
+  }
+  else if (mean3 >= 1.0 && mean3 < 1.57) {
+    return 2;
+  }
+  else if (mean3 >= 0.7 && mean3 < 1.0) {
+    return 3;
+  }
+  else {
+    return 0;
+  }
+}
+
+//Grid Returner 4
+int grid_ret4(float mean4) {
+  if (mean4 >= 1.6 && mean4 < 3.4) {
+    return 1;
+  }
+  else if (mean4 >= 1.0 && mean4 < 1.6) {
+    return 2;
+  }
+  else if (mean4 >= 0.85 && mean4 < 1.0) {
+    return 3;
+  }
+  else {
+    return 0;
+  }
+}
+
+//Grid Returner 5
+int grid_ret5(float mean5) {
+  if (mean5 >= 1.04 && mean5 < 1.22) {
+    return 5;
+  }
+  else if (mean5 >= 1.22 && mean5 < 1.46) {
+    return 4;
+  }
+  else if (mean5 >= 1.46 && mean5 < 1.87) {
+    return 3;
+  }
+  else if (mean5 >= 1.87 && mean5 < 2.46) {
+    return 2;
+  }
+  else if (mean5 >= 2.46 && mean5 < 3.2) {
+    return 1;
+  }
+  else {
+    return 0;
+  }
+}
+
 //Sensor 1
 float distance_1(float mean1) {
-  if (mean1 > 1.54 && mean1 < 3.2) {
-    return (mean1 * (-6.165) + 20.51);
+  if (mean1 >= 1.54 && mean1 < 3.2) {
+    return (mean1 * (-6.165) + 29.81);
   }
-  else if (mean1 > 0.66 && mean1 < 1.54) {
-    return (mean1 * (-22.01) + 42.93);
+  else if (mean1 >= 0.66 && mean1 < 1.54) {
+    return (mean1 * (-22.01) + 52.93);
   }
-  //  else if (mean1 > 0.3 && mean1 < 0.66) {
-  //    return (mean1 * (-121.6) + 115.3);
-  //  }
   else {
-    return 40;
+    return 0;
   }
 }
 
 //Sensor 2
 float distance_2(float mean2) {
-  if (mean2 > 1.64 && mean2 < 3.2) {
-    return (mean2 * (-6.666) + 22.11);
+  if (mean2 >= 1.64 && mean2 < 3.4) {
+    return (mean2 * (-6.666) + 32.11);
   }
-  else if (mean2 > 0.78 && mean2 < 1.64) {
-    return (mean2 * (-22.07) + 47.34);
+  else if (mean2 >= 0.70 && mean2 < 1.64) {
+    return (mean2 * (-22.07) + 56.34);
   }
-  //  else if (mean2 > 0.38 && mean2 < 0.78) {
-  //    return (mean2 * (-109) + 120);
-  //  }
   else {
-    return 40;
+    return 0;
   }
 }
 
 //Sensor 3
 float distance_3(float mean3) {
-  if (mean3 > 1.64 && mean3 < 3.26) {
-    return (mean3 * (-6.756) + 21.85);
+  if (mean3 >= 1.64 && mean3 < 3.5) {
+    return (mean3 * (-6.756) + 31.85);
   }
   else if (mean3 > 0.72 && mean3 < 1.64) {
-    d3 = mean3 * (-22.53) + 49.69;
+    d3 = mean3 * (-22.53) + 59.69;
     if (d3 <= 30) {
-      return d3;
+      return d3 + 10;
     }
     else {
-      return 30;
+      return 40;
     }
   }
-  //  else if (mean3 > 0.32 && mean3 < 0.72) {
-  //    return (mean3 * (-106.7) + 110);
-  //  }
   else {
-    return 30;
+    return 0;
   }
 }
 
 //Sensor 4
 float distance_4(float mean4) {
-  if (mean4 > 1.71 && mean4 < 3.1) {
-    return (mean4 * (-7.040) + 23.30);
+  if (mean4 >= 1.67 && mean4 < 3.4) {
+    return (mean4 * (-6.883) + 31.61);
   }
-  else if (mean4 > 0.8 && mean4 < 1.71) {
-    return (mean4 * (-20.62) + 44.41);
+  else if (mean4 >= 0.87 && mean4 < 1.67) {
+    return (mean4 * (-18.83) + 45.62);
   }
-  //  else if (mean4 > 0.32 && mean4 < 0.8) {
-  //    return (mean4 * (-94.35) + 108.8);
-  //  }
   else {
-    return 40;
+    return 0;
   }
 }
 
 //Sensor 5
 float distance_5(float mean5) {
-  if (mean5 > 1.75 && mean5 < 2.88) {
-    return (mean5 * (-18.09) + 65.28);
+  if (mean5 >= 1.75 && mean5 < 3) {
+    return (mean5 * (-18.09) + 62.28);
   }
-  else if (mean5 > 1.22 && mean5 < 1.75) {
-    return (mean5 * (-28.7) + 86.55);
+  else if (mean5 >= 1.35 && mean5 < 1.75) {
+    return (mean5 * (-28.7) + 83.55) ;
   }
-  else if (mean5 > 0.65 && mean5 < 1.22) {
-    d5 = (mean5 * (-43.13) + 102.5);
-    if (d5 <= 50) {
-      return d5;
-    }
-    else {
-      return d5+10;
-    }
+  else if (mean5 >= 1.22 && mean5 < 1.35) {
+    return 40;
+  }
+  else if (mean5 > 0.9 && mean5 < 1.22) {
+    d5 = (mean5 * (-43.13) + 100.5);
+    return d5;
   }
   else {
-    return 60;
+    return 0;
   }
 }
 
-//Calibration
-void calibrate() {
-  switch (command_String.charAt(1)) {
-    case 'M': case 'm':
-      while (1) {
-        for (int s = 0; s < 30; s++) {
-          mean_sensor1 += (float)analogRead(sensorPin1);
-          mean_sensor4 += (float)analogRead(sensorPin4);
-        }
-        mean_sensor1 /= 6144;
-        mean_sensor4 /= 6144;
-        d1 = distance_1(mean_sensor1);
-        d4 = distance_4(mean_sensor4);
-        float diff1 = d1 - d4;
-        float diff2 = d4 - d1;
-        delay(50);
-        if ((abs(diff1) < 0.2) && (abs(diff1) > 0.03)) {
-          break;
-        }
-        else if (diff2 > 0.2) {
-          md.setSpeeds(-100, -100);
-          delay(50);
-          md.setBrakes(100, -100);
-        }
-        else if (diff1 > 0.2) {
-          md.setSpeeds(100, 100);
-          delay(50);
-          md.setBrakes(100, -100);
-        }
-      }
-      break;
-    case 'N': case 'n':
-      d2=100;
-      while (1) {
-        for (int s = 0; s < 30; s++) {
-          mean_sensor2 += (float)analogRead(sensorPin2);
-        }
-        mean_sensor2 /= 6144;
-        ex_dist = d2;
-        d2 = distance_2(mean_sensor2);
-        if (d2>3) {
-          reverse(100);
-          if(ex_dist<d2){
-            forward(100);
-            forward(100);
-            break;
-          }
-        }
-        else {
-          break;
-        }
-      }
-      md.setBrakes(400, -400);
-      break;
-    default:
-      md.setBrakes(400, -400);
+//Calibration at the start (unused).
+void start_cal() {
+  check_calibration();
+  rotate_right_fast(90);
+  check_calibration();
+  rotate_right_fast(90);
+}
+
+//Function used to print valid distances of each sensor.
+void distance_print() {
+  for (int s = 0; s < 31; s++) {
+    medd5[s] = (float)analogRead(sensorPin5);
+    medd1[s] = (float)analogRead(sensorPin1);
+    medd4[s] = (float)analogRead(sensorPin4);
+    medd2[s] = (float)analogRead(sensorPin2);
+    medd3[s] = (float)analogRead(sensorPin3);
   }
+  mean_sensor5 = find_median(medd5);
+  mean_sensor5 /= 204.8;
+  mean_sensor1 = find_median(medd1);
+  mean_sensor1 /= 204.8;
+  mean_sensor4 = find_median(medd4);
+  mean_sensor4 /= 204.8;
+  mean_sensor2 = find_median(medd2);
+  mean_sensor2 /= 204.8;
+  mean_sensor3 = find_median(medd3);
+  mean_sensor3 /= 204.8;
+  dist_sensor1 = distance_1(mean_sensor1);
+  dist_sensor2 = distance_2(mean_sensor2);
+  dist_sensor3 = distance_3(mean_sensor3);
+  dist_sensor4 = distance_4(mean_sensor4);
+  dist_sensor5 = distance_5(mean_sensor5);
+}
+
+//Perform final checks to see if robot should calibrate.
+void check_calibration() {
+  calibrate_angle();
+  calibrate_dist();
+  calibrate_angle();
+  delay(20);
+}
+
+//Function to align robot back to correct orientation.
+void calibrate_angle() { //correct region where need to 2 times.
+  for (int s = 0; s < 31; s++) {
+    medd1[s] = (float)analogRead(sensorPin1);
+    medd4[s] = (float)analogRead(sensorPin4);
+  }
+  mean_sensor1 = find_median(medd1);
+  mean_sensor1 /= 204.8;
+  mean_sensor4 = find_median(medd4);
+  mean_sensor4 /= 204.8;
+  d1 = distance_1(mean_sensor1);
+  d4 = distance_4(mean_sensor4);
+  diff1 = abs(d1 - d4);
+  if (diff1 > DEG_DIFF) {
+    if (d1 > d4) {
+      cal_target_angle = (diff1 - DEG_DIFF) * PER_DEG;
+      rotate_right_fast(1);
+    }
+    else if (d4 > d1) {
+      cal_target_angle = (diff1 - DEG_DIFF) * PER_DEG;
+      rotate_left_fast(1);
+    }
+  }
+  if (diff1 > 4) {
+    calibrate_angle();
+  }
+}
+
+//Unused calibration for when Sensor 3 and Sensor 5 both returns 1.
+void calibrate_angle_II() { 
+  for (int s = 0; s < 31; s++) {
+    medd3[s] = (float)analogRead(sensorPin3);
+    medd5[s] = (float)analogRead(sensorPin5);
+  }
+  mean_sensor3 = find_median(medd3);
+  mean_sensor3 /= 204.8;
+  mean_sensor5 = find_median(medd5);
+  mean_sensor5 /= 204.8;
+  d3 = distance_3(mean_sensor3);
+  d5 = distance_5(mean_sensor5);
+  diff2 = abs(d3 - d5);
+  if (diff2 > DEG_DIFF_II) {
+    if (d5 > d3) {
+      cal_target_angle = (diff2 - DEG_DIFF_II) * PER_DEG;
+      rotate_left_fast(1);
+    }
+    else if (d3 > d5) {
+      cal_target_angle = (diff2 - DEG_DIFF_II) * PER_DEG;
+      rotate_right_fast(1);
+    }
+  }
+  if (diff2 > 4) {
+    calibrate_angle_II();
+  }
+}
+
+//Function to align robot back to correct distance away from obstacles or wall.
+void calibrate_dist() {
+  for (int t = 0; t < 1; t++) {
+    for (int s = 0; s < 31; s++) {
+      medd2[s] = (float)analogRead(sensorPin2);
+    }
+    mean_sensor2 = find_median(medd2);
+    mean_sensor2 /= 204.8;
+    d2 = distance_2(mean_sensor2);
+    if (d2 > WALL_GAP) {
+      cal_target = (d2 - WALL_GAP) * PER_CM;
+      if (cal_target > 200) {
+        cal_target = 100;
+      }
+      forward_fast(cal_target);
+    }
+    else {
+      cal_target = (WALL_GAP - d2) * PER_CM_II;
+      if (cal_target > 200) {
+        cal_target = 100;
+      }
+      reverse_fast(cal_target);
+    }
+  }
+}
+
+//Find Median
+float find_median(float someArray[]) {
+  float tmp;
+  for (int i = 0; i < 31; i++) {
+    for (int j = i; j > 0; j--) {
+      if (someArray[j] < someArray[j - 1]) {
+        tmp = someArray[j];
+        someArray[j] = someArray[j - 1];
+        someArray[j - 1] = tmp;
+      }
+      else {
+        break;
+      }
+    }
+  }
+  return someArray[6];
 }

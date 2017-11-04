@@ -3,15 +3,15 @@ package com.example.android.mdpgrp17_androidapp;
 /**
  * Created by szean on 4/9/2017.
  */
-
+// Android = a
+// Arduino = b
+// Algorithm = c
+// chat[0] = destination
+// chat[1] = source
+// chat[2onwards] = content
+// Bluetooth Message Command
 public class GlobalVariables {
-    // Android = a
-    // Arduino = b
-    // Algorithm = c
-    // chat[0] = destination
-    // chat[1] = source
-    // chat[2onwards] = content
-    // Bluetooth Message Command
+
     public static final int MESSAGE_COMMAND = 0;
     public static final int MESSAGE_CONVERSATION = 1;
     public static final int MESSAGE_READ = 2;

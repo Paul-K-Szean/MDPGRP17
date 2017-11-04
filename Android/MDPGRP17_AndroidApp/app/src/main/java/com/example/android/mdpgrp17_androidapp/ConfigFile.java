@@ -5,7 +5,6 @@ package com.example.android.mdpgrp17_androidapp;
  */
 
 public class ConfigFile {
-
     BluetoothConfig bluetoothConfig;
     FunctionConfig functionConfig;
     TiltConfig tiltConfig;
